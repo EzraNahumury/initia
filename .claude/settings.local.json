@@ -14,7 +14,22 @@
       "Bash(gh api:*)",
       "Bash(python3 -c \"import json,sys; items=json.load\\(sys.stdin\\); [print\\(f'{i[\\\\\"type\\\\\"]}: {i[\\\\\"name\\\\\"]}'\\) for i in items]\")",
       "Bash(curl -sL \"https://api.github.com/repos/initia-labs/examples/contents/\")",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:rest.testnet.initia.xyz)",
+      "WebFetch(domain:app.testnet.initia.xyz)",
+      "WebFetch(domain:faucet.testnet.initia.xyz)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(curl -s \"https://rest.testnet.initia.xyz/initia/move/v1/accounts/0x1/resources/by_struct_tag?struct_tag=0x1::dex::ModuleStore&decode=true\")",
+      "Bash(curl -s \"https://rest.testnet.initia.xyz/initia/move/v1/accounts/0x1/modules/dex\")",
+      "WebFetch(domain:api.github.com)",
+      "Bash(curl -s \"https://rest.testnet.initia.xyz/initia/move/v1/accounts/0x1/resources/by_struct_tag?struct_tag=0x1::dex::Pool&decode=true\")",
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); [print\\(json.dumps\\(r,indent=2\\)\\) for r in \\(data.get\\('resources',[]\\) if isinstance\\(data,dict\\) else []\\)]\")",
+      "WebFetch(domain:medium.com)",
+      "Bash(curl -s \"https://rest.testnet.initia.xyz/initia/move/v1/accounts/0x1/resources?decode=true&limit=10\")",
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); [print\\(r.get\\('struct_tag',''\\)\\) for r in data.get\\('resources',[]\\)]\")",
+      "Bash(curl -s \"https://rest.testnet.initia.xyz/initia/move/v1/view\" -X POST -H \"Content-Type: application/json\" -d '{\"address\":\"0x1\",\"module_name\":\"dex\",\"function_name\":\"get_all_pairs\",\"type_args\":[],\"args\":[\"MHgx\",\"AAAAAAAAAB8=\",\"HQAAAAAAAAAA\"]}')",
+      "WebFetch(domain:blog.f5nodes.com)",
+      "WebFetch(domain:ibsvalidator.medium.com)"
     ]
   }
 }
