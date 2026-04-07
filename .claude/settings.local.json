@@ -29,7 +29,28 @@
       "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); [print\\(r.get\\('struct_tag',''\\)\\) for r in data.get\\('resources',[]\\)]\")",
       "Bash(curl -s \"https://rest.testnet.initia.xyz/initia/move/v1/view\" -X POST -H \"Content-Type: application/json\" -d '{\"address\":\"0x1\",\"module_name\":\"dex\",\"function_name\":\"get_all_pairs\",\"type_args\":[],\"args\":[\"MHgx\",\"AAAAAAAAAB8=\",\"HQAAAAAAAAAA\"]}')",
       "WebFetch(domain:blog.f5nodes.com)",
-      "WebFetch(domain:ibsvalidator.medium.com)"
+      "WebFetch(domain:ibsvalidator.medium.com)",
+      "Bash(forge --version)",
+      "Bash(where forge:*)",
+      "Read(//c/Users/ASUS ROG/.foundry/bin/**)",
+      "Read(//c/initia/$USERPROFILE/.foundry/bin/**)",
+      "Bash(node -e \"const j=require\\(''''../sc_RupiahRote/out/RupiahRouter.sol/RupiahRouter.json''''\\); console.log\\(JSON.stringify\\(j.abi, null, 2\\)\\)\")",
+      "Bash(mkdir -p lib)",
+      "Bash(node -e \"const j=require\\(''../sc_RupiahRote/out/RupiahRouter.sol/RupiahRouter.json''\\); const fs=require\\(''fs''\\); fs.writeFileSync\\(''lib/abi.ts'', ''export const RUPIAH_ROUTER_ABI = '' + JSON.stringify\\(j.abi, null, 2\\) + '' as const;\\\\n''\\)\")",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(ls C:/initia/fe_rupiahrote/public/logo.*)",
+      "Bash(for f:*)",
+      "Bash(do cat:*)",
+      "Bash(done)",
+      "Bash(identify \"C:/initia/fe_rupiahrote/public/logo/image.png\")",
+      "Bash(python3 -c \":*)",
+      "Bash(npx tsc:*)",
+      "Bash(node -e \"console.log\\(require\\(''@web3modal/wagmi/package.json''\\).version\\)\")",
+      "Bash(where weave:*)",
+      "Bash(go version:*)",
+      "Bash(docker --version)",
+      "Bash(printf %d\\\\n:*)"
     ]
   }
 }

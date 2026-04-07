@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+:root {
+  --white: #ffffff;
+  --bg: #fafafa;
+  --text: #0a0a0a;
+  --text-sub: #525252;
+  --text-muted: #a3a3a3;
+  --border: #e5e5e5;
+  --border-hover: #d4d4d4;
+  --green: #16a34a;
+  --green-bg: #f0fdf4;
+  --red: #dc2626;
+  --red-bg: #fef2f2;
+  --amber: #d97706;
+  --amber-bg: #fffbeb;
+}
+
+@theme inline {
+  --color-white: var(--white);
+  --color-bg: var(--bg);
+  --color-text: var(--text);
+  --color-text-sub: var(--text-sub);
+  --color-text-muted: var(--text-muted);
+  --color-border: var(--border);
+  --color-border-hover: var(--border-hover);
+  --color-green: var(--green);
+  --color-green-bg: var(--green-bg);
+  --color-red: var(--red);
+  --color-red-bg: var(--red-bg);
+  --color-amber: var(--amber);
+  --color-amber-bg: var(--amber-bg);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--white);
+  color: var(--text);
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }
+
+::selection { background: #0a0a0a; color: white; }
+
+/* Fix Web3Modal invisible overlay blocking clicks */
+w3m-modal:not([open]),
+wcm-modal:not([open]) { pointer-events: none !important; display: none !important; }
+w3m-modal { pointer-events: none !important; }
+w3m-modal[open] { pointer-events: auto !important; display: block !important; }
+div[data-w3m-portal] { pointer-events: none !important; }
+div[data-w3m-portal]:has(w3m-modal[open]) { pointer-events: auto !important; }
