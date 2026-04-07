@@ -44,11 +44,3 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; marg
 input[type="number"] { -moz-appearance: textfield; }
 
 ::selection { background: #0a0a0a; color: white; }
-
-/* Fix Web3Modal invisible overlay blocking clicks */
-w3m-modal:not([open]),
-wcm-modal:not([open]) { pointer-events: none !important; display: none !important; }
-w3m-modal { pointer-events: none !important; }
-w3m-modal[open] { pointer-events: auto !important; display: block !important; }
-div[data-w3m-portal] { pointer-events: none !important; }
-div[data-w3m-portal]:has(w3m-modal[open]) { pointer-events: auto !important; }
