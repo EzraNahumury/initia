@@ -122,6 +122,25 @@ const en = {
     topTraders: "Top Traders",
     swaps: "swaps",
   },
+  wallet: {
+    connectTitle: "Connect Wallet",
+    installed: "Installed",
+    available: "Available",
+    popular: "Popular",
+    opening: "Opening {{wallet}}...",
+    confirmInExtension: "Confirm connection in extension",
+    whatIsWallet: "What is a Wallet?",
+    digitalHome: "Home for Digital Assets",
+    digitalHomeDesc:
+      "A wallet is used to send, receive, store, and display digital assets like tokens and NFTs.",
+    newWayToLogin: "A New Way to Login",
+    newWayToLoginDesc:
+      "Just connect your wallet — no need to create a new account on every site.",
+    copyAddress: "Copy Address",
+    copied: "Copied!",
+    disconnect: "Disconnect",
+    getWallet: "Get a Wallet",
+  },
 } as const;
 
 export default en;

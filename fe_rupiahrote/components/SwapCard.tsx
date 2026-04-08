@@ -20,10 +20,10 @@ export function SwapCard() {
 
   const parsedAmount = amountIn ? parseAmount(amountIn, tokenIn.decimals) : 0n;
 
-  const { data: quoteData, isLoading: isQuoting } = useReadContract({
+  const { data: quoteData, isLoading: isQuoting, isError: isQuoteError } = useReadContract({
     ...routerContract, functionName: "getQuote",
     args: [tokenIn.address, tokenOut.address, parsedAmount],
-    query: { enabled: parsedAmount > 0n && isConnected, refetchInterval: 10000 },
+    query: { enabled: parsedAmount > 0n && isConnected, refetchInterval: 10000, retry: 1 },
   });
 
   const { writeContract, data: txHash, isPending: isSwapping } = useWriteContract();
@@ -101,7 +101,7 @@ export function SwapCard() {
         <div className="text-[12px] text-text-muted mb-2">{t("swap.youGet")}</div>
         <div className="flex items-center gap-3">
           <div className="flex-1 text-[28px] font-semibold min-w-0">
-            {isQuoting
+            {isQuoting && !isQuoteError
               ? <div className="h-9 w-28 rounded-lg bg-border animate-pulse" />
               : <span className={expectedOut > 0n ? "text-text" : "text-neutral-300"}>{formattedOut}</span>}
           </div>
@@ -126,6 +126,20 @@ export function SwapCard() {
             <span className="text-text-sub font-medium">
               {route?.routeType === 0 ? t("common.direct") : route?.routeType === 1 ? t("common.multiHop") : t("common.crossChain")}
             </span>
+          </div>
+          <div className="flex justify-between text-[13px]">
+            <span className="text-text-muted">{t("common.gasEstimate")}</span>
+            <span className="text-green font-medium">~0.001 GAS</span>
+          </div>
+        </div>
+      )}
+
+      {/* Fee info */}
+      {parsedAmount > 0n && expectedOut === 0n && !isQuoting && (
+        <div className="mt-3 pt-3 border-t border-border">
+          <div className="flex justify-between text-[13px]">
+            <span className="text-text-muted">{t("common.gasEstimate")}</span>
+            <span className="text-green font-medium">~0.001 GAS</span>
           </div>
         </div>
       )}

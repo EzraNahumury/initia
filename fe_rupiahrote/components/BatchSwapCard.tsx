@@ -92,6 +92,10 @@ export function BatchSwapCard() {
               <span className="font-semibold">{a.percentage}%</span>
             </div>
           ))}
+          <div className="flex justify-between text-[12px] text-text-sub pt-1 mt-1 border-t border-border">
+            <span className="text-text-muted">Gas fee ({allocations.length} swap, 1 tx)</span>
+            <span className="text-green font-semibold">~0.001 GAS</span>
+          </div>
         </div>
       )}
 

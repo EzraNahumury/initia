@@ -68,7 +68,7 @@ export function DashboardView() {
         <h3 className="text-[12px] font-semibold text-text-muted mb-4">{t("dashboard.performance")}</h3>
         <div className="grid grid-cols-3 gap-4">
           {[{ val: "100ms", label: t("dashboard.blockTime"), color: "text-text" },
-            { val: "~Rp 0", label: t("dashboard.gasFee"), color: "text-green" },
+            { val: "~0.001 GAS", label: t("dashboard.gasFee"), color: "text-green" },
             { val: "L2", label: t("dashboard.settlement"), color: "text-text-sub" }].map((item, i) => (
             <div key={i} className="text-center">
               <div className={`text-xl font-bold ${item.color}`}>{item.val}</div>

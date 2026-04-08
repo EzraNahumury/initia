@@ -65,6 +65,10 @@ export function LimitOrderCard() {
         </div>
 
         <div className="flex items-center justify-between px-1">
+          <span className="text-[12px] text-text-muted">Gas fee</span>
+          <span className="text-[12px] text-green font-medium">~0.001 GAS</span>
+        </div>
+        <div className="flex items-center justify-between px-1">
           <span className="text-[12px] text-text-muted">{t("limit.expiry")}</span>
           <select value={expiryHours} onChange={(e) => setExpiryHours(Number(e.target.value))}
             className="bg-bg border border-border rounded-xl px-2.5 py-1.5 text-[12px] text-text-sub">

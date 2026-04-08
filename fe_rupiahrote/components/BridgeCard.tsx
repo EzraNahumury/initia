@@ -60,7 +60,8 @@ export function BridgeCard() {
 
       <div className="space-y-1.5 px-1">
         <div className="flex justify-between text-[12px]"><span className="text-text-muted">{t("bridge.estimatedTime")}</span><span className="text-green font-medium">{t("bridge.seconds")}</span></div>
-        <div className="flex justify-between text-[12px]"><span className="text-text-muted">{t("bridge.bridgeFee")}</span><span className="text-text-sub font-medium">{t("bridge.free")}</span></div>
+        <div className="flex justify-between text-[12px]"><span className="text-text-muted">{t("bridge.bridgeFee")}</span><span className="text-green font-medium">{t("bridge.free")}</span></div>
+        <div className="flex justify-between text-[12px]"><span className="text-text-muted">Gas fee</span><span className="text-green font-medium">~0.001 GAS</span></div>
         <div className="flex justify-between text-[12px]"><span className="text-text-muted">{t("bridge.protocol")}</span><span className="text-text-sub font-medium">OPinit</span></div>
       </div>
 

@@ -63,6 +63,7 @@ export function SendCard() {
         <div className="rounded-xl bg-bg p-4 text-center border border-border">
           <div className="text-[12px] text-text-muted">{isInit ? `→ @${recipient}` : `→ ${recipient.slice(0, 8)}...`}</div>
           <div className="text-[28px] font-bold mt-1 text-text">{amount} {token.symbol}</div>
+          <div className="text-[11px] text-green mt-1 font-medium">Gas fee: ~0.001 GAS</div>
         </div>
       )}
 

@@ -378,17 +378,16 @@ weave opinit init executor && weave opinit start executor -d
 weave relayer init && weave relayer start -d
 
 # 4. Deploy smart contract
-cd contracts
-forge install initia-labs/initia-evm-contracts
+cd sc_RupiahRote
 forge build
-forge create src/RupiahRouter.sol:RupiahRouter \
+forge script script/RupiahRouter.s.sol \
   --rpc-url http://localhost:8545 \
   --private-key $DEPLOYER_KEY \
-  --legacy
+  --broadcast --legacy
 
 # 5. Start frontend
-cd ../frontend
-cp .env.example .env   # Set: VITE_CHAIN_ID, VITE_RPC_URL, VITE_ROUTER_CONTRACT
+cd ../fe_rupiahrote
+cp .env.local.example .env.local   # Set: NEXT_PUBLIC_ROUTER_CONTRACT, NEXT_PUBLIC_WC_PROJECT_ID
 npm install
 npm run dev
 ```
@@ -445,20 +444,20 @@ npm run dev
 +========================================================================+
 
 +========================================================================+
-|                      Frontend (React + Vite + TypeScript)               |
+|                    Frontend (Next.js 16 + TypeScript)                   |
 |                                                                         |
 | +---------------------+ +-------------------+ +---------------------+   |
-| | InterwovenKit       | | Smart Swap UI     | | Indonesia UX        |   |
+| | wagmi v3 + viem     | | Smart Swap UI     | | Indonesia UX        |   |
 | | - Wallet connect    | | - Token selector  | | - Bahasa Indonesia  |   |
-| | - Auto-sign toggle  | | - Route visualizer| | - Rupiah (Rp) fees  |   |
-| | - Bridge deposit    | | - Quote preview   | | - IDR conversion    |   |
-| | - Bridge withdraw   | | - Savings display | | - Onboarding guide  |   |
+| | - Multi-connector   | | - Route visualizer| | - Rupiah (Rp) fees  |   |
+| | - Bridge UI         | | - Quote preview   | | - IDR conversion    |   |
+| | - Balance tracking  | | - Savings display | | - Onboarding guide  |   |
 | | - .init username    | | - Limit order UI  | | - Familiar UX       |   |
 | +---------------------+ | - Batch swap UI   | +---------------------+   |
 |                          | - Leaderboard     |                          |
 | +---------------------+ +-------------------+ +---------------------+   |
-| | wagmi + viem        |                       | D3.js / React Flow  |   |
-| | (EVM interaction)   |                       | (route animation)   |   |
+| | Framer Motion       |                       | Tailwind CSS v4     |   |
+| | (UI animations)     |                       | (styling)           |   |
 | +---------------------+                       +---------------------+   |
 +==========================================================================+
 ```
@@ -674,13 +673,13 @@ Dashboard menampilkan real-time:
 | **Appchain** | Initia MiniEVM Rollup | 100ms blocks, full EVM, Cosmos interop |
 | **Smart Contract** | Solidity + Foundry | Industry standard, `--legacy` flag for MiniEVM |
 | **Base Contracts** | `initia-evm-contracts` | InitiaERC20, ICosmos, IConnectOracle |
-| **Frontend** | React + Vite + TypeScript | Fast dev, type safety |
-| **Wallet** | InterwovenKit + wagmi + viem | Official Initia SDK, EVM compatibility |
-| **Bridge** | Interwoven Bridge (OPinit) | Native L1↔L2, dalam InterwovenKit |
+| **Frontend** | Next.js 16 + TypeScript | SSR, fast dev, type safety |
+| **Wallet** | wagmi v3 + viem | EVM wallet connection, multi-connector |
+| **Bridge** | Interwoven Bridge (OPinit) | Native L1↔L2 |
 | **Oracle** | ConnectOracle / Slinky | On-chain precompile, no external dependency |
 | **Cross-chain** | Cosmos Precompile + IBC Hooks | Native to MiniEVM |
 | **Route API** | Initia Router API | Cross-chain route comparison |
-| **Visualization** | React Flow / D3.js | Animated route diagrams |
+| **Animation** | Framer Motion | Smooth UI transitions |
 | **Styling** | Tailwind CSS | Rapid UI development |
 | **i18n** | i18next | Bahasa Indonesia + English toggle |
 
@@ -693,7 +692,7 @@ Dashboard menampilkan real-time:
 - [ ] Implement `RupiahRouter.sol`: Pool struct, createPool, addLiquidity, swap, getAmountOut
 - [ ] Deploy ke local devnet + seed 4 pools dengan testnet tokens
 - [ ] `forge test` → unit tests untuk AMM math
-- [ ] Frontend boilerplate: React + Vite + InterwovenKit + wagmi provider setup
+- [ ] Frontend boilerplate: Next.js 16 + wagmi v3 + viem provider setup
 
 ### Phase 2: Routing + Core DeFi (Day 4-7)
 - [ ] Routing: findBestRoute (direct + multi-hop evaluation)

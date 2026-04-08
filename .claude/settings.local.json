@@ -50,7 +50,16 @@
       "Bash(where weave:*)",
       "Bash(go version:*)",
       "Bash(docker --version)",
-      "Bash(printf %d\\\\n:*)"
+      "Bash(printf %d\\\\n:*)",
+      "Read(//mnt/c/initia/**)",
+      "Bash(npx next:*)",
+      "Bash(node -e \"const chains = require\\('wagmi/chains'\\); console.log\\(Object.keys\\(chains\\).slice\\(0, 40\\).join\\(', '\\)\\)\")",
+      "Bash(node -e ':*)",
+      "WebFetch(domain:tokens.uniswap.org)",
+      "Bash(curl -s https://raw.githubusercontent.com/initia-labs/initia-registry/main/mainnets/__TRACKED_VAR__/chain.json)",
+      "Bash(curl -s \"https://raw.githubusercontent.com/initia-labs/initia-registry/main/mainnets/initia/assetlist.json\")",
+      "Bash(node -e \" const d=require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\); try { const j=JSON.parse\\(d\\); \\(j.assets||[]\\).forEach\\(a=>{ const sym=a.symbol||a.display||'?'; const name=a.name||sym; const logo=a.logo_URIs?.png||a.images?.[0]?.png||''; const dec=a.denom_units?.find\\(u=>u.denom===a.display\\)?.exponent||6; console.log\\(JSON.stringify\\({symbol:sym,name,decimals:dec,logo}\\)\\); }\\); } catch\\(e\\){ console.log\\('no assetlist'\\); } \" done)",
+      "WebFetch(domain:www.coingecko.com)"
     ]
   }
 }

@@ -122,6 +122,25 @@ const id = {
     topTraders: "Top Traders",
     swaps: "swaps",
   },
+  wallet: {
+    connectTitle: "Hubungkan Dompet",
+    installed: "Terinstal",
+    available: "Tersedia",
+    popular: "Populer",
+    opening: "Membuka {{wallet}}...",
+    confirmInExtension: "Konfirmasi koneksi di ekstensi",
+    whatIsWallet: "Apa itu Dompet?",
+    digitalHome: "Rumah untuk Aset Digital",
+    digitalHomeDesc:
+      "Dompet digunakan untuk mengirim, menerima, menyimpan, dan menampilkan aset digital seperti token dan NFT.",
+    newWayToLogin: "Cara Baru untuk Masuk",
+    newWayToLoginDesc:
+      "Cukup hubungkan dompet Anda, tanpa perlu membuat akun baru di setiap situs.",
+    copyAddress: "Salin Alamat",
+    copied: "Tersalin!",
+    disconnect: "Putuskan",
+    getWallet: "Dapatkan Dompet",
+  },
 } as const;
 
 export default id;

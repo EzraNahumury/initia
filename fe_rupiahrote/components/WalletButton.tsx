@@ -1,30 +1,99 @@
 "use client";
 
-import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { useAccount, useConnect, useDisconnect, type Connector } from "wagmi";
 import { useTranslation } from "react-i18next";
-import { HiChevronDown } from "react-icons/hi2";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { HiWallet, HiDocumentDuplicate } from "react-icons/hi2";
 
-function getWalletIcon(connectorName: string | undefined) {
-  const icons: Record<string, string> = {
-    MetaMask: "🦊",
-    "Rabby Wallet": "🐰",
-    "Coinbase Wallet": "🔵",
-    Talisman: "🔮",
-    "OKX Wallet": "⬛",
-  };
-  return connectorName ? icons[connectorName] || "💼" : "💼";
+/* ── Fallback colors for wallets without icon ────────────── */
+
+const BRAND_COLORS: Record<string, string> = {
+  MetaMask: "#F6851B",
+  WalletConnect: "#3B99FC",
+  "Coinbase Wallet": "#0052FF",
+  "Rabby Wallet": "#7C8AFF",
+  Rabby: "#7C8AFF",
+  "OKX Wallet": "#000000",
+  Talisman: "#D5FF5C",
+  "Trust Wallet": "#3375BB",
+  Rainbow: "#001AFF",
+  Phantom: "#AB9FF2",
+  Zerion: "#2962EF",
+  Injected: "#6366F1",
+};
+
+/* ── Popular wallets (shown when not detected) ───────────── */
+
+interface PopularWallet {
+  name: string;
+  url: string;
+  color: string;
 }
+
+const POPULAR_WALLETS: PopularWallet[] = [
+  { name: "Rabby Wallet", url: "https://rabby.io", color: "#7C8AFF" },
+  { name: "OKX Wallet", url: "https://www.okx.com/web3", color: "#000000" },
+  { name: "Trust Wallet", url: "https://trustwallet.com", color: "#3375BB" },
+  { name: "Phantom", url: "https://phantom.app", color: "#AB9FF2" },
+  { name: "Rainbow", url: "https://rainbow.me", color: "#001AFF" },
+  { name: "Zerion", url: "https://zerion.io", color: "#2962EF" },
+];
+
+/* ── Wallet icon — uses real connector icon when available ── */
+
+function WalletIcon({
+  name,
+  iconUrl,
+  size = 36,
+}: {
+  name: string;
+  iconUrl?: string;
+  size?: number;
+}) {
+  if (iconUrl) {
+    return (
+      <img
+        src={iconUrl}
+        alt={name}
+        className="rounded-xl shrink-0 object-cover"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+  const bg = BRAND_COLORS[name] || "#6B7280";
+  const textColor = name === "Talisman" ? "#000" : "#fff";
+  return (
+    <div
+      className="rounded-xl flex items-center justify-center font-bold shrink-0 select-none"
+      style={{
+        width: size,
+        height: size,
+        backgroundColor: bg,
+        color: textColor,
+        fontSize: size * 0.42,
+        lineHeight: 1,
+      }}
+    >
+      {name.charAt(0)}
+    </div>
+  );
+}
+
+/* ── Main component ──────────────────────────────────────── */
 
 export function WalletButton() {
   const { address, isConnected, connector } = useAccount();
-  const { connectors, connect } = useConnect();
+  const { connectors, connect, isPending } = useConnect();
   const { disconnect } = useDisconnect();
   const { t } = useTranslation();
-  const [gasBalance, setGasBalance] = useState("0");
-  const [showMenu, setShowMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
 
+  const [showConnectModal, setShowConnectModal] = useState(false);
+  const [showAccountPopup, setShowAccountPopup] = useState(false);
+  const [selectedConnectorId, setSelectedConnectorId] = useState<string | null>(null);
+  const [gasBalance, setGasBalance] = useState("0");
+  const [copied, setCopied] = useState(false);
+
+  // Fetch GAS balance
   useEffect(() => {
     if (!address) return;
     const fetchBalance = async () => {
@@ -41,77 +110,309 @@ export function WalletButton() {
         });
         const data = await res.json();
         if (data.result) {
-          const wei = BigInt(data.result);
-          const ether = Number(wei) / 1e18;
-          setGasBalance(ether.toLocaleString(undefined, { maximumFractionDigits: 2 }));
+          const ether = Number(BigInt(data.result)) / 1e18;
+          setGasBalance(
+            ether.toLocaleString(undefined, { maximumFractionDigits: 2 }),
+          );
         }
       } catch {}
     };
     fetchBalance();
-    const interval = setInterval(fetchBalance, 10000);
-    return () => clearInterval(interval);
+    const iv = setInterval(fetchBalance, 10000);
+    return () => clearInterval(iv);
   }, [address]);
 
+  // Auto-close modal on connection
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setShowMenu(false);
-      }
+    if (isConnected) {
+      setShowConnectModal(false);
+      setSelectedConnectorId(null);
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [isConnected]);
+
+  const handleCopy = useCallback(() => {
+    if (!address) return;
+    navigator.clipboard.writeText(address);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [address]);
+
+  const handleDisconnect = useCallback(() => {
+    disconnect();
+    setShowAccountPopup(false);
+  }, [disconnect]);
+
+  // De-duplicate & clean connector list
+  const uniqueConnectors = connectors.filter((c, i, arr) => {
+    // Skip duplicates by name
+    if (arr.findIndex((x) => x.name === c.name) !== i) return false;
+    // Hide generic "Injected" / "Browser Wallet" when named wallets exist
+    if (c.name === "Injected" || c.name === "Browser Wallet") {
+      const hasNamed = arr.some(
+        (x) =>
+          x.name !== "Injected" &&
+          x.name !== "Browser Wallet" &&
+          x.name !== "WalletConnect" &&
+          x.name !== "Coinbase Wallet" &&
+          x.type === "injected",
+      );
+      if (hasNamed) return false;
+    }
+    return true;
+  });
+
+  // Popular wallets not already detected
+  const detectedNames = new Set(uniqueConnectors.map((c) => c.name));
+  const popularNotDetected = POPULAR_WALLETS.filter(
+    (w) => !detectedNames.has(w.name),
+  );
+
+  const selectedConnector = connectors.find(
+    (c) => c.uid === selectedConnectorId,
+  );
+
+  /* ────────────────────────── CONNECTED ────────────────────────── */
 
   if (isConnected && address) {
     return (
-      <div className="relative" ref={menuRef}>
-        <button onClick={() => setShowMenu(!showMenu)}
-          className="flex items-center gap-2 px-3 py-1.5 text-[13px] rounded-full bg-neutral-900 text-white hover:bg-neutral-800 transition-colors cursor-pointer">
-          <span className="text-base leading-none">{getWalletIcon(connector?.name)}</span>
-          <span className="font-mono font-medium text-emerald-400">{gasBalance} GAS</span>
+      <>
+        <button
+          onClick={() => setShowAccountPopup(true)}
+          className="flex items-center gap-2 px-3 py-1.5 text-[13px] rounded-full bg-neutral-900 text-white hover:bg-neutral-800 transition-colors cursor-pointer"
+        >
+          <WalletIcon
+            name={connector?.name ?? ""}
+            iconUrl={connector?.icon}
+            size={20}
+          />
+          <span className="font-mono font-medium text-emerald-400">
+            {gasBalance} GAS
+          </span>
           <span className="text-neutral-500">|</span>
-          <span className="font-mono font-medium">{address.slice(0, 6)}...{address.slice(-4)}</span>
-          <HiChevronDown className={`w-3.5 h-3.5 text-neutral-400 transition-transform ${showMenu ? "rotate-180" : ""}`} />
+          <span className="font-mono font-medium">
+            {address.slice(0, 6)}...{address.slice(-4)}
+          </span>
         </button>
-        {showMenu && (
-          <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-lg border border-neutral-200 py-1 z-[9999]">
-            <div className="px-3 py-2 text-xs text-neutral-500 border-b border-neutral-100 font-mono">
-              {address.slice(0, 10)}...{address.slice(-8)}
+
+        {/* ── Account popup ── */}
+        {showAccountPopup && (
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center animate-[fadeIn_0.15s_ease]"
+            onClick={() => setShowAccountPopup(false)}
+          >
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+            <div
+              className="relative bg-white rounded-2xl shadow-2xl p-6 w-[280px] flex flex-col items-center gap-3 animate-[slideUp_0.2s_ease]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setShowAccountPopup(false)}
+                className="absolute top-3 right-3 w-7 h-7 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-400 hover:bg-neutral-200 cursor-pointer text-sm"
+              >
+                &#x2715;
+              </button>
+
+              <div className="w-16 h-16 rounded-full bg-neutral-100 flex items-center justify-center">
+                <WalletIcon
+                  name={connector?.name ?? ""}
+                  iconUrl={connector?.icon}
+                  size={40}
+                />
+              </div>
+
+              <p className="font-bold text-lg font-mono">
+                {address.slice(0, 6)}...{address.slice(-4)}
+              </p>
+              <p className="text-sm text-neutral-500">{gasBalance} GAS</p>
+
+              <div className="flex gap-2 w-full mt-1">
+                <button
+                  onClick={handleCopy}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-neutral-200 text-sm font-medium hover:bg-neutral-50 transition-colors cursor-pointer"
+                >
+                  <HiDocumentDuplicate className="w-4 h-4" />
+                  {copied ? t("wallet.copied") : t("wallet.copyAddress")}
+                </button>
+                <button
+                  onClick={handleDisconnect}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-neutral-200 text-sm font-medium hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors cursor-pointer"
+                >
+                  <HiWallet className="w-4 h-4" />
+                  {t("wallet.disconnect")}
+                </button>
+              </div>
             </div>
-            <button onClick={() => { navigator.clipboard.writeText(address); setShowMenu(false); }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-neutral-50 text-neutral-700 cursor-pointer">
-              Copy Address
-            </button>
-            <button onClick={() => { disconnect(); setShowMenu(false); }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 text-red-600 cursor-pointer">
-              Disconnect
-            </button>
           </div>
         )}
-      </div>
+      </>
     );
   }
 
+  /* ────────────────────── NOT CONNECTED ────────────────────── */
+
   return (
-    <div className="relative" ref={menuRef}>
-      <button onClick={() => setShowMenu(!showMenu)}
-        className="px-4 py-2 text-[13px] font-semibold rounded-full bg-neutral-900 text-white hover:bg-neutral-800 transition-colors cursor-pointer">
+    <>
+      <button
+        onClick={() => setShowConnectModal(true)}
+        className="px-4 py-2 text-[13px] font-semibold rounded-full bg-neutral-900 text-white hover:bg-neutral-800 transition-colors cursor-pointer"
+      >
         {t("common.connectWallet")}
       </button>
-      {showMenu && (
-        <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-lg border border-neutral-200 py-1 z-[9999]">
-          <div className="px-3 py-2 text-xs text-neutral-500 border-b border-neutral-100 font-medium">
-            Select Wallet
-          </div>
-          {connectors.map((c) => (
-            <button key={c.uid} onClick={() => { connect({ connector: c }); setShowMenu(false); }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-neutral-50 text-neutral-700 flex items-center gap-2 cursor-pointer">
-              <span>{getWalletIcon(c.name)}</span>
-              <span>{c.name}</span>
+
+      {/* ── Connect modal ── */}
+      {showConnectModal && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center animate-[fadeIn_0.15s_ease]"
+          onClick={() => {
+            setShowConnectModal(false);
+            setSelectedConnectorId(null);
+          }}
+        >
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+
+          <div
+            className="relative bg-white rounded-2xl shadow-2xl w-[560px] max-w-[92vw] h-[440px] max-h-[80vh] flex overflow-hidden animate-[slideUp_0.2s_ease]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* close */}
+            <button
+              onClick={() => {
+                setShowConnectModal(false);
+                setSelectedConnectorId(null);
+              }}
+              className="absolute top-4 right-4 w-7 h-7 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-400 hover:bg-neutral-200 cursor-pointer z-10 text-sm"
+            >
+              &#x2715;
             </button>
-          ))}
+
+            {/* ─ Left: wallet list (scrollable) ─ */}
+            <div className="w-[230px] shrink-0 border-r border-neutral-100 flex flex-col">
+              <h3 className="px-4 pt-5 pb-2 font-bold text-[15px]">
+                {t("wallet.connectTitle")}
+              </h3>
+              <p className="px-4 pb-2 text-xs font-semibold text-blue-500">
+                {t("wallet.installed")}
+              </p>
+
+              {/* scrollable list */}
+              <div className="flex-1 overflow-y-auto px-2 pb-4 space-y-0.5">
+                {uniqueConnectors.map((c) => {
+                  const isActive = selectedConnectorId === c.uid;
+                  return (
+                    <button
+                      key={c.uid}
+                      onClick={() => {
+                        setSelectedConnectorId(c.uid);
+                        connect({ connector: c });
+                      }}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer ${
+                        isActive
+                          ? "bg-blue-500 text-white"
+                          : "text-neutral-700 hover:bg-neutral-50"
+                      }`}
+                    >
+                      <WalletIcon
+                        name={c.name}
+                        iconUrl={c.icon}
+                        size={28}
+                      />
+                      <span className="truncate">{c.name}</span>
+                    </button>
+                  );
+                })}
+
+                {/* Popular (not installed) */}
+                {popularNotDetected.length > 0 && (
+                  <>
+                    <p className="px-2 pt-3 pb-1 text-xs font-semibold text-neutral-400">
+                      {t("wallet.popular")}
+                    </p>
+                    {popularNotDetected.map((w) => (
+                      <a
+                        key={w.name}
+                        href={w.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-neutral-400 hover:bg-neutral-50 hover:text-neutral-600 transition-colors cursor-pointer"
+                      >
+                        <WalletIcon name={w.name} size={28} />
+                        <span className="truncate">{w.name}</span>
+                      </a>
+                    ))}
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* ─ Right: info / connecting ─ */}
+            <div className="flex-1 p-8 flex flex-col items-center justify-center overflow-hidden">
+              {selectedConnectorId && isPending ? (
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <WalletIcon
+                    name={selectedConnector?.name ?? ""}
+                    iconUrl={selectedConnector?.icon}
+                    size={64}
+                  />
+                  <p className="font-semibold text-lg">
+                    {t("wallet.opening", {
+                      wallet: selectedConnector?.name ?? "",
+                    })}
+                  </p>
+                  <p className="text-sm text-neutral-500">
+                    {t("wallet.confirmInExtension")}
+                  </p>
+                  <div className="w-6 h-6 border-2 border-neutral-200 border-t-neutral-600 rounded-full animate-spin" />
+                </div>
+              ) : (
+                <div className="flex flex-col items-center text-center gap-5 max-w-[260px]">
+                  <h3 className="font-bold text-xl">
+                    {t("wallet.whatIsWallet")}
+                  </h3>
+
+                  <div className="flex flex-col gap-4 text-left">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                        <HiWallet className="w-5 h-5 text-blue-500" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">
+                          {t("wallet.digitalHome")}
+                        </p>
+                        <p className="text-xs text-neutral-500 mt-0.5 leading-relaxed">
+                          {t("wallet.digitalHomeDesc")}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center shrink-0 text-lg">
+                        &#x1F511;
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">
+                          {t("wallet.newWayToLogin")}
+                        </p>
+                        <p className="text-xs text-neutral-500 mt-0.5 leading-relaxed">
+                          {t("wallet.newWayToLoginDesc")}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <a
+                    href="https://ethereum.org/wallets"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 px-5 py-2.5 bg-neutral-900 text-white text-sm font-semibold rounded-xl hover:bg-neutral-800 transition-colors"
+                  >
+                    {t("wallet.getWallet")}
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
