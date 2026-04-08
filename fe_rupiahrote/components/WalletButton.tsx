@@ -202,7 +202,7 @@ export function WalletButton() {
           >
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
             <div
-              className="relative bg-white rounded-2xl shadow-2xl p-6 w-[280px] flex flex-col items-center gap-3 animate-[slideUp_0.2s_ease]"
+              className="relative bg-white rounded-2xl shadow-2xl p-6 w-[300px] flex flex-col items-center gap-3 animate-[slideUp_0.2s_ease]"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -225,19 +225,19 @@ export function WalletButton() {
               </p>
               <p className="text-sm text-neutral-500">{gasBalance} GAS</p>
 
-              <div className="flex gap-2 w-full mt-1">
+              <div className="flex gap-3 w-full mt-2">
                 <button
                   onClick={handleCopy}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-neutral-200 text-sm font-medium hover:bg-neutral-50 transition-colors cursor-pointer"
+                  className="flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl border border-neutral-200 text-[12px] font-medium hover:bg-neutral-50 transition-colors cursor-pointer"
                 >
-                  <HiDocumentDuplicate className="w-4 h-4" />
+                  <HiDocumentDuplicate className="w-5 h-5 text-neutral-600" />
                   {copied ? t("wallet.copied") : t("wallet.copyAddress")}
                 </button>
                 <button
                   onClick={handleDisconnect}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-neutral-200 text-sm font-medium hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors cursor-pointer"
+                  className="flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl border border-neutral-200 text-[12px] font-medium hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors cursor-pointer"
                 >
-                  <HiWallet className="w-4 h-4" />
+                  <HiWallet className="w-5 h-5 text-neutral-600" />
                   {t("wallet.disconnect")}
                 </button>
               </div>

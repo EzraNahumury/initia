@@ -136,9 +136,9 @@ const id = {
     newWayToLogin: "Cara Baru untuk Masuk",
     newWayToLoginDesc:
       "Cukup hubungkan dompet Anda, tanpa perlu membuat akun baru di setiap situs.",
-    copyAddress: "Salin Alamat",
+    copyAddress: "Salin alamat",
     copied: "Tersalin!",
-    disconnect: "Putuskan",
+    disconnect: "Putuskan koneksi",
     getWallet: "Dapatkan Dompet",
   },
 } as const;

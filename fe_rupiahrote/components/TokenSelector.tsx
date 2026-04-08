@@ -63,7 +63,7 @@ export function TokenSelector({ selected, onSelect, disabledToken }: Props) {
   // Filter chains
   const filteredChains = useMemo(() => {
     const base: UniChain[] = [
-      { chainId: 0, name: "RupiahRoute", logo: "", color: "#0a0a0a" },
+      { chainId: 0, name: "RupiahRoute", logo: "/logo/logo.png", color: "#0a0a0a" },
       ...uniChains.filter((c) => c.chainId !== 0),
     ];
     if (!chainSearch) return base;

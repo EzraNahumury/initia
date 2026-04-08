@@ -59,7 +59,13 @@
       "Bash(curl -s https://raw.githubusercontent.com/initia-labs/initia-registry/main/mainnets/__TRACKED_VAR__/chain.json)",
       "Bash(curl -s \"https://raw.githubusercontent.com/initia-labs/initia-registry/main/mainnets/initia/assetlist.json\")",
       "Bash(node -e \" const d=require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\); try { const j=JSON.parse\\(d\\); \\(j.assets||[]\\).forEach\\(a=>{ const sym=a.symbol||a.display||'?'; const name=a.name||sym; const logo=a.logo_URIs?.png||a.images?.[0]?.png||''; const dec=a.denom_units?.find\\(u=>u.denom===a.display\\)?.exponent||6; console.log\\(JSON.stringify\\({symbol:sym,name,decimals:dec,logo}\\)\\); }\\); } catch\\(e\\){ console.log\\('no assetlist'\\); } \" done)",
-      "WebFetch(domain:www.coingecko.com)"
+      "WebFetch(domain:www.coingecko.com)",
+      "Bash(npx shadcn@latest mcp init --client claude)",
+      "Bash(npx shadcn@latest add \"https://www.aceternity.com/r/globe\")",
+      "Bash(npx shadcn@latest add \"https://aceternity.com/r/globe\")",
+      "Bash(npx shadcn@latest add \"@aceternity/globe\")",
+      "Bash(npx shadcn@latest init -d)",
+      "Bash(npx shadcn@latest add \"https://pro.aceternity.com/registry/globe.json\")"
     ]
   }
 }

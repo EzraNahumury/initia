@@ -29,8 +29,8 @@ export function Header() {
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-1 shrink-0">
-          <Image src="/logo/logo.png" alt="RupiahRoute" width={100} height={100} className="w-20 h-auto" />
-          <span className="font-semibold text-[15px] text-text tracking-tight">RupiahRoute</span>
+          <Image src="/logo/logo.png" alt="Rupiah Rote" width={40} height={40} className="w-10 h-10 rounded-full object-cover" unoptimized />
+          <span className="font-semibold text-[15px] text-text tracking-tight">Rupiah Rote</span>
         </Link>
 
         {/* Center nav */}
