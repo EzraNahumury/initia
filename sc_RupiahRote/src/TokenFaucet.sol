@@ -161,6 +161,41 @@ contract TokenFaucet {
         emit LimitOrderCancelled(orderId);
     }
 
+    // ── Batch Swap ──
+
+    event BatchSwapped(address indexed user, address tokenIn, uint256 totalIn, uint256 count);
+
+    function batchSwap(
+        address tokenIn,
+        address[] calldata tokensOut,
+        uint256[] calldata amounts
+    ) external payable {
+        require(msg.value >= SWAP_FEE, "Send 500 GAS");
+        require(tokensOut.length == amounts.length, "Length mismatch");
+        require(tokensOut.length > 0, "Empty batch");
+        require(priceUSD[tokenIn] > 0, "Unknown tokenIn");
+
+        uint256 totalIn = 0;
+        for (uint256 i = 0; i < amounts.length; i++) {
+            totalIn += amounts[i];
+        }
+        require(totalIn > 0, "Total = 0");
+
+        // Burn all input at once
+        MockERC20(tokenIn).burnFrom(msg.sender, totalIn);
+
+        // Mint each output
+        for (uint256 i = 0; i < tokensOut.length; i++) {
+            require(priceUSD[tokensOut[i]] > 0, "Unknown tokenOut");
+            require(tokenIn != tokensOut[i], "Same token");
+            uint256 amountOut = _calcOutput(tokenIn, tokensOut[i], amounts[i]);
+            require(amountOut > 0, "Output too small");
+            MockERC20(tokensOut[i]).mint(msg.sender, amountOut);
+        }
+
+        emit BatchSwapped(msg.sender, tokenIn, totalIn, tokensOut.length);
+    }
+
     // ── Views ──
 
     function getUserOrderCount(address user) external view returns (uint256) {
