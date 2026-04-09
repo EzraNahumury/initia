@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { useTranslation } from "react-i18next";
 import { parseAmount, formatAmount, TOKENS, type Token } from "@/lib/contract";
+import { addActivity } from "@/lib/activity";
 import { TokenSelector } from "./TokenSelector";
 import { HiPlus, HiTrash, HiCheckCircle } from "react-icons/hi2";
 
@@ -71,7 +72,22 @@ export function BatchSwapCard() {
     });
   }, [sourceAmount, sourceToken, allocations, total, parsedTotal, writeContract]);
 
-  useEffect(() => { if (isSuccess) setSourceAmount(""); }, [isSuccess]);
+  useEffect(() => {
+    if (isSuccess && address) {
+      const targetSymbols = allocations.map((a) => `${a.percentage}% ${a.token.symbol}`).join(", ");
+      addActivity(address, {
+        id: Date.now().toString(36) + "b",
+        type: "batch",
+        timestamp: Date.now(),
+        txHash,
+        tokenIn: { symbol: sourceToken.symbol, amount: sourceAmount },
+        tokenOut: { symbol: targetSymbols, amount: sourceAmount },
+        status: "confirmed",
+        meta: { batchAllocations: targetSymbols },
+      });
+      setSourceAmount("");
+    }
+  }, [isSuccess]);
 
   const disabled = !isConnected || !sourceAmount || parsedTotal === 0n || total !== 100 || insufficientBalance || busy;
 
@@ -87,15 +103,15 @@ export function BatchSwapCard() {
   return (
     <div className="glass rounded-2xl glow-purple-sm p-5 space-y-3">
       <div className="px-1 pb-1">
-        <h2 className="text-[16px] font-bold text-text">{t("batch.title")}</h2>
-        <p className="text-[12px] text-text-muted mt-0.5">{t("batch.description")}</p>
+        <h2 className="text-[10px] font-bold text-text">{t("batch.title")}</h2>
+        <p className="text-[8px] text-text-muted mt-0.5">{t("batch.description")}</p>
       </div>
 
       {/* Source token */}
       <div className={`rounded-xl bg-bg p-4 border ${insufficientBalance ? "border-red/30" : "border-transparent"}`}>
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[12px] text-text-muted">{t("batch.sourceToken")}</span>
-          <span className={`text-[11px] font-medium ${insufficientBalance ? "text-red" : "text-text-muted"}`}>
+          <span className="text-[8px] text-text-muted">{t("batch.sourceToken")}</span>
+          <span className={`text-[7px] font-medium ${insufficientBalance ? "text-red" : "text-text-muted"}`}>
             Balance: {formattedBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })} {sourceToken.symbol}
           </span>
         </div>
@@ -109,8 +125,8 @@ export function BatchSwapCard() {
       {/* Allocations */}
       <div className="space-y-2">
         <div className="flex items-center justify-between px-1">
-          <span className="text-[12px] text-text-muted font-medium">{t("batch.allocation")}</span>
-          <span className={`text-[12px] font-bold ${total === 100 ? "text-green" : "text-red"}`}>{total}%</span>
+          <span className="text-[8px] text-text-muted font-medium">{t("batch.allocation")}</span>
+          <span className={`text-[8px] font-bold ${total === 100 ? "text-green" : "text-red"}`}>{total}%</span>
         </div>
 
         {allocations.map((alloc, i) => {
@@ -122,9 +138,13 @@ export function BatchSwapCard() {
                 onSelect={(tk) => setAllocations((p) => p.map((a, j) => j === i ? { ...a, token: tk } : a))}
                 disabledToken={sourceToken} />
               <input type="range" min="5" max="95" step="5" value={alloc.percentage}
-                onChange={(e) => setAllocations((p) => p.map((a, j) => j === i ? { ...a, percentage: Number(e.target.value) } : a))}
+                onChange={(e) => {
+                  const newVal = Number(e.target.value);
+                  if (newVal > alloc.percentage && total >= 100) return;
+                  setAllocations((p) => p.map((a, j) => j === i ? { ...a, percentage: newVal } : a));
+                }}
                 className="flex-1 accent-purple h-1.5 rounded-full" />
-              <span className="text-[13px] font-bold w-10 text-right text-text-sub">{alloc.percentage}%</span>
+              <span className="text-[8px] font-bold w-10 text-right text-text-sub">{alloc.percentage}%</span>
               {allocations.length > 1 && (
                 <button onClick={() => setAllocations((p) => p.filter((_, j) => j !== i))}
                   className="text-text-muted hover:text-red transition-colors cursor-pointer"><HiTrash className="w-4 h-4" /></button>
@@ -136,7 +156,7 @@ export function BatchSwapCard() {
         {allocations.length < TOKENS.length - 1 && (
           <button
             onClick={() => { const used = new Set([sourceToken.symbol, ...allocations.map(a => a.token.symbol)]); const av = TOKENS.find(t => !used.has(t.symbol)); if (av) setAllocations(p => [...p, { token: av, percentage: 10 }]); }}
-            className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 border-dashed border-border text-[12px] text-text-muted hover:text-text-sub hover:border-text-sub/30 transition-all cursor-pointer">
+            className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 border-dashed border-border text-[8px] text-text-muted hover:text-text-sub hover:border-text-sub/30 transition-all cursor-pointer">
             <HiPlus className="w-3.5 h-3.5" /> {t("batch.addToken")}
           </button>
         )}
@@ -146,12 +166,12 @@ export function BatchSwapCard() {
       {sourceAmount && total === 100 && (
         <div className="rounded-xl bg-bg p-3 space-y-1">
           {allocations.map((a, i) => (
-            <div key={i} className="flex justify-between text-[12px] text-text-sub">
+            <div key={i} className="flex justify-between text-[8px] text-text-sub">
               <span>{((Number(sourceAmount) * a.percentage) / 100).toFixed(2)} {sourceToken.symbol} &rarr; {a.token.symbol}</span>
               <span className="font-semibold">{a.percentage}%</span>
             </div>
           ))}
-          <div className="flex justify-between text-[12px] text-text-sub pt-1 mt-1 border-t border-border">
+          <div className="flex justify-between text-[8px] text-text-sub pt-1 mt-1 border-t border-border">
             <span className="text-text-muted">Gas fee ({allocations.length} swap, 1 tx)</span>
             <span className="text-green font-semibold">500 GAS</span>
           </div>
@@ -172,7 +192,7 @@ export function BatchSwapCard() {
       </button>
 
       {isSuccess && (
-        <div className="flex items-center justify-center gap-2 text-[13px] text-green bg-green-bg rounded-xl py-3 font-medium">
+        <div className="flex items-center justify-center gap-2 text-[8px] text-green bg-green-bg rounded-xl py-3 font-medium">
           <HiCheckCircle className="w-4 h-4" />{t("batch.batchSuccess", { count: allocations.length })}
         </div>
       )}

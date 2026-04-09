@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { useTranslation } from "react-i18next";
 import { parseAmount, TOKENS, type Token } from "@/lib/contract";
+import { addActivity } from "@/lib/activity";
 import { TokenSelector } from "./TokenSelector";
 import { HiCheck, HiCheckCircle, HiXCircle, HiPaperAirplane, HiClock } from "react-icons/hi2";
 
@@ -131,6 +132,16 @@ export function SendCard() {
       };
       addSendHistory(address, record);
       setSendHistory(getSendHistory(address));
+      addActivity(address, {
+        id: Date.now().toString(36) + "s",
+        type: "send",
+        timestamp: Date.now(),
+        txHash,
+        tokenIn: { symbol: token.symbol, amount: amount || "0" },
+        tokenOut: { symbol: token.symbol, amount: amount || "0" },
+        recipient: recipient ?? undefined,
+        status: "confirmed",
+      });
       setAmount("");
       setRecipient("");
     }
@@ -154,36 +165,37 @@ export function SendCard() {
   const disabled = !isConnected || !amount || !valid || parsedAmount === 0n || insufficientBalance || busy || (isInit && !usernameResolved);
 
   return (
-    <div className="space-y-3">
-      <div className="glass rounded-2xl glow-purple-sm p-5 space-y-3">
+    <div className="flex gap-4 items-start">
+      {/* Left: Send form */}
+      <div className="flex-1 min-w-0 glass rounded-2xl glow-purple-sm p-5 space-y-3">
         <div className="px-1 pb-1">
-          <h2 className="text-[16px] font-bold text-text">{t("send.title")}</h2>
-          <p className="text-[12px] text-text-muted mt-0.5">{t("send.description")}</p>
+          <h2 className="text-[10px] font-bold text-text">{t("send.title")}</h2>
+          <p className="text-[8px] text-text-muted mt-0.5">{t("send.description")}</p>
         </div>
 
         {/* Recipient */}
         <div className="rounded-xl bg-bg p-4">
-          <span className="text-[12px] text-text-muted">{t("send.recipientLabel")}</span>
+          <span className="text-[8px] text-text-muted">{t("send.recipientLabel")}</span>
           <input type="text" placeholder={t("send.recipientPlaceholder")} value={recipient} onChange={(e) => setRecipient(e.target.value)}
-            className="w-full bg-transparent text-lg font-semibold outline-none placeholder-text-muted/40 mt-2" />
+            className="w-full bg-transparent text-[10px] font-semibold outline-none placeholder-text-muted/40 mt-2" />
           {recipient && recipient.length > 2 && (
             <div className="mt-3 pt-3 border-t border-border overflow-hidden">
               {isInit && usernameResolved && (
-                <div className="flex items-center gap-1.5 text-[12px] text-green font-medium">
+                <div className="flex items-center gap-1.5 text-[8px] text-green font-medium">
                   <HiCheck className="w-3.5 h-3.5" />@{recipient} → <span className="font-mono text-text-sub">{(resolvedAddr as string)?.slice(0, 8)}...</span>
                 </div>
               )}
               {isInit && !usernameResolved && (
-                <div className="flex items-center gap-1.5 text-[12px] text-red font-medium">
+                <div className="flex items-center gap-1.5 text-[8px] text-red font-medium">
                   <HiXCircle className="w-3.5 h-3.5" />Username not registered
                 </div>
               )}
               {isAddr && (
-                <div className="flex items-center gap-1.5 text-[12px] text-green font-medium">
+                <div className="flex items-center gap-1.5 text-[8px] text-green font-medium">
                   <HiCheck className="w-3.5 h-3.5" /><span className="font-mono text-text-sub">{recipient.slice(0, 12)}...{recipient.slice(-6)}</span>
                 </div>
               )}
-              {!valid && <div className="text-[12px] text-red">Format: teman.init atau 0x...</div>}
+              {!valid && <div className="text-[8px] text-red">Format: teman.init atau 0x...</div>}
             </div>
           )}
         </div>
@@ -191,8 +203,8 @@ export function SendCard() {
         {/* Amount */}
         <div className={`rounded-xl bg-bg p-4 border ${insufficientBalance ? "border-red/30" : "border-transparent"}`}>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[12px] text-text-muted">{t("common.amount")}</span>
-            <span className={`text-[11px] font-medium ${insufficientBalance ? "text-red" : "text-text-muted"}`}>
+            <span className="text-[8px] text-text-muted">{t("common.amount")}</span>
+            <span className={`text-[7px] font-medium ${insufficientBalance ? "text-red" : "text-text-muted"}`}>
               Balance: {formattedBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })} {token.symbol}
             </span>
           </div>
@@ -206,9 +218,9 @@ export function SendCard() {
         {/* Preview */}
         {valid && amount && (
           <div className="rounded-xl bg-bg p-4 text-center border border-border">
-            <div className="text-[12px] text-text-muted">{isInit ? `→ @${recipient}` : `→ ${recipient.slice(0, 8)}...`}</div>
+            <div className="text-[8px] text-text-muted">{isInit ? `→ @${recipient}` : `→ ${recipient.slice(0, 8)}...`}</div>
             <div className="text-[28px] font-bold mt-1 text-text">{amount} {token.symbol}</div>
-            <div className="text-[11px] text-green mt-1 font-medium">Gas fee: 100 GAS</div>
+            <div className="text-[7px] text-green mt-1 font-medium">Gas fee: 100 GAS</div>
           </div>
         )}
 
@@ -228,24 +240,25 @@ export function SendCard() {
         </button>
 
         {isSuccess && (
-          <div className="flex items-center justify-center gap-2 text-[13px] text-green bg-green-bg rounded-xl py-3 font-medium">
+          <div className="flex items-center justify-center gap-2 text-[8px] text-green bg-green-bg rounded-xl py-3 font-medium">
             <HiCheckCircle className="w-4 h-4" />{t("send.sendSuccess", { username: recipient })}
           </div>
         )}
       </div>
 
-      {/* Register .init username */}
+      {/* Right: Register + History */}
+      <div className="w-[400px] shrink-0 space-y-3">
       <div className="glass rounded-2xl glow-purple-sm p-5 space-y-3">
-        <h3 className="text-[13px] font-bold text-text">Register .init Username</h3>
-        <p className="text-[11px] text-text-muted">Claim a username so others can send you tokens easily</p>
+        <h3 className="text-[8px] font-bold text-text">Register .init Username</h3>
+        <p className="text-[7px] text-text-muted">Claim a username so others can send you tokens easily</p>
         <div className="flex items-center gap-2">
           <div className="flex-1 flex items-center bg-bg rounded-xl px-3 py-2.5 border border-border">
             <input type="text" placeholder="yourname" value={registerName} onChange={(e) => setRegisterName(e.target.value)}
-              className="flex-1 bg-transparent text-[13px] outline-none placeholder-text-muted/40 min-w-0" />
-            <span className="text-[13px] text-text-muted font-medium">.init</span>
+              className="flex-1 bg-transparent text-[8px] outline-none placeholder-text-muted/40 min-w-0" />
+            <span className="text-[8px] text-text-muted font-medium">.init</span>
           </div>
           <button onClick={handleRegister} disabled={!registerName || isRegistering || isRegConfirming}
-            className={`px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer ${
+            className={`px-4 py-2.5 rounded-xl text-[8px] font-semibold transition-all cursor-pointer ${
               !registerName || isRegistering || isRegConfirming
                 ? "bg-purple/20 text-text-muted cursor-not-allowed"
                 : "bg-purple text-white hover:bg-purple-light"
@@ -254,18 +267,26 @@ export function SendCard() {
           </button>
         </div>
         {isRegSuccess && (
-          <div className="text-[12px] text-green font-medium">Username registered! Others can now send to {registerName.endsWith(".init") ? registerName : `${registerName}.init`}</div>
+          <div className="text-[8px] text-green font-medium">Username registered! Others can now send to {registerName.endsWith(".init") ? registerName : `${registerName}.init`}</div>
         )}
 
-        {/* Comparison */}
-        <div className="grid grid-cols-2 rounded-xl overflow-hidden border border-border text-[12px]">
-          <div className="p-3 bg-red/5 border-r border-border">
-            <div className="font-semibold text-red mb-1">Tanpa .init</div>
-            <div className="text-text-muted font-mono text-[11px]">0x7fD385d69...</div>
+        {/* Without / With .init */}
+        <div className="flex gap-2">
+          <div className="flex-1 rounded-xl bg-bg border border-red/15 p-3">
+            <div className="text-[7px] text-red mb-2">Without .init</div>
+            <div className="text-[7px] text-text-muted font-mono leading-relaxed">
+              "Send 100 INIT to<br />
+              <span className="text-red">0x7fD3...85d69aB2</span>"
+            </div>
+            <div className="text-[7px] text-text-muted mt-2">Hard to verify, easy to mistype</div>
           </div>
-          <div className="p-3 bg-green/5">
-            <div className="font-semibold text-green mb-1">Dengan .init</div>
-            <div className="text-text font-semibold">@teman.init</div>
+          <div className="flex-1 rounded-xl bg-bg border border-green/30 p-3">
+            <div className="text-[7px] text-green mb-2">With .init</div>
+            <div className="text-[7px] text-text leading-relaxed">
+              "Send 100 INIT to<br />
+              <span className="text-green font-semibold">@teman.init</span>"
+            </div>
+            <div className="text-[7px] text-text-muted mt-2">Simple, readable, human</div>
           </div>
         </div>
       </div>
@@ -277,8 +298,8 @@ export function SendCard() {
             <div className="w-6 h-6 rounded-md bg-purple/10 flex items-center justify-center">
               <HiClock className="w-3 h-3 text-purple-light" />
             </div>
-            <h3 className="text-[13px] font-bold text-text">Send History</h3>
-            <span className="text-[11px] text-text-muted">({sendHistory.length})</span>
+            <h3 className="text-[8px] font-bold text-text">Send History</h3>
+            <span className="text-[7px] text-text-muted">({sendHistory.length})</span>
           </div>
           <div className="space-y-1.5">
             {sendHistory.slice(0, 10).map((h) => (
@@ -287,19 +308,20 @@ export function SendCard() {
                   <HiPaperAirplane className="w-3.5 h-3.5 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[12px] font-medium text-text">
+                  <div className="text-[8px] font-medium text-text">
                     {h.amount} {h.token}
                   </div>
-                  <div className="text-[10px] text-text-muted">
+                  <div className="text-[7px] text-text-muted">
                     → {h.to.endsWith(".init") ? `@${h.to}` : `${h.to.slice(0, 8)}...${h.to.slice(-4)}`} · {timeAgo(h.timestamp)}
                   </div>
                 </div>
-                <span className="text-[10px] font-bold text-green bg-green/10 px-1.5 py-0.5 rounded">Sent</span>
+                <span className="text-[7px] font-bold text-green bg-green/10 px-1.5 py-0.5 rounded">Sent</span>
               </div>
             ))}
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

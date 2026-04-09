@@ -52,7 +52,7 @@ export function SwapConfirmModal({
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
             <HiShieldCheck className="w-5 h-5 text-green" />
-            <h2 className="text-[16px] font-bold text-text">Confirm Swap</h2>
+            <h2 className="text-[10px] font-bold text-text">Confirm Swap</h2>
           </div>
           <button
             onClick={onClose}
@@ -66,18 +66,18 @@ export function SwapConfirmModal({
         <div className="rounded-xl bg-bg p-4 mb-4">
           <div className="flex items-center justify-between">
             <div className="text-center">
-              <div className="text-[11px] text-text-muted mb-1">You pay</div>
+              <div className="text-[7px] text-text-muted mb-1">You pay</div>
               <div className="text-[20px] font-bold text-text">{amountIn}</div>
-              <div className="text-[12px] text-text-sub font-medium">{tokenIn.symbol}</div>
+              <div className="text-[8px] text-text-sub font-medium">{tokenIn.symbol}</div>
             </div>
             <div className="flex flex-col items-center gap-0.5 px-3">
               <HiArrowLongRight className="w-5 h-5 text-text-muted" />
-              <span className="text-[10px] text-text-muted">{routeName}</span>
+              <span className="text-[7px] text-text-muted">{routeName}</span>
             </div>
             <div className="text-center">
-              <div className="text-[11px] text-text-muted mb-1">You get</div>
+              <div className="text-[7px] text-text-muted mb-1">You get</div>
               <div className="text-[20px] font-bold text-green">{expectedOutput}</div>
-              <div className="text-[12px] text-text-sub font-medium">{tokenOut.symbol}</div>
+              <div className="text-[8px] text-text-sub font-medium">{tokenOut.symbol}</div>
             </div>
           </div>
         </div>
@@ -99,7 +99,7 @@ export function SwapConfirmModal({
             <DetailRow
               label="Recipient"
               value={
-                <span className="font-mono text-[10px]">
+                <span className="font-mono text-[7px]">
                   {recipient.length > 20
                     ? `${recipient.slice(0, 8)}...${recipient.slice(-6)}`
                     : recipient}
@@ -112,10 +112,10 @@ export function SwapConfirmModal({
         {/* Price impact danger warning */}
         {priceImpact >= 5 && (
           <div className="rounded-xl bg-red/5 border border-red/20 p-3 text-center mb-4">
-            <div className="text-[12px] font-semibold text-red">
+            <div className="text-[8px] font-semibold text-red">
               High price impact: {priceImpact.toFixed(2)}%
             </div>
-            <div className="text-[11px] text-text-muted mt-0.5">
+            <div className="text-[7px] text-text-muted mt-0.5">
               You may receive significantly less than expected
             </div>
           </div>
@@ -125,14 +125,14 @@ export function SwapConfirmModal({
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-3 rounded-xl text-[13px] font-semibold border border-border text-text-sub hover:bg-bg transition-colors cursor-pointer"
+            className="flex-1 py-3 rounded-xl text-[8px] font-semibold border border-border text-text-sub hover:bg-bg transition-colors cursor-pointer"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={isSwapping}
-            className={`flex-1 py-3 rounded-xl text-[13px] font-semibold transition-colors cursor-pointer ${
+            className={`flex-1 py-3 rounded-xl text-[8px] font-semibold transition-colors cursor-pointer ${
               isSwapping
                 ? "bg-purple/30 text-white cursor-not-allowed"
                 : priceImpact >= 5
@@ -168,7 +168,7 @@ function DetailRow({
   valueColor?: string;
 }) {
   return (
-    <div className="flex items-center justify-between text-[12px]">
+    <div className="flex items-center justify-between text-[8px]">
       <span className="text-text-muted">{label}</span>
       <span className={valueColor ?? "text-text-sub font-medium"}>{value}</span>
     </div>

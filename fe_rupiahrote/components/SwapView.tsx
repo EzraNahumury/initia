@@ -284,14 +284,40 @@ function TokenIcon({ symbol, logoURI, address, size = 20 }: {
 export function SwapView() {
   const { address, isConnected } = useAccount();
   const { t } = useTranslation();
-  const { data: livePrices, isSuccess: isPriceLive, isError: isPriceError } = useLivePrices();
+  const { data: livePrices, isError: isPriceError } = useLivePrices();
 
-  const [tokenIn, setTokenIn] = useState<Token>(TOKENS[0]);
-  const [tokenOut, setTokenOut] = useState<Token>(TOKENS[1]);
-  const [amountIn, setAmountIn] = useState("");
-  const [slippage, setSlippage] = useState(0.5);
+  // Restore persisted swap state from sessionStorage
+  const [tokenIn, setTokenIn] = useState<Token>(() => {
+    if (typeof window === "undefined") return TOKENS[0];
+    const saved = sessionStorage.getItem("swap_tokenIn");
+    if (saved) { const t = TOKENS.find((tk) => tk.symbol === saved); if (t) return t; }
+    return TOKENS[0];
+  });
+  const [tokenOut, setTokenOut] = useState<Token>(() => {
+    if (typeof window === "undefined") return TOKENS[1];
+    const saved = sessionStorage.getItem("swap_tokenOut");
+    if (saved) { const t = TOKENS.find((tk) => tk.symbol === saved); if (t) return t; }
+    return TOKENS[1];
+  });
+  const [amountIn, setAmountIn] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return sessionStorage.getItem("swap_amountIn") ?? "";
+  });
+  const [slippage, setSlippage] = useState(() => {
+    if (typeof window === "undefined") return 0.5;
+    const saved = sessionStorage.getItem("swap_slippage");
+    return saved ? Number(saved) : 0.5;
+  });
   const [recipient, setRecipient] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
+
+  // Persist swap state to sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem("swap_tokenIn", tokenIn.symbol);
+    sessionStorage.setItem("swap_tokenOut", tokenOut.symbol);
+    sessionStorage.setItem("swap_amountIn", amountIn);
+    sessionStorage.setItem("swap_slippage", String(slippage));
+  }, [tokenIn.symbol, tokenOut.symbol, amountIn, slippage]);
 
   const parsedAmount = amountIn ? parseAmount(amountIn, tokenIn.decimals) : 0n;
 
@@ -368,18 +394,17 @@ export function SwapView() {
 
   const faucetOut = (faucetQuote as bigint) ?? 0n;
 
-  // Best output: prefer faucet quote (real rate), fall back to simulation
-  const formattedOut =
-    faucetOut > 0n
-      ? formatAmount(faucetOut, tokenOut.decimals)
-      : simRoutes.length > 0
-        ? simRoutes[0].output
-        : "0";
+  // Output based on selected route — consistent simulated rates for display
+  const selectedRouteData = simRoutes[selectedRoute] ?? simRoutes[0];
+  const formattedOut = selectedRouteData ? selectedRouteData.output : "0";
 
+  // For swap execution: prefer on-chain faucet quote for slippage calc
   const expectedOut =
-    faucetOut > 0n ? faucetOut : parsedAmount > 0n && simRoutes[0]
-      ? parseAmount(simRoutes[0].output, tokenOut.decimals)
-      : 0n;
+    faucetOut > 0n && selectedRoute === 0
+      ? faucetOut
+      : parsedAmount > 0n && selectedRouteData
+        ? parseAmount(selectedRouteData.output, tokenOut.decimals)
+        : 0n;
 
   const minOut =
     (expectedOut * BigInt(Math.floor((100 - slippage) * 100))) / 10000n;
@@ -440,7 +465,6 @@ export function SwapView() {
   const handleFlip = () => {
     setTokenIn(tokenOut);
     setTokenOut(tokenIn);
-    setAmountIn("");
   };
 
   // Activity recording is now handled inside handleSwap
@@ -477,15 +501,15 @@ export function SwapView() {
         <div className="glass rounded-2xl glow-purple p-5 flex-1 flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-[16px] font-bold">{t("swap.title")}</h2>
+            <h2 className="text-[10px] font-bold">{t("swap.title")}</h2>
             <SlippageSettings slippage={slippage} onChange={setSlippage} />
           </div>
 
           {/* You pay */}
           <div className={`rounded-xl p-4 mb-1 border transition-all focus-within:border-purple/30 focus-within:shadow-[0_0_15px_rgba(159,41,255,0.1)] ${insufficientBalance ? "border-red/30" : "border-purple/10"}`} style={{ background: "rgba(18,18,42,0.6)" }}>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[12px] text-text-muted font-medium">{t("swap.youPay")}</span>
-              <span className={`text-[11px] font-medium ${insufficientBalance ? "text-red" : "text-text-muted"}`}>
+              <span className="text-[8px] text-text-muted font-medium">{t("swap.youPay")}</span>
+              <span className={`text-[7px] font-medium ${insufficientBalance ? "text-red" : "text-text-muted"}`}>
                 Balance: {formattedUserBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })} {tokenIn.symbol}
               </span>
             </div>
@@ -500,7 +524,8 @@ export function SwapView() {
                 placeholder="0.00"
                 value={amountIn}
                 onChange={(e) => setAmountIn(e.target.value)}
-                className="flex-1 bg-transparent text-[28px] font-semibold outline-none placeholder-text-muted/30 min-w-0 text-right text-text"
+                className="flex-1 bg-transparent font-semibold outline-none placeholder-text-muted/30 min-w-0 text-right text-text"
+                style={{ fontSize: amountIn.length > 14 ? 14 : amountIn.length > 10 ? 18 : amountIn.length > 7 ? 22 : 28 }}
               />
             </div>
           </div>
@@ -519,8 +544,8 @@ export function SwapView() {
           {/* You get */}
           <div className="rounded-xl p-4 mt-1 border border-purple/10" style={{ background: "rgba(18,18,42,0.6)" }}>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[12px] text-text-muted font-medium">{t("swap.youGet")}</span>
-              <span className="text-[11px] text-green font-pixel">OUTPUT</span>
+              <span className="text-[8px] text-text-muted font-medium">{t("swap.youGet")}</span>
+              <span className="text-[7px] text-green font-pixel">OUTPUT</span>
             </div>
             <div className="flex items-center gap-3">
               <TokenSelector
@@ -528,12 +553,14 @@ export function SwapView() {
                 onSelect={setTokenOut}
                 disabledToken={tokenIn}
               />
-              <div className="flex-1 text-[28px] font-semibold min-w-0 text-right">
+              <div className="flex-1 font-semibold min-w-0 text-right overflow-hidden"
+                style={{ fontSize: formattedOut.length > 14 ? 14 : formattedOut.length > 10 ? 18 : formattedOut.length > 7 ? 22 : 28 }}>
                 {isQuoting && !isQuoteError ? (
                   <div className="h-9 w-28 rounded-lg bg-purple/10 animate-pulse ml-auto" />
                 ) : (
                   <span
-                    className={formattedOut !== "0" ? "text-green" : "text-text-muted/30"}
+                    key={formattedOut}
+                    className={`inline-block ${formattedOut !== "0" ? "text-green animate-[rollIn_0.3s_ease-out]" : "text-text-muted/30"}`}
                   >
                     {formattedOut}
                   </span>
@@ -549,19 +576,19 @@ export function SwapView() {
           {amountIn && Number(amountIn) > 0 && (
             <div className="mt-3 pt-3 border-t border-border space-y-1.5">
               {rateStr && (
-                <div className="flex justify-between text-[12px]">
+                <div className="flex justify-between text-[8px]">
                   <span className="text-text-muted">{t("common.route")}</span>
-                  <span className="text-text-sub font-mono text-[11px]">
+                  <span className="text-text-sub font-mono text-[7px]">
                     {rateStr}
                   </span>
                 </div>
               )}
-              <div className="flex justify-between items-center text-[12px]">
+              <div className="flex justify-between items-center text-[8px]">
                 <span className="text-text-muted">Price impact</span>
                 <PriceImpactBadge impact={priceImpact} />
               </div>
               {expectedOut > 0n && (
-                <div className="flex justify-between text-[12px]">
+                <div className="flex justify-between text-[8px]">
                   <span className="text-text-muted">
                     {t("swap.minOutput")}
                   </span>
@@ -570,7 +597,7 @@ export function SwapView() {
                   </span>
                 </div>
               )}
-              <div className="flex justify-between text-[12px]">
+              <div className="flex justify-between text-[8px]">
                 <span className="text-text-muted">
                   {t("common.gasEstimate")}
                 </span>
@@ -606,7 +633,7 @@ export function SwapView() {
           </button>
 
           {swapSuccess && (
-            <div className="flex items-center justify-center gap-2 mt-3 text-[13px] text-green bg-green-bg rounded-xl py-3 font-medium">
+            <div className="flex items-center justify-center gap-2 mt-3 text-[8px] text-green bg-green-bg rounded-xl py-3 font-medium">
               <HiCheckCircle className="w-4 h-4" />
               {t("swap.swapSuccess")}
             </div>
@@ -642,33 +669,14 @@ export function SwapView() {
       <div className="flex-1 min-w-0 flex flex-col">
         <div className="glass rounded-2xl glow-purple p-5 flex-1 flex flex-col">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-[16px] font-bold">
+            <h2 className="text-[10px] font-bold">
               {t("swap.routeComparison")}
             </h2>
-            <div className="flex items-center gap-1.5 text-[12px] text-text-muted">
-              {isPriceLive ? (
-                <span className="flex items-center gap-1">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green" />
-                  </span>
-                  <span className="text-green font-medium">Live</span>
-                </span>
-              ) : isPriceError ? (
-                <span className="flex items-center gap-1">
-                  <span className="inline-flex rounded-full h-2 w-2 bg-amber-500" />
-                  <span className="text-amber-500 font-medium">Offline</span>
-                </span>
-              ) : (
-                <HiBolt className="w-3.5 h-3.5 text-amber-500" />
-              )}
-              Smart Routing
-            </div>
           </div>
 
           {/* API unavailable notice */}
           {isPriceError && simRoutes.length > 0 && (
-            <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg bg-amber/10 border border-amber/20 text-[11px] text-amber">
+            <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg bg-amber/10 border border-amber/20 text-[7px] text-amber">
               <span className="shrink-0">&#9888;</span>
               <span>Live price feed unavailable — using cached rates. Prices may not reflect current market.</span>
             </div>
@@ -739,10 +747,10 @@ export function SwapView() {
 
               </div>
 
-              <h3 className="font-bold text-[15px] text-text mt-3">
+              <h3 className="font-bold text-[10px] text-text mt-3">
                 Smart Router
               </h3>
-              <p className="text-[12px] text-text-muted text-center mt-1 max-w-[240px]">
+              <p className="text-[8px] text-text-muted text-center mt-1 max-w-[240px]">
                 Otomatis temukan jalur swap terbaik di seluruh ekosistem Initia
               </p>
             </div>
@@ -759,60 +767,69 @@ export function SwapView() {
                     alt="Initia"
                     className="w-4 h-4 rounded-full"
                   />
-                  <span className="text-[12px] font-semibold text-text">
+                  <span className="text-[8px] font-semibold text-text">
                     Initia Ecosystem
                   </span>
-                  <span className="text-[10px] font-medium text-green bg-green/10 px-1.5 py-0.5 rounded">
+                  <span className="text-[7px] font-medium text-green bg-green/10 px-1.5 py-0.5 rounded">
                     Near-zero gas
                   </span>
                 </div>
                 <div className="space-y-2">
-                  {simRoutes.map((r, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setSelectedRoute(i)}
-                      className={`w-full text-left rounded-xl p-3.5 border transition-all cursor-pointer ${
-                        selectedRoute === i
-                          ? "border-purple bg-purple-bg ring-2 ring-purple/20 glow-purple-sm"
-                          : "border-border bg-purple/5 hover:bg-purple/10 hover:border-purple/30"
-                      }`}
-                      style={{ borderLeftWidth: 3, borderLeftColor: r.accent }}
-                    >
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div className="flex items-center gap-2">
-                          <TokenIcon symbol={tokenOut.symbol} logoURI={tokenOut.logoURI} address={tokenOut.address} size={20} />
-                          <span className="text-[15px] font-bold text-text">
-                            {r.output} {tokenOut.symbol}
+                  {simRoutes.map((r, i) => {
+                    const isSelected = selectedRoute === i;
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => setSelectedRoute(i)}
+                        className={`w-full text-left rounded-xl p-3.5 border transition-all cursor-pointer relative overflow-hidden ${
+                          isSelected
+                            ? "border-purple bg-purple-bg"
+                            : "border-border bg-purple/5 hover:bg-purple/10 hover:border-purple/30"
+                        }`}
+                      >
+                        {/* Best rate top accent bar */}
+                        {r.best && (
+                          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-green via-green to-transparent" />
+                        )}
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-2">
+                            <TokenIcon symbol={tokenOut.symbol} logoURI={tokenOut.logoURI} address={tokenOut.address} size={20} />
+                            <span className={`text-[10px] font-bold ${r.best ? "text-green" : "text-text"}`}>
+                              {r.output} {tokenOut.symbol}
+                            </span>
+                            {r.best && <HiBolt className="w-3.5 h-3.5 text-green" />}
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            {r.best && (
+                              <span className="text-[7px] font-bold text-white bg-green px-2 py-0.5 rounded-full"
+                                style={{ textShadow: "1px 1px 0 rgba(0,0,0,0.3)" }}>
+                                Best Rate
+                              </span>
+                            )}
+                            {r.diff !== null && r.diff !== 0 && (
+                              <span className="text-[7px] font-bold text-red">
+                                {r.diff > 0 ? "+" : ""}{r.diff.toFixed(2)}%
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between text-[7px]">
+                          <span className="text-text-muted">
+                            via <span className="font-medium text-text-sub">{r.name}</span>
+                            {" · "}{r.protocol}
                           </span>
-                          {r.best && <HiBolt className="w-3.5 h-3.5 text-amber-500" />}
+                          <div className="flex items-center gap-2">
+                            <span className="text-green font-medium">{r.gasUsd} gas</span>
+                            {isSelected && (
+                              <span className="text-[7px] font-bold text-white bg-purple px-2 py-0.5 rounded-full">
+                                Selected
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          {r.best && (
-                            <span className="text-[10px] font-bold text-green bg-green/10 px-2 py-0.5 rounded-full">
-                              Best Rate
-                            </span>
-                          )}
-                          {selectedRoute === i && (
-                            <span className="text-[10px] font-bold text-white bg-text px-2 py-0.5 rounded-full">
-                              Selected
-                            </span>
-                          )}
-                          {r.diff !== null && r.diff !== 0 && (
-                            <span className="text-[11px] font-bold text-red">
-                              {r.diff > 0 ? "+" : ""}{r.diff.toFixed(2)}%
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-text-muted">
-                          via <span className="font-medium text-text-sub">{r.name}</span>
-                          {" · "}{r.protocol}
-                        </span>
-                        <span className="text-green font-medium">{r.gasUsd} gas</span>
-                      </div>
-                    </button>
-                  ))}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -821,7 +838,7 @@ export function SwapView() {
                 <>
                   <div className="flex items-center gap-2 pt-1 pb-1">
                     <div className="flex-1 h-px bg-border" />
-                    <span className="text-[10px] text-text-muted font-medium uppercase tracking-wider">
+                    <span className="text-[7px] text-text-muted font-medium uppercase tracking-wider">
                       {isQuotesLoading ? "Fetching live quotes..." : `vs ${externalQuotes!.length} external DEXs`}
                     </span>
                     <div className="flex-1 h-px bg-border" />
@@ -829,11 +846,8 @@ export function SwapView() {
 
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-[12px] font-semibold text-text-sub">
+                      <span className="text-[8px] font-semibold text-text-sub">
                         Other DEXs
-                      </span>
-                      <span className="text-[9px] font-bold text-green bg-green/10 px-1.5 py-0.5 rounded">
-                        LIVE API
                       </span>
                       {isQuotesLoading && (
                         <span className="w-3 h-3 border-2 border-text-muted/30 border-t-text-muted rounded-full animate-spin" />
@@ -855,23 +869,23 @@ export function SwapView() {
                                   className="w-2 h-2 rounded-full shrink-0"
                                   style={{ backgroundColor: q.accent }}
                                 />
-                                <span className="text-[12px] font-semibold text-text-sub">
+                                <span className="text-[8px] font-semibold text-text-sub">
                                   {q.name}
                                 </span>
-                                <span className="text-[10px] text-text-muted">
+                                <span className="text-[7px] text-text-muted">
                                   {q.protocol}
                                 </span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className="text-[12px] font-medium text-text-sub">
+                                <span className="text-[8px] font-medium text-text-sub">
                                   {q.outputAmount.toFixed(dec)}
                                 </span>
-                                <span className="text-[10px] font-bold text-red">
+                                <span className="text-[7px] font-bold text-red">
                                   {diff.toFixed(2)}%
                                 </span>
                               </div>
                             </div>
-                            <div className="flex items-center justify-between mt-1 text-[10px] text-text-muted">
+                            <div className="flex items-center justify-between mt-1 text-[7px] text-text-muted">
                               <span>
                                 Gas: <span className="text-red font-medium">{q.gasUsd}</span>
                               </span>
@@ -889,12 +903,12 @@ export function SwapView() {
                   {/* Savings summary */}
                   {externalQuotes?.[0] && simRoutes[0] && (
                     <div className="rounded-xl bg-green/5 border border-green/20 p-3 text-center">
-                      <div className="text-[13px] font-semibold text-green">
+                      <div className="text-[8px] font-semibold text-green">
                         RupiahRoute saves you{" "}
                         {(simRoutes[0].outputNum - externalQuotes[0].outputAmount).toFixed(Math.min(tokenOut.decimals, 4))}{" "}
                         {tokenOut.symbol}
                       </div>
-                      <div className="text-[11px] text-text-muted mt-0.5">
+                      <div className="text-[7px] text-text-muted mt-0.5">
                         vs {externalQuotes[0].name} (live quote) · Near-zero gas vs {externalQuotes[0].gasUsd}
                       </div>
                     </div>

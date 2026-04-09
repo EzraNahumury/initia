@@ -1,4 +1,8 @@
 const en = {
+  hero: {
+    subtitle: "Automatically find the fastest and cheapest swap route across the entire Initia ecosystem. One click, best route.",
+    docs: "Read Docs",
+  },
   common: {
     connectWallet: "Connect Wallet",
     disconnect: "Disconnect",

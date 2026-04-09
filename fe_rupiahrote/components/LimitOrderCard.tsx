@@ -5,6 +5,7 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { useTranslation } from "react-i18next";
 import { encodeFunctionData, decodeFunctionResult } from "viem";
 import { parseAmount, formatAmount, TOKENS, type Token } from "@/lib/contract";
+import { addActivity } from "@/lib/activity";
 import { TokenSelector } from "./TokenSelector";
 import { HiXMark, HiCheckCircle, HiClock, HiPlay } from "react-icons/hi2";
 
@@ -88,7 +89,17 @@ export function LimitOrderCard() {
   }, [amountIn, targetPrice, parsedAmount, parsedTarget, tokenIn, tokenOut, expiryHours, writeContract]);
 
   useEffect(() => {
-    if (isSuccess) {
+    if (isSuccess && address) {
+      addActivity(address, {
+        id: Date.now().toString(36) + "l",
+        type: "limit",
+        timestamp: Date.now(),
+        txHash,
+        tokenIn: { symbol: tokenIn.symbol, amount: amountIn },
+        tokenOut: { symbol: tokenOut.symbol, amount: targetPrice },
+        status: "confirmed",
+        meta: { limitExpiry: expiryHours },
+      });
       setAmountIn("");
       setTargetPrice("");
       refetchCount();
@@ -176,18 +187,18 @@ export function LimitOrderCard() {
     : "0";
 
   return (
-    <div className="space-y-3">
-      <div className="glass rounded-2xl glow-purple-sm p-5 space-y-3">
+    <div className="flex gap-4 items-start">
+      <div className="flex-1 min-w-0 glass rounded-2xl glow-purple-sm p-5 space-y-3">
         <div className="px-1 pb-1">
-          <h2 className="text-[16px] font-bold text-text">{t("limit.title")}</h2>
-          <p className="text-[12px] text-text-muted mt-0.5">{t("limit.description")}</p>
+          <h2 className="text-[10px] font-bold text-text">{t("limit.title")}</h2>
+          <p className="text-[8px] text-text-muted mt-0.5">{t("limit.description")}</p>
         </div>
 
         {/* Sell */}
         <div className={`rounded-xl bg-bg p-4 border ${insufficientBalance ? "border-red/30" : "border-transparent"}`}>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[12px] text-text-muted">{t("limit.sell")}</span>
-            <span className={`text-[11px] font-medium ${insufficientBalance ? "text-red" : "text-text-muted"}`}>
+            <span className="text-[8px] text-text-muted">{t("limit.sell")}</span>
+            <span className={`text-[7px] font-medium ${insufficientBalance ? "text-red" : "text-text-muted"}`}>
               Balance: {Number(userBalance) / 10 ** tokenIn.decimals} {tokenIn.symbol}
             </span>
           </div>
@@ -200,16 +211,16 @@ export function LimitOrderCard() {
 
         {/* Buy token */}
         <div className="rounded-xl bg-bg p-4">
-          <span className="text-[12px] text-text-muted">{t("limit.buy")}</span>
+          <span className="text-[8px] text-text-muted">{t("limit.buy")}</span>
           <div className="mt-2"><TokenSelector selected={tokenOut} onSelect={setTokenOut} disabledToken={tokenIn} /></div>
         </div>
 
         {/* Target price */}
         <div className="rounded-xl bg-bg p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[12px] text-text-muted">Min. output ({tokenOut.symbol})</span>
+            <span className="text-[8px] text-text-muted">Min. output ({tokenOut.symbol})</span>
             {parsedAmount > 0n && (
-              <span className="text-[11px] text-text-muted">
+              <span className="text-[7px] text-text-muted">
                 Current: <span className="text-green font-medium">{currentQuoteFormatted}</span>
               </span>
             )}
@@ -220,14 +231,14 @@ export function LimitOrderCard() {
 
         {/* Info */}
         <div className="space-y-1.5 px-1">
-          <div className="flex justify-between text-[12px]">
+          <div className="flex justify-between text-[8px]">
             <span className="text-text-muted">Gas fee</span>
             <span className="text-green font-medium">500 GAS</span>
           </div>
-          <div className="flex justify-between text-[12px]">
+          <div className="flex justify-between text-[8px]">
             <span className="text-text-muted">{t("limit.expiry")}</span>
             <select value={expiryHours} onChange={(e) => setExpiryHours(Number(e.target.value))}
-              className="bg-bg border border-border rounded-xl px-2.5 py-1.5 text-[12px] text-white" style={{ color: "#ffffff" }}>
+              className="bg-bg border border-border rounded-xl px-2.5 py-1.5 text-[8px] text-white" style={{ color: "#ffffff" }}>
               <option value={1}>{t("limit.hours1")}</option>
               <option value={6}>{t("limit.hours6")}</option>
               <option value={24}>{t("limit.hours24")}</option>
@@ -251,35 +262,37 @@ export function LimitOrderCard() {
         </button>
 
         {isSuccess && (
-          <div className="flex items-center justify-center gap-2 text-[13px] text-green bg-green-bg rounded-xl py-3 font-medium">
+          <div className="flex items-center justify-center gap-2 text-[8px] text-green bg-green-bg rounded-xl py-3 font-medium">
             <HiCheckCircle className="w-4 h-4" />{t("limit.orderPlaced")}
           </div>
         )}
       </div>
 
-      {/* Active Orders */}
-      {orders.length > 0 && (
-        <div className="glass rounded-2xl glow-purple-sm p-5 space-y-2">
-          <h3 className="text-[12px] font-semibold text-text-muted px-1">Active Orders ({orders.length})</h3>
+      {/* Active Orders — right panel */}
+      <div className="w-[320px] shrink-0 glass rounded-2xl glow-purple-sm p-5 space-y-2">
+        <h3 className="text-[8px] font-semibold text-text-muted px-1">Active Orders ({orders.length})</h3>
+        {orders.length === 0 && (
+          <div className="py-8 text-center text-[7px] text-text-muted">No active orders yet</div>
+        )}
           {orders.map((o) => {
             const isExpired = Date.now() / 1000 > o.expiry;
             return (
               <div key={o.id} className="flex items-center justify-between p-3 rounded-xl bg-bg border border-border">
                 <div>
-                  <div className="text-[13px] font-semibold text-text">
+                  <div className="text-[8px] font-semibold text-text">
                     {formatAmount(o.amountIn, o.tokenIn.decimals)} {o.tokenIn.symbol} &rarr; {o.tokenOut.symbol}
                   </div>
-                  <div className="text-[11px] text-text-muted">
+                  <div className="text-[7px] text-text-muted">
                     Min: {formatAmount(o.targetPrice, o.tokenOut.decimals)} {o.tokenOut.symbol}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {o.executed ? (
-                    <span className="text-[11px] text-green bg-green/10 px-2 py-0.5 rounded-md font-medium">Filled</span>
+                    <span className="text-[7px] text-green bg-green/10 px-2 py-0.5 rounded-md font-medium">Filled</span>
                   ) : o.cancelled ? (
-                    <span className="text-[11px] text-red bg-red/10 px-2 py-0.5 rounded-md font-medium">Cancelled</span>
+                    <span className="text-[7px] text-red bg-red/10 px-2 py-0.5 rounded-md font-medium">Cancelled</span>
                   ) : isExpired ? (
-                    <span className="text-[11px] text-amber bg-amber/10 px-2 py-0.5 rounded-md font-medium">Expired</span>
+                    <span className="text-[7px] text-amber bg-amber/10 px-2 py-0.5 rounded-md font-medium">Expired</span>
                   ) : (
                     <>
                       <button onClick={() => handleExecute(o.id)}
@@ -290,7 +303,7 @@ export function LimitOrderCard() {
                         className="text-text-muted hover:text-red transition-colors cursor-pointer" title="Cancel">
                         <HiXMark className="w-4 h-4" />
                       </button>
-                      <span className="text-[11px] text-amber bg-amber/10 px-2 py-0.5 rounded-md font-medium">
+                      <span className="text-[7px] text-amber bg-amber/10 px-2 py-0.5 rounded-md font-medium">
                         <HiClock className="w-3 h-3 inline mr-0.5" />Pending
                       </span>
                     </>
@@ -299,8 +312,7 @@ export function LimitOrderCard() {
               </div>
             );
           })}
-        </div>
-      )}
+      </div>
     </div>
   );
 }

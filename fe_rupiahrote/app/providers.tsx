@@ -9,8 +9,13 @@ import "@/lib/i18n";
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
 
+  // Only reconnect on mount if user previously connected
+  const [shouldReconnect] = useState(
+    () => typeof window !== "undefined" && !!sessionStorage.getItem("rr_user_connected")
+  );
+
   return (
-    <WagmiProvider config={config} reconnectOnMount={false}>
+    <WagmiProvider config={config} reconnectOnMount={shouldReconnect}>
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </WagmiProvider>
   );

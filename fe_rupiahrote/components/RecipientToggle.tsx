@@ -32,7 +32,7 @@ export function RecipientToggle({
     <div className="mt-1">
       <button
         onClick={toggle}
-        className="flex items-center gap-2 px-1 py-1 text-[11px] text-text-muted hover:text-text-sub transition-colors cursor-pointer"
+        className="flex items-center gap-2 px-1 py-1 text-[7px] text-text-muted hover:text-text-sub transition-colors cursor-pointer"
       >
         <div
           className={`w-7 h-4 rounded-full transition-colors relative ${
@@ -56,7 +56,7 @@ export function RecipientToggle({
               placeholder="0x... or name.init"
               value={recipient ?? ""}
               onChange={(e) => onChange(e.target.value || null)}
-              className="flex-1 bg-transparent text-[13px] outline-none placeholder-text-muted/50 font-mono min-w-0"
+              className="flex-1 bg-transparent text-[8px] outline-none placeholder-text-muted/50 font-mono min-w-0"
             />
             {recipient && (
               isValid ? (

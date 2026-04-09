@@ -85,7 +85,9 @@
       "Bash(export USER_ADDRESS=0x5Aea061d814A72de9EE9171bE86F45f48e1E2f5d)",
       "Bash(forge script:*)",
       "Bash(cmd:*)",
-      "Bash(forge build:*)"
+      "Bash(forge build:*)",
+      "WebFetch(domain:reactbits.dev)",
+      "Bash(node:*)"
     ]
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useTranslation } from "react-i18next";
 
 const Radar = dynamic(() => import("./Radar"), { ssr: false });
 
@@ -84,9 +85,10 @@ const PARTICLES = [
 
 
 export function HeroSection() {
+  const { t } = useTranslation();
   return (
     <div className="w-full pt-0 pb-24">
-      <div className="max-w-6xl mx-auto p-10 md:p-14 relative overflow-hidden min-h-[300px] rounded-b-3xl" style={{ background: "linear-gradient(135deg, rgba(15,15,35,0.95) 0%, rgba(10,10,26,0.98) 50%, rgba(20,15,40,0.95) 100%)" }}>
+      <div className="max-w-6xl mx-auto p-10 md:p-14 relative overflow-hidden min-h-[300px] rounded-b-3xl" style={{ background: "linear-gradient(135deg, rgba(15,15,35,0.7) 0%, rgba(10,10,26,0.75) 50%, rgba(20,15,40,0.7) 100%)" }}>
 
         {/* ── Radar background ── */}
         <div className="absolute inset-0">
@@ -193,7 +195,7 @@ export function HeroSection() {
         {/* ── Text content ── */}
         <div className="relative z-10 max-w-lg">
           <h1
-            className="text-xl md:text-2xl leading-tight uppercase"
+            className="text-xs md:text-sm leading-tight uppercase"
             style={{
               fontFamily: "var(--font-pixel)",
               color: "#e0d0ff",
@@ -204,19 +206,19 @@ export function HeroSection() {
             <br />
             <span style={{ color: "#9f29ff", textShadow: "0 0 20px rgba(159,41,255,0.8)" }}>on Initia</span>
           </h1>
-          <p className="text-[15px] mt-4 leading-relaxed max-w-md" style={{ color: "#c0b8e0" }}>
-            Otomatis temukan jalur swap tercepat dan termurah di seluruh ekosistem Initia. Satu klik, route terbaik.
+          <p className="text-[10px] mt-4 leading-relaxed max-w-md" style={{ color: "#c0b8e0" }}>
+            {t("hero.subtitle")}
           </p>
           <a
             href="/docs"
-            className="group inline-flex items-center gap-2 mt-6 px-5 py-2.5 rounded-lg border text-sm font-medium transition-all duration-300"
+            className="group inline-flex items-center gap-2 mt-6 px-5 py-2.5 rounded-lg border text-[8px] font-medium transition-all duration-300"
             style={{
               background: "rgba(159,41,255,0.15)",
               borderColor: "rgba(159,41,255,0.3)",
               color: "#d0c0ff",
             }}
           >
-            <span className="transition-transform duration-300 group-hover:translate-x-0.5">Documentation</span>
+            <span className="transition-transform duration-300 group-hover:translate-x-0.5">{t("hero.docs")}</span>
             <svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
           </a>
         </div>

@@ -1,4 +1,8 @@
 const id = {
+  hero: {
+    subtitle: "Otomatis temukan jalur swap tercepat dan termurah di seluruh ekosistem Initia. Satu klik, route terbaik.",
+    docs: "Baca Docs",
+  },
   common: {
     connectWallet: "Hubungkan Wallet",
     disconnect: "Putuskan",
@@ -29,7 +33,7 @@ const id = {
     batch: "Batch",
     bridge: "Bridge",
     dashboard: "Dashboard",
-    send: "Kirim",
+    send: "Send",
   },
   swap: {
     title: "Swap",

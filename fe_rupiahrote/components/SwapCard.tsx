@@ -57,7 +57,7 @@ export function SwapCard() {
     <div className="glass rounded-2xl glow-purple-sm p-5">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-[16px] font-bold">{t("swap.title")}</h2>
+        <h2 className="text-[10px] font-bold">{t("swap.title")}</h2>
         <button onClick={() => setShowSettings(!showSettings)}
           className="p-2 rounded-lg hover:bg-bg text-text-muted hover:text-text-sub transition-colors cursor-pointer">
           <HiCog6Tooth className="w-4 h-4" />
@@ -66,11 +66,11 @@ export function SwapCard() {
 
       {showSettings && (
         <div className="flex items-center gap-2 mb-4 pb-4 border-b border-border">
-          <span className="text-[13px] text-text-muted">{t("common.slippage")}</span>
+          <span className="text-[8px] text-text-muted">{t("common.slippage")}</span>
           <div className="flex gap-1">
             {[0.1, 0.5, 1, 3].map((v) => (
               <button key={v} onClick={() => setSlippage(v)}
-                className={`px-2.5 py-1 text-[12px] rounded-lg font-medium cursor-pointer transition-colors ${
+                className={`px-2.5 py-1 text-[8px] rounded-lg font-medium cursor-pointer transition-colors ${
                   slippage === v ? "bg-purple text-white" : "bg-bg text-text-sub hover:bg-border"
                 }`}>{v}%</button>
             ))}
@@ -80,7 +80,7 @@ export function SwapCard() {
 
       {/* You pay */}
       <div className="rounded-xl bg-bg p-4 mb-1">
-        <div className="text-[12px] text-text-muted mb-2">{t("swap.youPay")}</div>
+        <div className="text-[8px] text-text-muted mb-2">{t("swap.youPay")}</div>
         <div className="flex items-center gap-3">
           <input type="number" placeholder="0" value={amountIn} onChange={(e) => setAmountIn(e.target.value)}
             className="flex-1 bg-transparent text-[28px] font-semibold outline-none placeholder-text-muted/30 min-w-0" />
@@ -98,7 +98,7 @@ export function SwapCard() {
 
       {/* You get */}
       <div className="rounded-xl bg-bg p-4 mt-1">
-        <div className="text-[12px] text-text-muted mb-2">{t("swap.youGet")}</div>
+        <div className="text-[8px] text-text-muted mb-2">{t("swap.youGet")}</div>
         <div className="flex items-center gap-3">
           <div className="flex-1 text-[28px] font-semibold min-w-0">
             {isQuoting && !isQuoteError
@@ -117,17 +117,17 @@ export function SwapCard() {
       {/* Details */}
       {expectedOut > 0n && (
         <div className="mt-3 pt-3 border-t border-border space-y-2">
-          <div className="flex justify-between text-[13px]">
+          <div className="flex justify-between text-[8px]">
             <span className="text-text-muted">{t("swap.minOutput")}</span>
             <span className="text-text-sub font-medium">{formatAmount(minOut, tokenOut.decimals)} {tokenOut.symbol}</span>
           </div>
-          <div className="flex justify-between text-[13px]">
+          <div className="flex justify-between text-[8px]">
             <span className="text-text-muted">{t("common.route")}</span>
             <span className="text-text-sub font-medium">
               {route?.routeType === 0 ? t("common.direct") : route?.routeType === 1 ? t("common.multiHop") : t("common.crossChain")}
             </span>
           </div>
-          <div className="flex justify-between text-[13px]">
+          <div className="flex justify-between text-[8px]">
             <span className="text-text-muted">{t("common.gasEstimate")}</span>
             <span className="text-green font-medium">~0.001 GAS</span>
           </div>
@@ -137,7 +137,7 @@ export function SwapCard() {
       {/* Fee info */}
       {parsedAmount > 0n && expectedOut === 0n && !isQuoting && (
         <div className="mt-3 pt-3 border-t border-border">
-          <div className="flex justify-between text-[13px]">
+          <div className="flex justify-between text-[8px]">
             <span className="text-text-muted">{t("common.gasEstimate")}</span>
             <span className="text-green font-medium">~0.001 GAS</span>
           </div>
@@ -153,7 +153,7 @@ export function SwapCard() {
       </button>
 
       {isSuccess && (
-        <div className="flex items-center justify-center gap-2 mt-3 text-[13px] text-green bg-green-bg rounded-xl py-3 font-medium">
+        <div className="flex items-center justify-center gap-2 mt-3 text-[8px] text-green bg-green-bg rounded-xl py-3 font-medium">
           <HiCheckCircle className="w-4 h-4" />{t("swap.swapSuccess")}
         </div>
       )}

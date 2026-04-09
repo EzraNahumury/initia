@@ -9,6 +9,12 @@ export interface ActivityRecord {
   priceImpact?: number;
   slippage?: number;
   status: "pending" | "confirmed" | "failed";
+  /** Extra context per type */
+  meta?: {
+    bridgeMode?: "deposit" | "withdraw";
+    limitExpiry?: number;
+    batchAllocations?: string;
+  };
 }
 
 const MAX_RECORDS = 50;

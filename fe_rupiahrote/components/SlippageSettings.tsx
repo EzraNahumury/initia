@@ -42,9 +42,9 @@ export function SlippageSettings({
             <button
               key={v}
               onClick={() => handlePreset(v)}
-              className={`px-2 py-0.5 text-[11px] rounded-md font-medium cursor-pointer transition-colors ${
+              className={`px-2 py-0.5 text-[7px] rounded-md font-medium cursor-pointer transition-colors ${
                 slippage === v && !isCustom
-                  ? "bg-text text-white"
+                  ? "bg-purple text-white"
                   : "bg-bg text-text-sub hover:bg-border"
               }`}
             >
@@ -57,9 +57,9 @@ export function SlippageSettings({
               placeholder="Custom"
               value={isCustom ? (custom || slippage.toString()) : custom}
               onChange={(e) => handleCustom(e.target.value)}
-              className={`w-[58px] px-1.5 py-0.5 text-[11px] rounded-md font-medium outline-none border transition-colors text-right ${
+              className={`w-[58px] px-1.5 py-0.5 text-[7px] rounded-md font-medium outline-none border transition-colors text-right ${
                 isCustom
-                  ? "border-text bg-text text-white placeholder-white/50"
+                  ? "border-purple bg-purple text-white placeholder-white/50"
                   : "border-border bg-bg text-text-sub placeholder-text-muted"
               }`}
               step="0.01"
@@ -67,7 +67,7 @@ export function SlippageSettings({
               max="50"
             />
             <span
-              className={`absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] pointer-events-none ${
+              className={`absolute right-1.5 top-1/2 -translate-y-1/2 text-[7px] pointer-events-none ${
                 isCustom ? "text-white/70" : "text-text-muted"
               }`}
             >
@@ -77,13 +77,13 @@ export function SlippageSettings({
         </div>
       )}
       {warning && open && (
-        <span className={`text-[10px] font-medium ${slippage > 5 ? "text-amber" : "text-red"}`}>
+        <span className={`text-[7px] font-medium ${slippage > 5 ? "text-amber" : "text-red"}`}>
           {warning}
         </span>
       )}
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-bg text-text-muted hover:text-text-sub transition-colors cursor-pointer text-[12px]"
+        className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-bg text-text-muted hover:text-text-sub transition-colors cursor-pointer text-[8px]"
       >
         {slippage}%
         <HiCog6Tooth className="w-3.5 h-3.5" />

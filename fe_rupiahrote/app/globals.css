@@ -6,7 +6,6 @@
 
 :root {
   /* ── Dark Cyberpunk Purple Theme ── */
-  --white: #0f0f23;
   --bg: #12122a;
   --text: #f0f0ff;
   --text-sub: #b0b0d0;
@@ -56,7 +55,6 @@
 }
 
 @theme inline {
-  --color-white: var(--white);
   --color-bg: var(--bg);
   --color-text: var(--text);
   --color-text-sub: var(--text-sub);
@@ -72,10 +70,10 @@
   --color-purple: var(--purple);
   --color-purple-light: var(--purple-light);
   --color-purple-bg: var(--purple-bg);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-pixel), var(--font-cjk), sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-pixel: var(--font-pixel);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-pixel), var(--font-cjk), sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -118,11 +116,7 @@
 body {
   background: var(--background);
   color: var(--text);
-  background-image:
-    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(159, 41, 255, 0.08) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 80% 50%, rgba(99, 102, 241, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 40% at 20% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
-  background-attachment: fixed;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
 }
 
 input[type="number"]::-webkit-inner-spin-button,
@@ -151,6 +145,18 @@ input[type="number"] { -moz-appearance: textfield; }
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes rollIn {
+  from { transform: translateY(-40%); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes floatUpFade {
+  0%   { opacity: 0; transform: translateY(6px) scale(0.8); }
+  15%  { opacity: 1; transform: translateY(0) scale(1); }
+  60%  { opacity: 1; transform: translateY(-4px) scale(1); }
+  100% { opacity: 0; transform: translateY(-12px) scale(0.9); }
 }
 
 @keyframes orbitSlow {
@@ -189,6 +195,13 @@ input[type="number"] { -moz-appearance: textfield; }
 @keyframes pulseOpacity {
   0%, 100% { opacity: 0.3; }
   50%      { opacity: 1; }
+}
+
+@keyframes scanDown {
+  0%   { top: -2px; opacity: 0; }
+  5%   { opacity: 1; }
+  95%  { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
 }
 
 @keyframes spinY {
@@ -256,7 +269,16 @@ input[type="number"] { -moz-appearance: textfield; }
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(139, 92, 246, 0.3) transparent;
   }
+  *::-webkit-scrollbar { width: 6px; height: 6px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.3);
+    border-radius: 3px;
+  }
+  *::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.5); }
   body {
     @apply bg-background text-foreground;
   }

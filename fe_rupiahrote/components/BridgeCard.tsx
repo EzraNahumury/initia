@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { useTranslation } from "react-i18next";
 import { parseAmount, TOKENS, type Token } from "@/lib/contract";
+import { addActivity } from "@/lib/activity";
 import { TokenSelector } from "./TokenSelector";
 import { HiArrowRight, HiCheckCircle, HiClock } from "react-icons/hi2";
 
@@ -64,7 +65,17 @@ export function BridgeCard() {
   }, [amount, parsedAmount, token, isDeposit, writeContract]);
 
   useEffect(() => {
-    if (isSuccess) {
+    if (isSuccess && address) {
+      addActivity(address, {
+        id: Date.now().toString(36) + "br",
+        type: "bridge",
+        timestamp: Date.now(),
+        txHash,
+        tokenIn: { symbol: token.symbol, amount: amount || "0" },
+        tokenOut: { symbol: token.symbol, amount: amount || "0" },
+        status: "confirmed",
+        meta: { bridgeMode: isDeposit ? "deposit" : "withdraw" },
+      });
       setBridging(false);
       setBridgeSuccess(true);
       setAmount("");
@@ -85,8 +96,8 @@ export function BridgeCard() {
   return (
     <div className="glass rounded-2xl glow-purple-sm p-5 space-y-4">
       <div className="px-1">
-        <h2 className="text-[16px] font-bold text-text">Interwoven Bridge</h2>
-        <p className="text-[12px] text-text-muted mt-0.5">{t("bridge.description")}</p>
+        <h2 className="text-[10px] font-bold text-text">Interwoven Bridge</h2>
+        <p className="text-[8px] text-text-muted mt-0.5">{t("bridge.description")}</p>
       </div>
 
       {/* Mode toggle */}
@@ -104,22 +115,22 @@ export function BridgeCard() {
       {/* Chain flow */}
       <div className="flex items-center gap-3">
         <div className="flex-1 rounded-xl bg-bg p-3.5 border border-border text-center">
-          <div className="text-[11px] text-text-muted">{t("common.from")}</div>
-          <div className="text-[13px] font-bold mt-1 text-text">{isDeposit ? "Initia L1" : "RupiahRoute"}</div>
+          <div className="text-[7px] text-text-muted">{t("common.from")}</div>
+          <div className="text-[8px] font-bold mt-1 text-text">{isDeposit ? "Initia L1" : "RupiahRoute"}</div>
         </div>
         <HiArrowRight className="w-5 h-5 text-text-sub" />
         <div className="flex-1 rounded-xl bg-bg p-3.5 border border-border text-center">
-          <div className="text-[11px] text-text-muted">{t("common.to")}</div>
-          <div className="text-[13px] font-bold mt-1 text-text">{isDeposit ? "RupiahRoute" : "Initia L1"}</div>
+          <div className="text-[7px] text-text-muted">{t("common.to")}</div>
+          <div className="text-[8px] font-bold mt-1 text-text">{isDeposit ? "RupiahRoute" : "Initia L1"}</div>
         </div>
       </div>
 
       {/* Token & amount */}
       <div className={`rounded-xl bg-bg p-4 border ${insufficientBalance ? "border-red/30" : "border-transparent"}`}>
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[12px] text-text-muted">{t("bridge.tokenAmount")}</span>
+          <span className="text-[8px] text-text-muted">{t("bridge.tokenAmount")}</span>
           {!isDeposit && (
-            <span className={`text-[11px] font-medium ${insufficientBalance ? "text-red" : "text-text-muted"}`}>
+            <span className={`text-[7px] font-medium ${insufficientBalance ? "text-red" : "text-text-muted"}`}>
               Balance: {formattedBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })} {token.symbol}
             </span>
           )}
@@ -133,15 +144,15 @@ export function BridgeCard() {
 
       {/* Info */}
       <div className="space-y-1.5 px-1">
-        <div className="flex justify-between text-[12px]">
+        <div className="flex justify-between text-[8px]">
           <span className="text-text-muted">{t("bridge.estimatedTime")}</span>
           <span className="text-green font-medium">~10 seconds</span>
         </div>
-        <div className="flex justify-between text-[12px]">
+        <div className="flex justify-between text-[8px]">
           <span className="text-text-muted">{t("bridge.bridgeFee")}</span>
           <span className="text-green font-medium">100 GAS</span>
         </div>
-        <div className="flex justify-between text-[12px]">
+        <div className="flex justify-between text-[8px]">
           <span className="text-text-muted">{t("bridge.protocol")}</span>
           <span className="text-text-sub font-medium">OPinit</span>
         </div>
@@ -166,7 +177,7 @@ export function BridgeCard() {
       </button>
 
       {bridgeSuccess && (
-        <div className="flex items-center justify-center gap-2 text-[13px] text-green bg-green-bg rounded-xl py-3 font-medium">
+        <div className="flex items-center justify-center gap-2 text-[8px] text-green bg-green-bg rounded-xl py-3 font-medium">
           <HiCheckCircle className="w-4 h-4" />
           {isDeposit ? "Deposit successful! Tokens bridged to RupiahRoute" : "Withdraw successful! Tokens bridged to Initia L1"}
         </div>
