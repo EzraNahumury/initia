@@ -77,6 +77,31 @@ contract TokenFaucet {
         emit TokensClaimed(msg.sender, token, amount);
     }
 
+    // ── Bridge (simulated) ──
+
+    uint256 public constant BRIDGE_FEE = 100 ether; // 100 GAS
+
+    event BridgeDeposit(address indexed user, address token, uint256 amount);
+    event BridgeWithdraw(address indexed user, address token, uint256 amount);
+
+    /// @notice Deposit: simulate bridging from L1 → RupiahRoute (mints tokens)
+    function bridgeDeposit(address token, uint256 amount) external payable {
+        require(msg.value >= BRIDGE_FEE, "Send 100 GAS");
+        require(amount > 0, "Amount = 0");
+        require(priceUSD[token] > 0, "Unknown token");
+        MockERC20(token).mint(msg.sender, amount);
+        emit BridgeDeposit(msg.sender, token, amount);
+    }
+
+    /// @notice Withdraw: simulate bridging from RupiahRoute → L1 (burns tokens)
+    function bridgeWithdraw(address token, uint256 amount) external payable {
+        require(msg.value >= BRIDGE_FEE, "Send 100 GAS");
+        require(amount > 0, "Amount = 0");
+        require(priceUSD[token] > 0, "Unknown token");
+        MockERC20(token).burnFrom(msg.sender, amount);
+        emit BridgeWithdraw(msg.sender, token, amount);
+    }
+
     // ── Swap ──
 
     function swap(address tokenIn, address tokenOut, uint256 amountIn) external payable {
