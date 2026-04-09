@@ -87,7 +87,10 @@
       "Bash(cmd:*)",
       "Bash(forge build:*)",
       "WebFetch(domain:reactbits.dev)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(ls -la C:\\\\\\\\initia\\\\\\\\fe_rupiahrote/*.json C:\\\\\\\\initia\\\\\\\\fe_rupiahrote/*.config.* C:\\\\\\\\initia\\\\\\\\fe_rupiahrote/.env*)",
+      "Bash(grep -E \"\\\\\\\\.\\(json|config|env\\)\")",
+      "Bash(cd C:\\\\\\\\initia\\\\\\\\fe_rupiahrote)"
     ]
   }
 }
