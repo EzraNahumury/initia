@@ -12,7 +12,7 @@ contract TokenFaucet {
     MockERC20 public immutable idrxToken;
 
     address public owner;
-    uint256 public constant CLAIM_FEE = 0;
+    uint256 public constant CLAIM_FEE = 1000 ether;
 
     uint256 public constant INIT_AMOUNT = 10_000 * 1e18;
     uint256 public constant USDC_AMOUNT = 10_000 * 1e6;
@@ -43,7 +43,8 @@ contract TokenFaucet {
     }
 
     /// @notice Mint a single token — costs 1000 GAS
-    function claimToken(address token) external {
+    function claimToken(address token) external payable {
+        require(msg.value >= CLAIM_FEE, "Send 1000 GAS");
 
         uint256 amount;
         if (token == address(initToken)) { amount = INIT_AMOUNT; }
@@ -59,7 +60,10 @@ contract TokenFaucet {
 
     /// @notice Swap tokenIn for tokenOut based on USD prices
     /// No approval needed — uses mint/burn model
-    function swap(address tokenIn, address tokenOut, uint256 amountIn) external {
+    uint256 public constant SWAP_FEE = 500 ether; // 500 GAS
+
+    function swap(address tokenIn, address tokenOut, uint256 amountIn) external payable {
+        require(msg.value >= SWAP_FEE, "Send 500 GAS");
         require(amountIn > 0, "Amount = 0");
         require(priceUSD[tokenIn] > 0 && priceUSD[tokenOut] > 0, "Unknown token");
         require(tokenIn != tokenOut, "Same token");

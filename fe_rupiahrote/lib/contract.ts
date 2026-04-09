@@ -23,11 +23,11 @@ export interface Token {
 // Core tokens — AMM pool tokens. Logos from initia-registry.
 const IMG = "https://raw.githubusercontent.com/initia-labs/initia-registry/main/images";
 export const CORE_TOKENS: Token[] = [
-  { symbol: "INIT", name: "Initia", address: "0x05439f13285527d44a840571beE6D61B86E5D4B4", decimals: 18, icon: "/tokens/init.svg", logoURI: `${IMG}/INIT.png`, denom: "uinit", tags: ["core", "native"] },
-  { symbol: "USDC", name: "USD Coin", address: "0x68201164731AA9bF67adc452D073808085b01b0A", decimals: 6, icon: "/tokens/usdc.svg", logoURI: `${IMG}/USDC.png`, denom: "uusdc", tags: ["core", "stablecoin"] },
-  { symbol: "WETH", name: "Wrapped Ether", address: "0x8E4728da8Eb7384cC236997981C61F0Fb003D6F2", decimals: 18, icon: "/tokens/eth.svg", logoURI: `${IMG}/ETH.png`, denom: "ueth", tags: ["core"] },
-  { symbol: "TIA", name: "Celestia", address: "0x6F21BC00E7B7803C7766Ab41eF223Fa58354B009", decimals: 6, icon: "/tokens/tia.svg", logoURI: `${IMG}/TIA.png`, denom: "utia", tags: ["core"] },
-  { symbol: "IDRX", name: "IDRX", address: "0xD6a07783954C77D5118Bd39B493d2c45261BB8ac", decimals: 2, icon: "", logoURI: "https://assets.coingecko.com/coins/images/34883/standard/IDRX_BLUE_COIN_200x200.png", denom: "uidrx", tags: ["core", "stablecoin"] },
+  { symbol: "INIT", name: "Initia", address: "0x748254eD7bE134ABfaFB84Ff225f1E8E6F26A43C", decimals: 18, icon: "/tokens/init.svg", logoURI: `${IMG}/INIT.png`, denom: "uinit", tags: ["core", "native"] },
+  { symbol: "USDC", name: "USD Coin", address: "0x7312008a312c3A7Ab132A69471F8afC362183Acc", decimals: 6, icon: "/tokens/usdc.svg", logoURI: `${IMG}/USDC.png`, denom: "uusdc", tags: ["core", "stablecoin"] },
+  { symbol: "WETH", name: "Wrapped Ether", address: "0x1EaB8CAc1fE6db5d3135f23094fE2Ce693b8031c", decimals: 18, icon: "/tokens/eth.svg", logoURI: `${IMG}/ETH.png`, denom: "ueth", tags: ["core"] },
+  { symbol: "TIA", name: "Celestia", address: "0x7A7285180c7A9Bd27B1bde82D950c3C77B6c4343", decimals: 6, icon: "/tokens/tia.svg", logoURI: `${IMG}/TIA.png`, denom: "utia", tags: ["core"] },
+  { symbol: "IDRX", name: "IDRX", address: "0xA2593B1bC08CAC2Cc000c86E8ed71EBC63Ab1E5C", decimals: 2, icon: "", logoURI: "https://assets.coingecko.com/coins/images/34883/standard/IDRX_BLUE_COIN_200x200.png", denom: "uidrx", tags: ["core", "stablecoin"] },
 ];
 
 // All hardcoded tokens = core only. Extended list fetched from https://tokens.uniswap.org at runtime.

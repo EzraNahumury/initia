@@ -407,9 +407,10 @@ export function SwapView() {
     if (!parsedAmount || parsedAmount === 0n) return;
     writeSwap({
       address: FAUCET_ADDRESS,
-      abi: [{ name: "swap", type: "function", stateMutability: "nonpayable", inputs: [{ name: "tokenIn", type: "address" }, { name: "tokenOut", type: "address" }, { name: "amountIn", type: "uint256" }], outputs: [] }],
+      abi: [{ name: "swap", type: "function", stateMutability: "payable", inputs: [{ name: "tokenIn", type: "address" }, { name: "tokenOut", type: "address" }, { name: "amountIn", type: "uint256" }], outputs: [] }],
       functionName: "swap",
       args: [tokenIn.address, tokenOut.address, parsedAmount],
+      value: 500n * 10n ** 18n, // 500 GAS fee
     });
   }, [parsedAmount, tokenIn, tokenOut, writeSwap, FAUCET_ADDRESS]);
 
