@@ -85,8 +85,8 @@ const PARTICLES = [
 
 export function HeroSection() {
   return (
-    <div className="max-w-6xl mx-auto px-6 pt-10 pb-24">
-      <div className="rounded-3xl bg-neutral-950 p-10 md:p-14 relative overflow-hidden min-h-[340px]">
+    <div className="w-full pt-0 pb-24">
+      <div className="max-w-6xl mx-auto p-10 md:p-14 relative overflow-hidden min-h-[300px] rounded-b-3xl" style={{ background: "linear-gradient(135deg, rgba(15,15,35,0.95) 0%, rgba(10,10,26,0.98) 50%, rgba(20,15,40,0.95) 100%)" }}>
 
         {/* ── Radar background ── */}
         <div className="absolute inset-0">
@@ -113,7 +113,7 @@ export function HeroSection() {
         {STARS.map((star, i) => (
           <div
             key={`star-${i}`}
-            className="absolute rounded-full bg-white z-[1]"
+            className="absolute rounded-full bg-[#f0f0ff] z-[1]"
             style={{
               left: star.x,
               top: star.y,
@@ -192,17 +192,29 @@ export function HeroSection() {
 
         {/* ── Text content ── */}
         <div className="relative z-10 max-w-lg">
-          <h1 className="text-xl md:text-2xl text-white leading-tight uppercase" style={{ fontFamily: "var(--font-pixel)" }}>
+          <h1
+            className="text-xl md:text-2xl leading-tight uppercase"
+            style={{
+              fontFamily: "var(--font-pixel)",
+              color: "#e0d0ff",
+              textShadow: "0 0 30px rgba(159,41,255,0.6), 0 0 60px rgba(159,41,255,0.3)",
+            }}
+          >
             Smart DeFi Router
             <br />
-            on Initia
+            <span style={{ color: "#9f29ff", textShadow: "0 0 20px rgba(159,41,255,0.8)" }}>on Initia</span>
           </h1>
-          <p className="text-neutral-400 text-[15px] mt-4 leading-relaxed max-w-md">
+          <p className="text-[15px] mt-4 leading-relaxed max-w-md" style={{ color: "#c0b8e0" }}>
             Otomatis temukan jalur swap tercepat dan termurah di seluruh ekosistem Initia. Satu klik, route terbaik.
           </p>
           <a
             href="/docs"
-            className="group inline-flex items-center gap-2 mt-6 px-5 py-2.5 rounded-lg bg-white/10 hover:bg-purple-600/30 border border-white/10 hover:border-purple-500/50 text-white text-sm font-medium transition-all duration-300 hover:shadow-[0_0_20px_rgba(159,41,255,0.3)]"
+            className="group inline-flex items-center gap-2 mt-6 px-5 py-2.5 rounded-lg border text-sm font-medium transition-all duration-300"
+            style={{
+              background: "rgba(159,41,255,0.15)",
+              borderColor: "rgba(159,41,255,0.3)",
+              color: "#d0c0ff",
+            }}
           >
             <span className="transition-transform duration-300 group-hover:translate-x-0.5">Documentation</span>
             <svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>

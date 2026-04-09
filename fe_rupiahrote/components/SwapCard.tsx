@@ -54,7 +54,7 @@ export function SwapCard() {
   const disabled = !isConnected || !amountIn || parsedAmount === 0n || isSwapping || isConfirming;
 
   return (
-    <div className="bg-white rounded-2xl border border-border shadow-lg shadow-black/[0.04] p-5">
+    <div className="glass rounded-2xl glow-purple-sm p-5">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-[16px] font-bold">{t("swap.title")}</h2>
@@ -71,7 +71,7 @@ export function SwapCard() {
             {[0.1, 0.5, 1, 3].map((v) => (
               <button key={v} onClick={() => setSlippage(v)}
                 className={`px-2.5 py-1 text-[12px] rounded-lg font-medium cursor-pointer transition-colors ${
-                  slippage === v ? "bg-text text-white" : "bg-bg text-text-sub hover:bg-border"
+                  slippage === v ? "bg-purple text-white" : "bg-bg text-text-sub hover:bg-border"
                 }`}>{v}%</button>
             ))}
           </div>
@@ -83,7 +83,7 @@ export function SwapCard() {
         <div className="text-[12px] text-text-muted mb-2">{t("swap.youPay")}</div>
         <div className="flex items-center gap-3">
           <input type="number" placeholder="0" value={amountIn} onChange={(e) => setAmountIn(e.target.value)}
-            className="flex-1 bg-transparent text-[28px] font-semibold outline-none placeholder-neutral-300 min-w-0" />
+            className="flex-1 bg-transparent text-[28px] font-semibold outline-none placeholder-text-muted/30 min-w-0" />
           <TokenSelector selected={tokenIn} onSelect={setTokenIn} disabledToken={tokenOut} />
         </div>
       </div>
@@ -91,7 +91,7 @@ export function SwapCard() {
       {/* Flip */}
       <div className="flex justify-center -my-3 relative z-10">
         <button onClick={handleFlip}
-          className="w-9 h-9 rounded-full bg-white border-[3px] border-bg flex items-center justify-center text-text-muted hover:text-text hover:border-border transition-all cursor-pointer active:scale-90">
+          className="w-9 h-9 rounded-full bg-bg border-[3px] border-purple/20 flex items-center justify-center text-text-muted hover:text-text hover:border-purple/40 transition-all cursor-pointer active:scale-90">
           <HiArrowsUpDown className="w-4 h-4" />
         </button>
       </div>
@@ -103,7 +103,7 @@ export function SwapCard() {
           <div className="flex-1 text-[28px] font-semibold min-w-0">
             {isQuoting && !isQuoteError
               ? <div className="h-9 w-28 rounded-lg bg-border animate-pulse" />
-              : <span className={expectedOut > 0n ? "text-text" : "text-neutral-300"}>{formattedOut}</span>}
+              : <span className={expectedOut > 0n ? "text-text" : "text-text-muted/30"}>{formattedOut}</span>}
           </div>
           <TokenSelector selected={tokenOut} onSelect={setTokenOut} disabledToken={tokenIn} />
         </div>
@@ -147,7 +147,7 @@ export function SwapCard() {
       {/* Button */}
       <button onClick={handleSwap} disabled={disabled}
         className={`w-full mt-4 py-3.5 rounded-xl text-[14px] font-semibold transition-colors cursor-pointer ${
-          disabled ? "bg-bg text-text-muted cursor-not-allowed" : "bg-text text-white hover:bg-neutral-800 active:scale-[0.99]"
+          disabled ? "bg-bg text-text-muted cursor-not-allowed" : "bg-purple text-white hover:bg-purple-light active:scale-[0.99]"
         }`}>
         {!isConnected ? t("common.connectWallet") : isSwapping || isConfirming ? t("swap.swapping") : !amountIn ? t("common.enterAmount") : t("swap.swapButton")}
       </button>

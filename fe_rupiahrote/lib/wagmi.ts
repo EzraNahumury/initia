@@ -1,4 +1,4 @@
-import { http, createConfig, type Transport } from "wagmi";
+import { http, createConfig, createStorage, type Transport } from "wagmi";
 import { injected, walletConnect, coinbaseWallet } from "wagmi/connectors";
 import { rupiahRouteChain } from "./chain";
 
@@ -28,5 +28,8 @@ export const config = createConfig({
   transports: {
     [rupiahRouteChain.id]: http("http://localhost:8545"),
   } as Record<(typeof chains)[number]["id"], Transport>,
+  storage: createStorage({
+    storage: typeof window !== "undefined" ? window.sessionStorage : undefined,
+  }),
   ssr: true,
 });

@@ -65,7 +65,27 @@
       "Bash(npx shadcn@latest add \"https://aceternity.com/r/globe\")",
       "Bash(npx shadcn@latest add \"@aceternity/globe\")",
       "Bash(npx shadcn@latest init -d)",
-      "Bash(npx shadcn@latest add \"https://pro.aceternity.com/registry/globe.json\")"
+      "Bash(npx shadcn@latest add \"https://pro.aceternity.com/registry/globe.json\")",
+      "Bash(grep -r \"DEPLOYER\\\\|ACCOUNT\\\\|seed\\\\|fund\\\\|mint\" /c/initia/fe_rupiahrote --include=\"*.ts\" --include=\"*.js\" --include=\"*.json\" ! -path \"*/node_modules/*\")",
+      "Bash(grep -r \"DEPLOYER\\\\|ACCOUNT\\\\|seed\\\\|fund\\\\|mint\" /c/initia/fe_rupiahrote --include=\"*.ts\" --include=\"*.js\" ! -path \"*/node_modules/*\")",
+      "Bash(grep -r \"faucet\\\\|RPC\\\\|CHAIN\" /c/initia/fe_rupiahrote --include=\"*.ts\" --include=\"*.tsx\" ! -path \"*/node_modules/*\")",
+      "Bash(grep -r \"http://localhost\\\\|RPC_URL\\\\|weave\\\\|initiad\" /c/initia --include=\"*.md\" ! -path \"*/node_modules/*\")",
+      "Bash(grep -r \"weave\\\\|initiad\\\\|init keys\\\\|init tx\\\\|init query\" /c/initia --include=\"*.md\" ! -path \"*/node_modules/*\" ! -path \"*/.git/*\")",
+      "Bash(find:*)",
+      "Bash(xargs grep:*)",
+      "Bash(xargs ls:*)",
+      "Bash(xargs cat:*)",
+      "WebFetch(domain:docs.oku.trade)",
+      "WebFetch(domain:docs.li.fi)",
+      "WebFetch(domain:docs.openocean.finance)",
+      "WebFetch(domain:aggregator-api.kyberswap.com)",
+      "WebFetch(domain:docs.kyberswap.com)",
+      "Bash(export DEPLOYER_KEY=0x30c892122ce6c85c30862eedf25614300ab2d4947d32d0515953ae691a89f724)",
+      "Bash(export ROUTER_ADDRESS=0xfE416695bf63C7F120A85550fe74a7CA1E127a27)",
+      "Bash(export USER_ADDRESS=0x5Aea061d814A72de9EE9171bE86F45f48e1E2f5d)",
+      "Bash(forge script:*)",
+      "Bash(cmd:*)",
+      "Bash(forge build:*)"
     ]
   }
 }

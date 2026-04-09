@@ -282,7 +282,7 @@ export const RUPIAH_ROUTER_ABI = [
         "internalType": "uint256"
       }
     ],
-    "stateMutability": "nonpayable"
+    "stateMutability": "payable"
   },
   {
     "type": "function",

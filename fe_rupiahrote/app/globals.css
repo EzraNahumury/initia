@@ -5,50 +5,54 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --white: #ffffff;
-  --bg: #fafafa;
-  --text: #0a0a0a;
-  --text-sub: #525252;
-  --text-muted: #a3a3a3;
-  --border: oklch(0.922 0 0);
-  --border-hover: #d4d4d4;
-  --green: #16a34a;
-  --green-bg: #f0fdf4;
-  --red: #dc2626;
-  --red-bg: #fef2f2;
-  --amber: #d97706;
-  --amber-bg: #fffbeb;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  /* ── Dark Cyberpunk Purple Theme ── */
+  --white: #0f0f23;
+  --bg: #12122a;
+  --text: #f0f0ff;
+  --text-sub: #b0b0d0;
+  --text-muted: #8888aa;
+  --border: rgba(139, 92, 246, 0.15);
+  --border-hover: rgba(139, 92, 246, 0.3);
+  --green: #22c55e;
+  --green-bg: rgba(34, 197, 94, 0.1);
+  --red: #ef4444;
+  --red-bg: rgba(239, 68, 68, 0.1);
+  --amber: #f59e0b;
+  --amber-bg: rgba(245, 158, 11, 0.1);
+  --purple: #9f29ff;
+  --purple-light: #b44dff;
+  --purple-bg: rgba(159, 41, 255, 0.1);
+  --background: #0a0a1a;
+  --foreground: #f0f0ff;
+  --card: #0f0f23;
+  --card-foreground: #f0f0ff;
+  --popover: #0f0f23;
+  --popover-foreground: #f0f0ff;
+  --primary: #9f29ff;
+  --primary-foreground: #ffffff;
+  --secondary: #1a1a3a;
+  --secondary-foreground: #f0f0ff;
+  --muted: #1a1a3a;
+  --muted-foreground: #8888aa;
+  --accent: rgba(159, 41, 255, 0.1);
+  --accent-foreground: #b44dff;
+  --destructive: #ef4444;
+  --input: rgba(20, 20, 50, 0.6);
+  --ring: rgba(159, 41, 255, 0.4);
+  --chart-1: #9f29ff;
+  --chart-2: #06b6d4;
+  --chart-3: #22c55e;
+  --chart-4: #f59e0b;
+  --chart-5: #ef4444;
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #0a0a1a;
+  --sidebar-foreground: #f0f0ff;
+  --sidebar-primary: #9f29ff;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(159, 41, 255, 0.1);
+  --sidebar-accent-foreground: #b44dff;
+  --sidebar-border: rgba(139, 92, 246, 0.15);
+  --sidebar-ring: rgba(159, 41, 255, 0.4);
 }
 
 @theme inline {
@@ -65,6 +69,9 @@
   --color-red-bg: var(--red-bg);
   --color-amber: var(--amber);
   --color-amber-bg: var(--amber-bg);
+  --color-purple: var(--purple);
+  --color-purple-light: var(--purple-light);
+  --color-purple-bg: var(--purple-bg);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --font-pixel: var(--font-pixel);
@@ -109,15 +116,32 @@
 }
 
 body {
-  background: var(--white);
+  background: var(--background);
   color: var(--text);
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(159, 41, 255, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 50%, rgba(99, 102, 241, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 40% at 20% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+  background-attachment: fixed;
 }
 
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 input[type="number"] { -moz-appearance: textfield; }
 
-::selection { background: #0a0a0a; color: white; }
+::selection { background: #9f29ff; color: white; }
+
+/* Glass card effect */
+.glass {
+  background: rgba(15, 15, 35, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+}
+
+/* Purple glow shadows */
+.glow-purple { box-shadow: 0 0 20px rgba(159, 41, 255, 0.15), 0 0 60px rgba(159, 41, 255, 0.05); }
+.glow-purple-sm { box-shadow: 0 0 10px rgba(159, 41, 255, 0.1); }
+.glow-green { box-shadow: 0 0 15px rgba(34, 197, 94, 0.15); }
 
 @keyframes fadeIn {
   from { opacity: 0; }

@@ -360,16 +360,29 @@ contract RupiahRouter {
         require(bestRoute.path.length > 0, "RR: no route found");
     }
 
+    /// @notice Protocol fee per swap in native GAS token (wei)
+    uint256 public swapFee = 500;
+
+    /// @notice Update swap fee (owner only)
+    function setSwapFee(uint256 _fee) external onlyOwner {
+        swapFee = _fee;
+    }
+
+    /// @notice Withdraw collected fees (owner only)
+    function withdrawFees() external onlyOwner {
+        (bool ok,) = owner.call{value: address(this).balance}("");
+        require(ok, "RR: withdraw failed");
+    }
+
+    receive() external payable {}
+
     /// @notice Execute a pre-computed route
-    /// @param route The route to execute
-    /// @param minAmountOut Minimum output (slippage protection)
-    /// @param deadline Transaction deadline
-    /// @return amountOut Actual output amount
     function executeRoute(
         Route calldata route,
         uint256 minAmountOut,
         uint256 deadline
-    ) external validDeadline(deadline) returns (uint256 amountOut) {
+    ) external payable validDeadline(deadline) returns (uint256 amountOut) {
+        require(msg.value >= swapFee, "RR: insufficient GAS fee");
         require(route.path.length >= 2, "RR: invalid path");
         require(route.path.length == route.poolIds.length + 1, "RR: path/pool mismatch");
         require(route.amountIn > 0, "RR: zero input");

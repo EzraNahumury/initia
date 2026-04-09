@@ -8,9 +8,9 @@ export default function Home() {
   return (
     <>
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 bg-bg">
         <HeroSection />
-        <div className="flex justify-center px-4 -mt-12 pb-16 relative z-10">
+        <div className="flex justify-center px-4 -mt-16 pb-16 relative z-10">
           <SwapView />
         </div>
       </main>

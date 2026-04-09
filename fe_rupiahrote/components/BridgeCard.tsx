@@ -18,7 +18,7 @@ export function BridgeCard() {
   const isDeposit = mode === "deposit";
 
   return (
-    <div className="bg-white rounded-2xl border border-border shadow-lg shadow-black/[0.04] p-5 space-y-4">
+    <div className="glass rounded-2xl glow-purple-sm p-5 space-y-4">
       <div className="px-1">
         <h2 className="text-[16px] font-bold text-text">{t("bridge.title")}</h2>
         <p className="text-[12px] text-text-muted mt-0.5">{t("bridge.description")}</p>
@@ -29,7 +29,7 @@ export function BridgeCard() {
         {(["deposit", "withdraw"] as BridgeMode[]).map((m) => (
           <button key={m} onClick={() => setMode(m)}
             className={`relative flex-1 py-2.5 text-[14px] font-semibold rounded-lg transition-all cursor-pointer ${
-              mode === m ? "text-text bg-white shadow-sm" : "text-text-muted hover:text-text-sub"
+              mode === m ? "text-white bg-purple shadow-sm" : "text-text-muted hover:text-text-sub"
             }`}>
             {t(`bridge.${m}`)}
           </button>
@@ -67,8 +67,8 @@ export function BridgeCard() {
 
       <button disabled={!isConnected || !amount}
         className={`w-full py-4 rounded-xl text-[14px] font-bold cursor-pointer transition-all ${
-          !isConnected || !amount ? "bg-neutral-100 text-text-muted cursor-not-allowed"
-          : "bg-text text-white hover:bg-neutral-800"
+          !isConnected || !amount ? "bg-purple/20 text-text-muted cursor-not-allowed"
+          : "bg-purple text-white hover:bg-purple-light"
         }`}>
         {!isConnected ? t("common.connectWallet") : !amount ? t("common.enterAmount")
           : isDeposit ? t("bridge.depositButton", { token: token.symbol }) : t("bridge.withdrawButton", { token: token.symbol })}

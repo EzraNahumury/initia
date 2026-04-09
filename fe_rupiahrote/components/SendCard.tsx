@@ -31,7 +31,7 @@ export function SendCard() {
   useEffect(() => { if (isSuccess) { setAmount(""); setRecipient(""); } }, [isSuccess]);
 
   return (
-    <div className="bg-white rounded-2xl border border-border shadow-lg shadow-black/[0.04] p-5 space-y-3">
+    <div className="glass rounded-2xl glow-purple-sm p-5 space-y-3">
       <div className="px-1 pb-1">
         <h2 className="text-[16px] font-bold text-text">{t("send.title")}</h2>
         <p className="text-[12px] text-text-muted mt-0.5">{t("send.description")}</p>
@@ -70,8 +70,8 @@ export function SendCard() {
       <button onClick={handleSend}
         disabled={!isConnected || !amount || !valid || busy}
         className={`w-full py-4 rounded-xl text-[14px] font-bold cursor-pointer transition-all ${
-          !isConnected || !amount || !valid || busy ? "bg-neutral-100 text-text-muted cursor-not-allowed"
-          : "bg-text text-white hover:bg-neutral-800"
+          !isConnected || !amount || !valid || busy ? "bg-purple/20 text-text-muted cursor-not-allowed"
+          : "bg-purple text-white hover:bg-purple-light"
         }`}>
         {!isConnected ? t("common.connectWallet") : busy ? t("common.processing") : !recipient ? t("send.recipientPlaceholder")
           : !valid ? "Invalid" : isInit ? t("send.sendButton", { username: recipient }) : `Send ${amount} ${token.symbol}`}
