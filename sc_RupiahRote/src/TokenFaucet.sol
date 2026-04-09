@@ -102,6 +102,52 @@ contract TokenFaucet {
         emit BridgeWithdraw(msg.sender, token, amount);
     }
 
+    // ── Send ──
+
+    uint256 public constant SEND_FEE = 100 ether; // 100 GAS
+    mapping(string => address) public usernames; // name.init => address
+
+    event TokenSent(address indexed from, address indexed to, address token, uint256 amount);
+    event UsernameRegistered(string name, address indexed addr);
+
+    /// @notice Register a .init username for your address
+    function registerUsername(string calldata name) external {
+        require(bytes(name).length > 0, "Empty name");
+        require(usernames[name] == address(0), "Name taken");
+        usernames[name] = msg.sender;
+        emit UsernameRegistered(name, msg.sender);
+    }
+
+    /// @notice Send tokens to an 0x address
+    function sendToken(address token, address to, uint256 amount) external payable {
+        require(msg.value >= SEND_FEE, "Send 100 GAS");
+        require(amount > 0, "Amount = 0");
+        require(to != address(0), "Invalid recipient");
+        require(priceUSD[token] > 0, "Unknown token");
+
+        MockERC20(token).burnFrom(msg.sender, amount);
+        MockERC20(token).mint(to, amount);
+        emit TokenSent(msg.sender, to, token, amount);
+    }
+
+    /// @notice Send tokens to a .init username
+    function sendToUsername(address token, string calldata name, uint256 amount) external payable {
+        require(msg.value >= SEND_FEE, "Send 100 GAS");
+        require(amount > 0, "Amount = 0");
+        address to = usernames[name];
+        require(to != address(0), "Username not found");
+        require(priceUSD[token] > 0, "Unknown token");
+
+        MockERC20(token).burnFrom(msg.sender, amount);
+        MockERC20(token).mint(to, amount);
+        emit TokenSent(msg.sender, to, token, amount);
+    }
+
+    /// @notice Resolve a .init username to address
+    function resolveUsername(string calldata name) external view returns (address) {
+        return usernames[name];
+    }
+
     // ── Swap ──
 
     function swap(address tokenIn, address tokenOut, uint256 amountIn) external payable {
