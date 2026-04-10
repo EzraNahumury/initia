@@ -258,25 +258,154 @@ useEffect(() => {
       </p>
 
       <h3>Layout</h3>
-      <pre><code>{`┌────────────────────────────────────────────────────────┐
-│                  DashboardView (flex)                   │
-│  ┌──────────────────────┐  ┌────────────────────────┐  │
-│  │  LEFT (flex-1)        │  │  RIGHT (380px)         │  │
-│  │                       │  │                        │  │
-│  │  Portfolio             │  │  Summary               │  │
-│  │  ├ GAS (native)       │  │  ├ Swaps: count        │  │
-│  │  ├ INIT               │  │  ├ Bridge: count       │  │
-│  │  ├ USDC               │  │  │  ├ Deposits: N      │  │
-│  │  ├ WETH               │  │  │  └ Withdrawals: N   │  │
-│  │  ├ TIA                │  │  ├ Sends: count        │  │
-│  │  └ IDRX               │  │  │  └ N recipients     │  │
-│  │                       │  │  ├ Limit Orders: count │  │
-│  │  Stats (3-col grid)   │  │  └ Batch: count        │  │
-│  │  ├ Transactions       │  │                        │  │
-│  │  ├ Gas Spent          │  │  Recent Activity       │  │
-│  │  └ Most Used          │  │  (scrollable list)     │  │
-│  └──────────────────────┘  └────────────────────────┘  │
-└────────────────────────────────────────────────────────┘`}</code></pre>
+
+      {/* Dashboard layout diagram */}
+      <div className="not-prose rounded-xl overflow-hidden my-5 text-[11px] font-mono" style={{ background: "rgba(12,12,28,0.95)", border: "1px solid rgba(139,92,246,0.2)" }}>
+
+        {/* Title bar */}
+        <div className="flex items-center gap-3 px-4 py-2.5" style={{ background: "rgba(159,41,255,0.08)", borderBottom: "1px solid rgba(139,92,246,0.18)" }}>
+          <div className="flex gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(239,68,68,0.6)" }} />
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(245,158,11,0.6)" }} />
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(34,197,94,0.6)" }} />
+          </div>
+          <span className="text-purple-light font-bold ml-1">DashboardView</span>
+          <span className="text-muted">— flex container</span>
+          <code className="ml-auto text-[10px] px-2 py-0.5 rounded" style={{ background: "rgba(159,41,255,0.15)", color: "#b44dff" }}>max-w-[960px]</code>
+        </div>
+
+        {/* Two-panel body */}
+        <div className="flex" style={{ minHeight: 320 }}>
+
+          {/* ── LEFT ── */}
+          <div className="p-4 space-y-3" style={{ width: "52%", borderRight: "1px solid rgba(139,92,246,0.18)" }}>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-purple-light font-bold text-[10px]">LEFT</span>
+              <code className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: "rgba(159,41,255,0.12)", color: "#b44dff" }}>flex-1</code>
+            </div>
+
+            {/* Portfolio */}
+            <div className="rounded-lg p-3" style={{ background: "rgba(159,41,255,0.05)", border: "1px solid rgba(139,92,246,0.15)" }}>
+              <div className="text-[9px] text-muted mb-2 font-semibold uppercase tracking-wider">Portfolio</div>
+              <div className="space-y-1">
+                {[
+                  { sym: "GAS", name: "Native Gas Token", native: true },
+                  { sym: "INIT", name: "Initia" },
+                  { sym: "USDC", name: "USD Coin" },
+                  { sym: "WETH", name: "Wrapped Ether" },
+                  { sym: "TIA",  name: "Celestia" },
+                  { sym: "IDRX", name: "IDR Stablecoin" },
+                ].map((t) => (
+                  <div key={t.sym} className="flex items-center gap-2 px-2 py-1 rounded-lg" style={{ background: "rgba(10,10,26,0.5)" }}>
+                    <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 text-[7px] font-bold" style={{ background: t.native ? "rgba(159,41,255,0.25)" : "rgba(139,92,246,0.15)", color: "#b44dff" }}>
+                      {t.sym.charAt(0)}
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-[9px] text-foreground font-medium">{t.sym}</span>
+                      {t.native && <span className="ml-1.5 text-[8px] px-1 py-0.5 rounded" style={{ background: "rgba(159,41,255,0.15)", color: "#b44dff" }}>native</span>}
+                    </div>
+                    <span className="text-[9px] text-green">—</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Stats grid */}
+            <div className="rounded-lg p-3" style={{ background: "rgba(10,10,26,0.5)", border: "1px solid rgba(139,92,246,0.1)" }}>
+              <div className="text-[9px] text-muted mb-2 font-semibold uppercase tracking-wider">Stats <span className="normal-case font-normal">(3-col grid)</span></div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {[
+                  { label: "Transactions", color: "rgba(59,130,246,0.3)" },
+                  { label: "Gas Spent",    color: "rgba(245,158,11,0.3)" },
+                  { label: "Most Used",   color: "rgba(159,41,255,0.3)" },
+                ].map((s) => (
+                  <div key={s.label} className="rounded-lg p-2 text-center" style={{ background: s.color, border: "1px solid rgba(139,92,246,0.12)" }}>
+                    <div className="text-[8px] text-muted leading-tight">{s.label}</div>
+                    <div className="text-[9px] text-foreground font-bold mt-0.5">—</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ── RIGHT ── */}
+          <div className="flex-1 p-4 space-y-3">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-purple-light font-bold text-[10px]">RIGHT</span>
+              <code className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: "rgba(159,41,255,0.12)", color: "#b44dff" }}>w-[380px]</code>
+            </div>
+
+            {/* Summary */}
+            <div className="rounded-lg p-3" style={{ background: "rgba(159,41,255,0.05)", border: "1px solid rgba(139,92,246,0.15)" }}>
+              <div className="text-[9px] text-muted mb-2 font-semibold uppercase tracking-wider">Summary</div>
+              <div className="space-y-1.5">
+
+                {/* Swaps */}
+                <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg" style={{ background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.15)" }}>
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: "rgba(59,130,246,0.8)" }} />
+                  <span className="text-[9px] text-muted flex-1">Swaps</span>
+                  <span className="text-[9px] font-bold text-foreground">count</span>
+                </div>
+
+                {/* Bridge + sub */}
+                <div className="rounded-lg p-2" style={{ background: "rgba(159,41,255,0.07)", border: "1px solid rgba(159,41,255,0.15)" }}>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: "rgba(159,41,255,0.8)" }} />
+                    <span className="text-[9px] text-muted flex-1">Bridge</span>
+                    <span className="text-[9px] font-bold text-foreground">count</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1 ml-3">
+                    <div className="rounded px-1.5 py-1 text-center" style={{ background: "rgba(34,197,94,0.07)", border: "1px solid rgba(34,197,94,0.15)" }}>
+                      <div className="text-[8px] text-green font-bold">N</div>
+                      <div className="text-[7px] text-muted">Deposits</div>
+                    </div>
+                    <div className="rounded px-1.5 py-1 text-center" style={{ background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.15)" }}>
+                      <div className="text-[8px] font-bold" style={{ color: "#f59e0b" }}>N</div>
+                      <div className="text-[7px] text-muted">Withdrawals</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sends */}
+                <div className="rounded-lg p-2" style={{ background: "rgba(6,182,212,0.07)", border: "1px solid rgba(6,182,212,0.15)" }}>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: "rgba(6,182,212,0.8)" }} />
+                    <span className="text-[9px] text-muted flex-1">Sends</span>
+                    <span className="text-[9px] font-bold text-foreground">count</span>
+                  </div>
+                  <div className="ml-3 text-[8px] text-muted">↳ N unique recipients</div>
+                </div>
+
+                {/* Limit + Batch */}
+                {[
+                  { label: "Limit Orders", color: "rgba(99,102,241,0.8)", bg: "rgba(99,102,241,0.07)", border: "rgba(99,102,241,0.15)" },
+                  { label: "Batch Swaps",  color: "rgba(245,158,11,0.8)",  bg: "rgba(245,158,11,0.07)",  border: "rgba(245,158,11,0.15)" },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center gap-2 px-2 py-1.5 rounded-lg" style={{ background: item.bg, border: `1px solid ${item.border}` }}>
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: item.color }} />
+                    <span className="text-[9px] text-muted flex-1">{item.label}</span>
+                    <span className="text-[9px] font-bold text-foreground">count</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Recent Activity */}
+            <div className="rounded-lg p-3" style={{ background: "rgba(10,10,26,0.6)", border: "1px solid rgba(139,92,246,0.1)" }}>
+              <div className="text-[9px] text-muted mb-2 font-semibold uppercase tracking-wider">Recent Activity</div>
+              <div className="space-y-1">
+                {["Swap · confirmed", "Bridge · pending", "Send · confirmed"].map((row) => (
+                  <div key={row} className="flex items-center gap-2 px-2 py-1 rounded" style={{ background: "rgba(159,41,255,0.04)" }}>
+                    <div className="w-1 h-1 rounded-full" style={{ background: "rgba(139,92,246,0.5)" }} />
+                    <span className="text-[8px] text-muted flex-1">{row}</span>
+                  </div>
+                ))}
+                <div className="text-[8px] text-center text-muted pt-0.5">scrollable · max 50 entries</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <h3>Portfolio</h3>
       <ul>

@@ -1,35 +1,28 @@
+import { ParticleBackground } from "./components/ParticleBackground";
+
 export default function IntroductionPage() {
   return (
     <article className="prose">
       {/* Banner */}
       <div className="not-prose rounded-2xl border border-border overflow-hidden mb-8 relative"
-        style={{ background: "linear-gradient(135deg, rgba(15,15,35,0.95) 0%, rgba(10,10,26,0.98) 50%, rgba(20,15,40,0.95) 100%)" }}>
+        style={{ background: "linear-gradient(135deg, rgba(15,15,35,0.97) 0%, rgba(10,10,26,0.99) 50%, rgba(20,15,40,0.97) 100%)" }}>
 
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Particle canvas */}
+          <ParticleBackground />
+
           {/* Gradient orbs */}
-          <div className="absolute w-64 h-64 rounded-full opacity-20"
-            style={{ background: "radial-gradient(circle, rgba(159,41,255,0.4) 0%, transparent 70%)", top: "-30%", right: "-10%", animation: "floatUp 8s ease-in-out infinite" }} />
-          <div className="absolute w-48 h-48 rounded-full opacity-15"
-            style={{ background: "radial-gradient(circle, rgba(99,102,241,0.4) 0%, transparent 70%)", bottom: "-20%", left: "-5%", animation: "floatUp 10s ease-in-out infinite 2s" }} />
+          <div className="absolute w-80 h-80 rounded-full"
+            style={{ background: "radial-gradient(circle, rgba(159,41,255,0.18) 0%, transparent 70%)", top: "-35%", right: "-8%", animation: "floatUp 9s ease-in-out infinite" }} />
+          <div className="absolute w-56 h-56 rounded-full"
+            style={{ background: "radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 70%)", bottom: "-25%", left: "-6%", animation: "floatUp 12s ease-in-out infinite 3s" }} />
+          <div className="absolute w-40 h-40 rounded-full"
+            style={{ background: "radial-gradient(circle, rgba(0,180,220,0.10) 0%, transparent 70%)", top: "10%", left: "30%", animation: "floatUp 7s ease-in-out infinite 1s" }} />
 
-          {/* Grid lines */}
-          <svg className="absolute inset-0 w-full h-full opacity-10">
-            <line x1="10%" y1="20%" x2="35%" y2="70%" stroke="#9f29ff" strokeWidth="0.5" style={{ animation: "pulseOpacity 4s ease-in-out infinite" }} />
-            <line x1="35%" y1="70%" x2="60%" y2="25%" stroke="#9f29ff" strokeWidth="0.5" style={{ animation: "pulseOpacity 4s ease-in-out infinite 1s" }} />
-            <line x1="60%" y1="25%" x2="85%" y2="60%" stroke="#9f29ff" strokeWidth="0.5" style={{ animation: "pulseOpacity 4s ease-in-out infinite 2s" }} />
-            <line x1="85%" y1="60%" x2="95%" y2="30%" stroke="#9f29ff" strokeWidth="0.5" style={{ animation: "pulseOpacity 5s ease-in-out infinite 0.5s" }} />
-          </svg>
-
-          {/* Dots */}
-          {[
-            { x: "10%", y: "20%", d: "3s" }, { x: "35%", y: "70%", d: "4s" },
-            { x: "60%", y: "25%", d: "5s" }, { x: "85%", y: "60%", d: "3.5s" },
-            { x: "20%", y: "45%", d: "6s" }, { x: "75%", y: "40%", d: "4.5s" },
-          ].map((dot, i) => (
-            <div key={i} className="absolute w-1 h-1 rounded-full bg-purple-light/40"
-              style={{ left: dot.x, top: dot.y, animation: `twinkle ${dot.d} ease-in-out infinite` }} />
-          ))}
+          {/* Scan line */}
+          <div className="absolute left-0 right-0 h-px"
+            style={{ background: "linear-gradient(90deg, transparent, rgba(159,41,255,0.3), transparent)", animation: "scanDown 6s linear infinite", top: 0 }} />
         </div>
 
         {/* Content */}
@@ -110,18 +103,123 @@ export default function IntroductionPage() {
       </table>
 
       <h2>Project Structure</h2>
-      <pre><code>{`initia/
-├── fe_rupiahrote/      # Frontend: Next.js 16 web app
-│   ├── app/            # Pages (swap, limit, batch, bridge, send, faucet, dashboard)
-│   ├── components/     # 25+ React components
-│   └── lib/            # Business logic, contracts, i18n
-│
-├── sc_RupiahRote/      # Smart Contracts: Foundry/Solidity
-│   ├── src/            # RupiahRouter, TokenFaucet, interfaces
-│   ├── script/         # Deployment scripts
-│   └── test/           # Test suite
-│
-└── docs_rupiahrote/    # This documentation site`}</code></pre>
+
+      <div className="not-prose rounded-xl overflow-hidden my-5" style={{ background: "rgba(12,12,28,0.95)", border: "1px solid rgba(139,92,246,0.2)" }}>
+
+        {/* Title bar */}
+        <div className="flex items-center gap-3 px-4 py-2.5" style={{ background: "rgba(159,41,255,0.08)", borderBottom: "1px solid rgba(139,92,246,0.18)" }}>
+          <div className="flex gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(239,68,68,0.6)" }} />
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(245,158,11,0.6)" }} />
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(34,197,94,0.6)" }} />
+          </div>
+          <span className="text-[11px] font-mono font-bold text-purple-light ml-1">initia/</span>
+          <span className="text-[10px] font-mono text-muted">— monorepo root</span>
+        </div>
+
+        {/* Three repo cards */}
+        <div className="grid grid-cols-3 gap-0 divide-x" style={{ borderColor: "rgba(139,92,246,0.15)" }}>
+
+          {/* fe_rupiahrote */}
+          <div className="p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center text-base" style={{ background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.25)" }}>
+                ⚡
+              </div>
+              <div>
+                <div className="text-[11px] font-mono font-bold text-foreground">fe_rupiahrote/</div>
+                <div className="text-[9px] text-muted">Frontend</div>
+              </div>
+            </div>
+            <div className="text-[9px] font-mono text-muted px-1">Next.js 16 · wagmi · Tailwind</div>
+            <div className="space-y-1">
+              {[
+                { path: "app/",        desc: "Pages & routes" },
+                { path: "components/", desc: "25+ React components" },
+                { path: "lib/",        desc: "Logic, contracts, i18n" },
+              ].map((item) => (
+                <div key={item.path} className="flex items-start gap-2 rounded-lg px-2.5 py-1.5" style={{ background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.1)" }}>
+                  <div className="w-1 h-1 rounded-full mt-1.5 shrink-0" style={{ background: "rgba(99,102,241,0.7)" }} />
+                  <div>
+                    <div className="text-[10px] font-mono text-purple-light">{item.path}</div>
+                    <div className="text-[9px] text-muted">{item.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="text-[9px] text-muted font-mono">
+              {["swap", "limit", "batch", "bridge", "send", "faucet", "dashboard"].map((p) => (
+                <span key={p} className="inline-block mr-1 mb-1 px-1.5 py-0.5 rounded" style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.15)", color: "#93c5fd" }}>/{p}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* sc_RupiahRote */}
+          <div className="p-4 space-y-3" style={{ borderLeft: "1px solid rgba(139,92,246,0.15)" }}>
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center text-base" style={{ background: "rgba(159,41,255,0.15)", border: "1px solid rgba(159,41,255,0.25)" }}>
+                🔗
+              </div>
+              <div>
+                <div className="text-[11px] font-mono font-bold text-foreground">sc_RupiahRote/</div>
+                <div className="text-[9px] text-muted">Smart Contracts</div>
+              </div>
+            </div>
+            <div className="text-[9px] font-mono text-muted px-1">Foundry · Solidity · EVM</div>
+            <div className="space-y-1">
+              {[
+                { path: "src/",    desc: "RupiahRouter, TokenFaucet" },
+                { path: "script/", desc: "Deployment scripts" },
+                { path: "test/",   desc: "Test suite" },
+              ].map((item) => (
+                <div key={item.path} className="flex items-start gap-2 rounded-lg px-2.5 py-1.5" style={{ background: "rgba(159,41,255,0.06)", border: "1px solid rgba(159,41,255,0.1)" }}>
+                  <div className="w-1 h-1 rounded-full mt-1.5 shrink-0" style={{ background: "rgba(159,41,255,0.7)" }} />
+                  <div>
+                    <div className="text-[10px] font-mono text-purple-light">{item.path}</div>
+                    <div className="text-[9px] text-muted">{item.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="rounded-lg px-2.5 py-2 space-y-0.5" style={{ background: "rgba(159,41,255,0.06)", border: "1px solid rgba(159,41,255,0.1)" }}>
+              {["RupiahRouter.sol", "TokenFaucet.sol", "interfaces/"].map((f) => (
+                <div key={f} className="text-[9px] font-mono" style={{ color: "#b44dff" }}>· {f}</div>
+              ))}
+            </div>
+          </div>
+
+          {/* docs_rupiahrote */}
+          <div className="p-4 space-y-3" style={{ borderLeft: "1px solid rgba(139,92,246,0.15)" }}>
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center text-base" style={{ background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.2)" }}>
+                📖
+              </div>
+              <div>
+                <div className="text-[11px] font-mono font-bold text-foreground">docs_rupiahrote/</div>
+                <div className="text-[9px] text-muted">Documentation</div>
+              </div>
+            </div>
+            <div className="text-[9px] font-mono text-muted px-1">Next.js 16 · Tailwind v4</div>
+            <div className="space-y-1">
+              {[
+                { path: "app/",        desc: "Doc pages & routes" },
+                { path: "components/", desc: "Header, Sidebar, TOC" },
+              ].map((item) => (
+                <div key={item.path} className="flex items-start gap-2 rounded-lg px-2.5 py-1.5" style={{ background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.1)" }}>
+                  <div className="w-1 h-1 rounded-full mt-1.5 shrink-0" style={{ background: "rgba(34,197,94,0.7)" }} />
+                  <div>
+                    <div className="text-[10px] font-mono text-green">{item.path}</div>
+                    <div className="text-[9px] text-muted">{item.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="rounded-lg px-2.5 py-2 text-center" style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.12)" }}>
+              <div className="text-[9px] font-mono text-green">← you are here</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </article>
   );
 }

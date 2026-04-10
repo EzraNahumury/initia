@@ -77,24 +77,81 @@ export default function ArchitecturePage() {
       </p>
 
       <h2>Frontend Layer</h2>
-      <Mermaid chart={`graph TB
-        subgraph Layout["Root Layout"]
-          BG["BackgroundEffect<br/>FaultyTerminal WebGL"]
-          Providers["WagmiProvider + QueryClient"]
-        end
 
-        subgraph Pages["Feature Pages"]
-          Home["/ Swap + HeroSection"]
-          Limit["/limit LimitOrderCard"]
-          Batch["/batch BatchSwapCard"]
-          Bridge["/bridge BridgeCard"]
-          Send["/send SendCard"]
-          FaucetP["/faucet FaucetCard"]
-          Dash["/dashboard DashboardView"]
-        end
+      <div className="not-prose rounded-xl overflow-hidden my-5" style={{ background: "rgba(12,12,28,0.95)", border: "1px solid rgba(139,92,246,0.2)" }}>
 
-        Layout --> Pages
-      `} />
+        {/* Title bar */}
+        <div className="flex items-center gap-3 px-4 py-2.5" style={{ background: "rgba(159,41,255,0.08)", borderBottom: "1px solid rgba(139,92,246,0.18)" }}>
+          <div className="flex gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(239,68,68,0.6)" }} />
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(245,158,11,0.6)" }} />
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(34,197,94,0.6)" }} />
+          </div>
+          <span className="text-[11px] font-mono font-bold text-purple-light ml-1">Frontend Layer</span>
+          <span className="text-[10px] font-mono text-muted">Next.js 16 App Router</span>
+        </div>
+
+        <div className="p-6 space-y-4">
+
+          {/* Root Layout box */}
+          <div className="rounded-xl p-4" style={{ background: "rgba(159,41,255,0.06)", border: "1px solid rgba(159,41,255,0.25)" }}>
+            <div className="text-[10px] font-mono font-bold text-purple-light mb-3 uppercase tracking-wider">Root Layout</div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-lg p-3 space-y-1" style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)" }}>
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🌌</span>
+                  <span className="text-[10px] font-mono font-semibold text-foreground">BackgroundEffect</span>
+                </div>
+                <div className="text-[9px] text-muted pl-7">FaultyTerminal · WebGL canvas</div>
+              </div>
+              <div className="rounded-lg p-3 space-y-1" style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)" }}>
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🔌</span>
+                  <span className="text-[10px] font-mono font-semibold text-foreground">Providers</span>
+                </div>
+                <div className="text-[9px] text-muted pl-7">WagmiProvider · QueryClient</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Arrow connector */}
+          <div className="flex flex-col items-center gap-0.5 py-1">
+            <div className="w-px h-4" style={{ background: "rgba(159,41,255,0.4)" }} />
+            <svg width="12" height="7" viewBox="0 0 12 7" fill="none">
+              <path d="M6 7L0.803848 0.25L11.1962 0.25L6 7Z" fill="rgba(159,41,255,0.6)" />
+            </svg>
+          </div>
+
+          {/* Feature Pages */}
+          <div className="rounded-xl p-4" style={{ background: "rgba(10,10,26,0.7)", border: "1px solid rgba(139,92,246,0.18)" }}>
+            <div className="text-[10px] font-mono font-bold text-muted mb-3 uppercase tracking-wider">Feature Pages</div>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { route: "/",          component: "SwapView",       label: "Swap + HeroSection", icon: "⇄",  color: "99,102,241"  },
+                { route: "/limit",     component: "LimitOrderCard", label: "Limit Orders",        icon: "📊", color: "139,92,246"  },
+                { route: "/batch",     component: "BatchSwapCard",  label: "Batch Swap",          icon: "🔀", color: "245,158,11"  },
+                { route: "/bridge",    component: "BridgeCard",     label: "L1 ↔ L2 Bridge",     icon: "🌉", color: "6,182,212"   },
+                { route: "/send",      component: "SendCard",        label: "Send Tokens",         icon: "📤", color: "34,197,94"   },
+                { route: "/faucet",    component: "FaucetCard",      label: "Testnet Faucet",      icon: "🚰", color: "249,115,22"  },
+                { route: "/dashboard", component: "DashboardView",   label: "Portfolio + Stats",   icon: "📈", color: "159,41,255"  },
+              ].map((page) => (
+                <div key={page.route}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5"
+                  style={{ background: `rgba(${page.color},0.07)`, border: `1px solid rgba(${page.color},0.2)` }}>
+                  <span className="text-sm shrink-0">{page.icon}</span>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <code className="text-[10px] font-mono font-bold" style={{ color: `rgba(${page.color},1)` }}>{page.route}</code>
+                    </div>
+                    <div className="text-[9px] font-mono text-muted truncate">{page.component}</div>
+                    <div className="text-[9px] text-muted opacity-70">{page.label}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
 
       <h2>State Management</h2>
       <table>

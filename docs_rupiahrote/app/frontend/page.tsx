@@ -61,40 +61,134 @@ export default function FrontendOverviewPage() {
       </p>
 
       <h2>Project Structure</h2>
-      <pre><code>{`fe_rupiahrote/
-├── app/                    # Next.js App Router pages
-│   ├── layout.tsx          # Root layout (fonts, providers, Header)
-│   ├── providers.tsx       # WagmiProvider + QueryClientProvider + i18n init
-│   ├── page.tsx            # / → SwapView
-│   ├── limit/page.tsx      # /limit → LimitOrderCard
-│   ├── batch/page.tsx      # /batch → BatchSwapCard
-│   ├── bridge/page.tsx     # /bridge → BridgeCard
-│   ├── send/page.tsx       # /send → SendCard
-│   ├── faucet/page.tsx     # /faucet → FaucetCard
-│   ├── dashboard/page.tsx  # /dashboard → DashboardView
-│   └── globals.css         # Tailwind v4 imports + custom CSS keyframes
-│
-├── components/             # All React components
-│   ├── ui/                 # shadcn/ui primitives (button, globe)
-│   └── *.tsx               # Feature components (see below)
-│
-├── lib/                    # Shared utilities and configuration
-│   ├── contract.ts         # Token list, router contract, formatAmount, parseAmount
-│   ├── wagmi.ts            # wagmi config (chains, connectors, storage, SSR)
-│   ├── chain.ts            # Initia MiniEVM chain definition (viem defineChain)
-│   ├── dex-quotes.ts       # External DEX aggregator API fetchers
-│   ├── activity.ts         # Activity recording (localStorage)
-│   ├── tokens.ts           # Token styling helpers
-│   ├── abi.ts              # RupiahRouter ABI
-│   ├── xp.ts               # XP reward system
-│   ├── utils.ts            # Tailwind cn() merge utility
-│   └── i18n/               # Translation files
-│       ├── index.ts        # i18next initialization
-│       ├── en.ts           # English
-│       ├── id.ts           # Bahasa Indonesia
-│       └── zh.ts           # Chinese (Simplified)
-│
-└── public/                 # Static assets (logos, token icons)`}</code></pre>
+
+      <div className="not-prose rounded-xl overflow-hidden my-5" style={{ background: "rgba(12,12,28,0.95)", border: "1px solid rgba(139,92,246,0.2)" }}>
+
+        {/* Title bar */}
+        <div className="flex items-center gap-3 px-4 py-2.5" style={{ background: "rgba(159,41,255,0.08)", borderBottom: "1px solid rgba(139,92,246,0.18)" }}>
+          <div className="flex gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(239,68,68,0.6)" }} />
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(245,158,11,0.6)" }} />
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(34,197,94,0.6)" }} />
+          </div>
+          <span className="text-[11px] font-mono font-bold text-purple-light ml-1">fe_rupiahrote/</span>
+          <span className="text-[10px] font-mono text-muted">Next.js App Router</span>
+        </div>
+
+        <div className="p-4 grid grid-cols-2 gap-3">
+
+          {/* app/ column */}
+          <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(99,102,241,0.2)" }}>
+            <div className="flex items-center gap-2 px-3 py-2" style={{ background: "rgba(99,102,241,0.1)", borderBottom: "1px solid rgba(99,102,241,0.15)" }}>
+              <span className="text-sm">📁</span>
+              <span className="text-[10px] font-mono font-bold text-foreground">app/</span>
+              <span className="text-[9px] text-muted ml-1">App Router pages</span>
+            </div>
+            <div className="p-2.5 space-y-0.5">
+              {[
+                { name: "layout.tsx",          desc: "Root layout · fonts, providers, Header", special: true },
+                { name: "providers.tsx",        desc: "Wagmi · QueryClient · i18n" },
+                { name: "globals.css",          desc: "Tailwind v4 · keyframes", css: true },
+                { name: "page.tsx",             desc: "/ → SwapView", route: true },
+                { name: "limit/page.tsx",       desc: "/limit → LimitOrderCard", route: true },
+                { name: "batch/page.tsx",       desc: "/batch → BatchSwapCard", route: true },
+                { name: "bridge/page.tsx",      desc: "/bridge → BridgeCard", route: true },
+                { name: "send/page.tsx",        desc: "/send → SendCard", route: true },
+                { name: "faucet/page.tsx",      desc: "/faucet → FaucetCard", route: true },
+                { name: "dashboard/page.tsx",   desc: "/dashboard → DashboardView", route: true },
+              ].map((f) => (
+                <div key={f.name} className="flex items-start gap-2 px-2 py-1.5 rounded-lg group"
+                  style={{ background: f.route ? "rgba(99,102,241,0.06)" : f.special ? "rgba(159,41,255,0.05)" : "transparent" }}>
+                  <span className="text-[10px] shrink-0 mt-px">{f.css ? "🎨" : f.route ? "🔷" : f.special ? "⚙️" : "📄"}</span>
+                  <div className="min-w-0">
+                    <div className="text-[9px] font-mono font-semibold truncate" style={{ color: f.route ? "#93c5fd" : f.css ? "#f9a8d4" : "#d4d4f5" }}>{f.name}</div>
+                    <div className="text-[8px] text-muted leading-tight">{f.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right column: components/ + lib/ + public/ */}
+          <div className="space-y-3">
+
+            {/* components/ */}
+            <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(159,41,255,0.2)" }}>
+              <div className="flex items-center gap-2 px-3 py-2" style={{ background: "rgba(159,41,255,0.1)", borderBottom: "1px solid rgba(159,41,255,0.15)" }}>
+                <span className="text-sm">📁</span>
+                <span className="text-[10px] font-mono font-bold text-foreground">components/</span>
+                <span className="text-[9px] text-muted ml-1">25+ React components</span>
+              </div>
+              <div className="p-2.5 space-y-0.5">
+                {[
+                  { name: "ui/",           desc: "shadcn primitives · globe, button", folder: true },
+                  { name: "SwapView",      desc: "Main swap + route comparison" },
+                  { name: "LimitOrderCard",desc: "Limit orders + active orders" },
+                  { name: "BatchSwapCard", desc: "Multi-target batch swap" },
+                  { name: "BridgeCard",    desc: "L1 ↔ L2 bridge UI" },
+                  { name: "SendCard",      desc: "Send to address / .init" },
+                  { name: "FaucetCard",    desc: "Testnet token faucet" },
+                  { name: "DashboardView", desc: "Portfolio + stats + activity" },
+                  { name: "ActivityHistory", desc: "Scrollable tx list + popups" },
+                  { name: "WalletButton",  desc: "Connect / account modal" },
+                  { name: "Header",        desc: "Nav bar · links · language" },
+                ].map((c) => (
+                  <div key={c.name} className="flex items-start gap-2 px-2 py-1 rounded-lg"
+                    style={{ background: c.folder ? "rgba(159,41,255,0.08)" : "transparent" }}>
+                    <span className="text-[10px] shrink-0 mt-px">{c.folder ? "📂" : "⚛️"}</span>
+                    <div>
+                      <div className="text-[9px] font-mono font-semibold" style={{ color: c.folder ? "#b44dff" : "#d4d4f5" }}>{c.name}{!c.folder ? ".tsx" : ""}</div>
+                      <div className="text-[8px] text-muted leading-tight">{c.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* lib/ */}
+            <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(6,182,212,0.2)" }}>
+              <div className="flex items-center gap-2 px-3 py-2" style={{ background: "rgba(6,182,212,0.08)", borderBottom: "1px solid rgba(6,182,212,0.15)" }}>
+                <span className="text-sm">📁</span>
+                <span className="text-[10px] font-mono font-bold text-foreground">lib/</span>
+                <span className="text-[9px] text-muted ml-1">Utilities · config · i18n</span>
+              </div>
+              <div className="p-2.5 grid grid-cols-2 gap-0.5">
+                {[
+                  { name: "contract.ts",   desc: "Tokens · ABI · format" },
+                  { name: "wagmi.ts",      desc: "Chains · connectors · SSR" },
+                  { name: "chain.ts",      desc: "Initia MiniEVM chain def" },
+                  { name: "dex-quotes.ts", desc: "4× DEX aggregator APIs" },
+                  { name: "activity.ts",   desc: "localStorage tx log" },
+                  { name: "tokens.ts",     desc: "Token styling helpers" },
+                  { name: "abi.ts",        desc: "RupiahRouter ABI" },
+                  { name: "xp.ts",         desc: "XP reward system" },
+                  { name: "utils.ts",      desc: "Tailwind cn() merge" },
+                  { name: "i18n/",         desc: "EN · ID · ZH translations", folder: true },
+                ].map((l) => (
+                  <div key={l.name} className="flex items-start gap-1.5 px-1.5 py-1 rounded"
+                    style={{ background: l.folder ? "rgba(6,182,212,0.08)" : "transparent" }}>
+                    <span className="text-[9px] shrink-0 mt-px">{l.folder ? "📂" : "🔧"}</span>
+                    <div className="min-w-0">
+                      <div className="text-[8px] font-mono font-semibold truncate" style={{ color: l.folder ? "#22d3ee" : "#a5b4fc" }}>{l.name}</div>
+                      <div className="text-[7px] text-muted leading-tight">{l.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* public/ */}
+            <div className="rounded-xl px-3 py-2.5 flex items-center gap-3" style={{ background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.15)" }}>
+              <span className="text-sm">🖼️</span>
+              <div>
+                <div className="text-[10px] font-mono font-bold text-green">public/</div>
+                <div className="text-[9px] text-muted">Static assets · logos · token icons</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
 
       <h2>Components</h2>
       <p>

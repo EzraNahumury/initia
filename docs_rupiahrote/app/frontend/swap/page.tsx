@@ -13,32 +13,133 @@ export default function SwapRoutingPage() {
         SwapView renders a two-panel horizontal layout inside a flex container
         (<code>max-w-[960px]</code>):
       </p>
-      <pre><code>{`┌──────────────────────────────────────────────────────────┐
-│                     SwapView (flex)                       │
-│  ┌───────────────────┐  ┌──────────────────────────────┐ │
-│  │  LEFT (420px)      │  │  RIGHT (flex-1)              │ │
-│  │                    │  │                              │ │
-│  │  SlippageSettings  │  │  Route Comparison            │ │
-│  │  ─────────────     │  │  ────────────────            │ │
-│  │  You Pay           │  │  When no input:              │ │
-│  │  [TokenSelector]   │  │    3D Globe + orbiting       │ │
-│  │  [Amount input]    │  │    chain icons               │ │
-│  │                    │  │                              │ │
-│  │  [Flip button]     │  │  When routes available:      │ │
-│  │                    │  │    Initia routes (3)         │ │
-│  │  You Get           │  │    External DEX quotes (4)   │ │
-│  │  [TokenSelector]   │  │    each clickable to select  │ │
-│  │  [Output display]  │  │                              │ │
-│  │                    │  │                              │ │
-│  │  RecipientToggle   │  │                              │ │
-│  │  Rate / Impact     │  │                              │ │
-│  │  Min received      │  │                              │ │
-│  │  Gas estimate      │  │                              │ │
-│  │                    │  │                              │ │
-│  │  [Swap Button]     │  │                              │ │
-│  │  SwapConfirmModal  │  │                              │ │
-│  └───────────────────┘  └──────────────────────────────┘ │
-└──────────────────────────────────────────────────────────┘`}</code></pre>
+      {/* Layout diagram */}
+      <div className="not-prose rounded-xl overflow-hidden my-6 text-[11px] font-mono" style={{ background: "rgba(12,12,28,0.95)", border: "1px solid rgba(139,92,246,0.2)" }}>
+
+        {/* Title bar */}
+        <div className="flex items-center gap-3 px-4 py-2.5" style={{ background: "rgba(159,41,255,0.08)", borderBottom: "1px solid rgba(139,92,246,0.18)" }}>
+          <div className="flex gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(239,68,68,0.6)" }} />
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(245,158,11,0.6)" }} />
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(34,197,94,0.6)" }} />
+          </div>
+          <span className="text-purple-light font-bold ml-1">SwapView</span>
+          <span className="text-muted">— flex container</span>
+          <code className="ml-auto text-[10px] px-2 py-0.5 rounded" style={{ background: "rgba(159,41,255,0.15)", color: "#b44dff" }}>max-w-[960px]</code>
+        </div>
+
+        {/* Two-panel layout */}
+        <div className="flex" style={{ minHeight: 340 }}>
+
+          {/* ── LEFT panel ── */}
+          <div className="p-4 space-y-2.5 shrink-0" style={{ width: "44%", borderRight: "1px solid rgba(139,92,246,0.18)" }}>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-purple-light font-bold text-[10px]">LEFT</span>
+              <code className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: "rgba(159,41,255,0.12)", color: "#b44dff" }}>w-[420px]</code>
+            </div>
+
+            {/* SlippageSettings */}
+            <div className="rounded-lg p-2.5 space-y-1.5" style={{ background: "rgba(159,41,255,0.05)", border: "1px solid rgba(139,92,246,0.15)" }}>
+              <div className="text-[9px] text-muted">SlippageSettings</div>
+              <div className="flex gap-1">
+                {["0.5%", "1%", "2%", "Custom"].map((v) => (
+                  <div key={v} className="px-1.5 py-0.5 rounded text-[9px] text-muted" style={{ border: "1px solid rgba(139,92,246,0.2)" }}>{v}</div>
+                ))}
+              </div>
+            </div>
+
+            {/* You Pay */}
+            <div className="rounded-lg p-2.5 space-y-1.5" style={{ border: "1px solid rgba(139,92,246,0.12)" }}>
+              <div className="text-[9px] text-muted">You Pay</div>
+              <div className="flex gap-1.5">
+                <div className="px-2 py-1 rounded text-[9px] text-foreground flex items-center gap-1" style={{ border: "1px solid rgba(139,92,246,0.2)" }}>
+                  Token ▾
+                </div>
+                <div className="flex-1 px-2 py-1 rounded text-[9px] text-muted text-right" style={{ border: "1px solid rgba(139,92,246,0.12)" }}>
+                  Amount
+                </div>
+              </div>
+            </div>
+
+            {/* Flip */}
+            <div className="flex items-center gap-2 py-0.5">
+              <div className="flex-1 h-px" style={{ background: "rgba(139,92,246,0.15)" }} />
+              <div className="w-6 h-6 rounded-full flex items-center justify-center text-purple-light text-[11px]" style={{ border: "1px solid rgba(159,41,255,0.35)", background: "rgba(159,41,255,0.08)" }}>⇅</div>
+              <div className="flex-1 h-px" style={{ background: "rgba(139,92,246,0.15)" }} />
+            </div>
+
+            {/* You Get */}
+            <div className="rounded-lg p-2.5 space-y-1.5" style={{ border: "1px solid rgba(139,92,246,0.12)" }}>
+              <div className="text-[9px] text-muted">You Get</div>
+              <div className="flex gap-1.5">
+                <div className="px-2 py-1 rounded text-[9px] text-foreground flex items-center gap-1" style={{ border: "1px solid rgba(139,92,246,0.2)" }}>
+                  Token ▾
+                </div>
+                <div className="flex-1 px-2 py-1 rounded text-[9px] text-green text-right font-semibold" style={{ border: "1px solid rgba(34,197,94,0.2)", background: "rgba(34,197,94,0.04)" }}>
+                  Output
+                </div>
+              </div>
+            </div>
+
+            {/* Meta info rows */}
+            <div className="rounded-lg p-2.5 space-y-1.5" style={{ background: "rgba(10,10,26,0.6)", border: "1px solid rgba(139,92,246,0.1)" }}>
+              {["RecipientToggle", "Rate / Impact", "Min received", "Gas estimate"].map((label) => (
+                <div key={label} className="flex items-center gap-2">
+                  <div className="w-1 h-1 rounded-full shrink-0" style={{ background: "rgba(159,41,255,0.5)" }} />
+                  <span className="text-[9px] text-muted">{label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Swap button */}
+            <div className="rounded-lg py-2 text-center text-[10px] font-semibold" style={{ background: "rgba(159,41,255,0.18)", border: "1px solid rgba(159,41,255,0.4)", color: "#b44dff" }}>
+              Swap Button
+            </div>
+            <div className="text-[9px] text-center text-muted">↳ opens SwapConfirmModal</div>
+          </div>
+
+          {/* ── RIGHT panel ── */}
+          <div className="flex-1 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-purple-light font-bold text-[10px]">RIGHT</span>
+              <code className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: "rgba(159,41,255,0.12)", color: "#b44dff" }}>flex-1</code>
+            </div>
+            <div className="text-[9px] text-muted mb-3 font-sans" style={{ fontFamily: "inherit" }}>Route Comparison</div>
+
+            {/* When no input */}
+            <div className="rounded-lg p-3 mb-2.5" style={{ background: "rgba(10,10,26,0.5)", border: "1px solid rgba(139,92,246,0.12)" }}>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-1.5 h-1.5 rounded-full" style={{ background: "rgba(245,158,11,0.7)" }} />
+                <span className="text-[9px] text-muted">When no input</span>
+              </div>
+              <div className="rounded-lg p-3 text-center" style={{ background: "rgba(159,41,255,0.06)", border: "1px solid rgba(139,92,246,0.15)" }}>
+                <div className="text-base mb-1">🌐</div>
+                <div className="text-[9px] text-muted">3D Globe (Three.js / react-three-fiber)</div>
+                <div className="text-[9px] text-muted opacity-70 mt-0.5">+ orbiting chain icons</div>
+              </div>
+            </div>
+
+            {/* When routes available */}
+            <div className="rounded-lg p-3" style={{ background: "rgba(10,10,26,0.5)", border: "1px solid rgba(139,92,246,0.12)" }}>
+              <div className="flex items-center gap-2 mb-2.5">
+                <div className="w-1.5 h-1.5 rounded-full" style={{ background: "rgba(34,197,94,0.7)" }} />
+                <span className="text-[9px] text-muted">When routes available</span>
+              </div>
+              <div className="space-y-1.5">
+                <div className="rounded-lg p-2 flex items-center justify-between" style={{ background: "rgba(159,41,255,0.07)", border: "1px solid rgba(159,41,255,0.2)" }}>
+                  <span className="text-[9px] text-purple-light font-medium">Initia ecosystem routes</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: "rgba(159,41,255,0.18)", color: "#b44dff" }}>×3</span>
+                </div>
+                <div className="rounded-lg p-2 flex items-center justify-between" style={{ background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.2)" }}>
+                  <span className="text-[9px] font-medium" style={{ color: "#93c5fd" }}>External DEX quotes</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: "rgba(99,102,241,0.18)", color: "#93c5fd" }}>×4</span>
+                </div>
+                <div className="text-[9px] text-muted text-center pt-0.5 font-sans" style={{ fontFamily: "inherit" }}>each card clickable to select</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <h2>Route Generation</h2>
       <p>
