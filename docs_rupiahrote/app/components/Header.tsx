@@ -10,7 +10,7 @@ export function Header() {
           <img src="/logo.png" alt="RupiahRoute" className="w-8 h-8 shrink-0 object-contain" style={{ filter: "drop-shadow(0 0 6px rgba(159,41,255,0.3))" }} />
           <span className="font-semibold text-sm text-foreground">RupiahRoute Docs</span>
         </Link>
-        <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted hover:text-foreground transition-colors">
+        <a href="https://github.com/EzraNahumury/initia" target="_blank" rel="noopener noreferrer" className="text-sm text-muted hover:text-foreground transition-colors">
           GitHub
         </a>
       </div>
