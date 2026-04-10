@@ -23,10 +23,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <Header />
           <div className="flex flex-1">
             <Sidebar />
-            <main className="flex-1 min-w-0 px-8 py-8 lg:px-12 lg:py-10 max-w-4xl">
-              {children}
-            </main>
-            <TableOfContents />
+            <div className="flex flex-1 justify-center">
+              <main className="w-full max-w-4xl min-w-0 px-8 py-8 lg:px-12 lg:py-10">
+                {children}
+              </main>
+              <TableOfContents />
+            </div>
           </div>
         </div>
       </body>
