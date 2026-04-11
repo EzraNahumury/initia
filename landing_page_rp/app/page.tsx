@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState, useMemo, Suspense } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useGLTF } from "@react-three/drei";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -476,7 +476,7 @@ function GlowingGlobe() {
   });
 
   return (
-    <group ref={groupRef}>
+    <group ref={groupRef} scale={0.3}>
       <mesh>
         <sphereGeometry args={[2.5, 64, 64]} />
         <meshStandardMaterial
@@ -518,42 +518,116 @@ function GlowingGlobe() {
   );
 }
 
-function InnerCaveWorld() {
+function Asset3D({ zoomProgress = 0 }: { zoomProgress?: number }) {
   const groupRef = useRef<THREE.Group>(null);
-  const { scene } = useGLTF("/stylized_alien_cave_skybox.glb");
-  const texture = useMemo(() => {
-    const tex = new THREE.TextureLoader().load('/asset/textures/Material_baseColor.jpeg');
-    tex.colorSpace = THREE.SRGBColorSpace;
-    return tex;
-  }, []);
-  
-  useEffect(() => {
-    if (scene) {
-      scene.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.material = new THREE.MeshStandardMaterial({
-            map: texture,
-            emissiveMap: texture,
-            emissive: new THREE.Color("#22d3ee"),
-            emissiveIntensity: 1.2,
-            side: THREE.DoubleSide,
-          });
-        }
-      });
-    }
-  }, [scene, texture]);
+  const { scene } = useGLTF("/asset/scene.gltf");
+  const { model, modelPosition, modelScale } = useMemo(() => {
+    const nextModel = scene.clone();
+    const box = new THREE.Box3().setFromObject(nextModel);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z) || 1;
+    const scale = 3.35 / maxDim;
+
+    nextModel.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+        const materials = Array.isArray(child.material) ? child.material : [child.material];
+        materials.forEach((material) => {
+          if (!material) return;
+          material.side = THREE.DoubleSide;
+          material.needsUpdate = true;
+        });
+      }
+    });
+
+    return {
+      model: nextModel,
+      modelScale: scale,
+      modelPosition: [-center.x * scale, -center.y * scale - 0.15, -center.z * scale] as [number, number, number],
+    };
+  }, [scene]);
 
   useFrame((state) => {
     if (groupRef.current) {
-      groupRef.current.rotation.y = state.clock.getElapsedTime() * 0.03;
+      const time = state.clock.getElapsedTime();
+      const entryProgress = THREE.MathUtils.smootherstep(zoomProgress, 0.2, 1);
+      const wobbleStrength = THREE.MathUtils.lerp(0.02, 0.006, entryProgress);
+      const rotationX = -0.02 + Math.sin(time * 0.32) * wobbleStrength;
+      const rotationY = THREE.MathUtils.lerp(0.55, 0.67, entryProgress) + time * 0.025;
+      const rotationZ = Math.cos(time * 0.45) * wobbleStrength * 0.7;
+      const targetY = Math.sin(time * 0.8) * 0.03;
+      const targetScale = THREE.MathUtils.lerp(1.12, 1.82, entryProgress);
+
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, rotationX, 0.08);
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, rotationY, 0.08);
+      groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, rotationZ, 0.08);
+      groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetY, 0.08);
+      groupRef.current.scale.setScalar(
+        THREE.MathUtils.lerp(groupRef.current.scale.x, targetScale, 0.08)
+      );
     }
   });
 
   return (
-    <group ref={groupRef} scale={0.4}>
-      <primitive object={scene.clone()} />
+    <group ref={groupRef} position={[0, 0, 0]}>
+      <primitive object={model} position={modelPosition} scale={modelScale} />
     </group>
   );
+}
+
+useGLTF.preload("/asset/scene.gltf");
+
+function FeatureAssetCameraRig({ zoomProgress = 0 }: { zoomProgress?: number }) {
+  const { camera } = useThree();
+  const lookTargetRef = useRef(new THREE.Vector3(0, 0, 0));
+  const desiredPositionRef = useRef(new THREE.Vector3(0, 0.02, 5.8));
+  const desiredLookRef = useRef(new THREE.Vector3(0, 0, 0));
+  const cameraPath = useMemo(() => ({
+    outer: new THREE.Vector3(0, 0.02, 5.8),
+    surface: new THREE.Vector3(0, 0.02, 3.25),
+    threshold: new THREE.Vector3(0, 0.01, 1.65),
+    inner: new THREE.Vector3(0, 0.01, 0.06),
+    outerLook: new THREE.Vector3(0.14, 0.03, -0.7),
+    surfaceLook: new THREE.Vector3(0.12, 0.03, -1.8),
+    thresholdLook: new THREE.Vector3(0.04, 0.02, -3.3),
+    innerLook: new THREE.Vector3(-0.55, 0.06, -6.5),
+  }), []);
+
+  useFrame(() => {
+    const enlargePhase = THREE.MathUtils.smoothstep(zoomProgress, 0, 0.72);
+    const thresholdPhase = THREE.MathUtils.smoothstep(zoomProgress, 0.55, 0.82);
+    const divePhase = THREE.MathUtils.smootherstep(zoomProgress, 0.8, 1);
+    const perspectiveCamera = camera as THREE.PerspectiveCamera;
+
+    desiredPositionRef.current
+      .copy(cameraPath.outer)
+      .lerp(cameraPath.surface, enlargePhase)
+      .lerp(cameraPath.threshold, thresholdPhase)
+      .lerp(cameraPath.inner, divePhase);
+    desiredLookRef.current
+      .copy(cameraPath.outerLook)
+      .lerp(cameraPath.surfaceLook, enlargePhase)
+      .lerp(cameraPath.thresholdLook, thresholdPhase)
+      .lerp(cameraPath.innerLook, divePhase);
+
+    const desiredFov = THREE.MathUtils.lerp(
+      THREE.MathUtils.lerp(28, 34, enlargePhase),
+      78,
+      divePhase
+    );
+
+    camera.position.lerp(desiredPositionRef.current, 0.06);
+    lookTargetRef.current.lerp(desiredLookRef.current, 0.06);
+    perspectiveCamera.fov = THREE.MathUtils.lerp(perspectiveCamera.fov, desiredFov, 0.06);
+    perspectiveCamera.near = 0.01;
+    perspectiveCamera.far = 80;
+    perspectiveCamera.updateProjectionMatrix();
+    camera.lookAt(lookTargetRef.current);
+  });
+
+  return null;
 }
 
 function MagicalParticles() {
@@ -786,97 +860,89 @@ function CinematicCard({ title, subtitle, description, index }: {
   );
 }
 
-function FeaturesSection() {
+function FeaturesSection({ scrollY }: { scrollY: number }) {
   const sectionRef = useRef<HTMLElement>(null);
-  const canvasRef = useRef<HTMLDivElement>(null);
-  const [mouseParallax, setMouseParallax] = useState({ x: 0, y: 0 });
+  const [sectionRange, setSectionRange] = useState({ start: 0, distance: 1 });
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
+    const updateSectionRange = () => {
       if (!sectionRef.current) return;
-      const rect = sectionRef.current.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      setMouseParallax({
-        x: (e.clientX - centerX) * 0.02,
-        y: (e.clientY - centerY) * 0.02,
-      });
+      const start = sectionRef.current.offsetTop;
+      const distance = Math.max(sectionRef.current.offsetHeight - window.innerHeight, 1);
+      setSectionRange({ start, distance });
     };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+
+    const frame = window.requestAnimationFrame(updateSectionRange);
+    window.addEventListener("resize", updateSectionRange);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", updateSectionRange);
+    };
   }, []);
 
-  const features = [
-    { title: "SMART SWAP", subtitle: "Protocol 01", description: "Auto-routing with live comparison against 4 external DEX aggregators. Finds the optimal path instantly." },
-    { title: "LIMIT ORDERS", subtitle: "Protocol 02", description: "Set target price with expiry, auto-executes on-chain. Never miss a trade opportunity." },
-    { title: "BATCH SWAP", subtitle: "Protocol 03", description: "Rebalance portfolio across multiple tokens in one atomic transaction." },
-    { title: "CROSS-CHAIN", subtitle: "Protocol 04", description: "Seamless deposit/withdraw between Initia L1 and the appchain." },
-  ];
+  const rawProgress = (scrollY - sectionRange.start) / sectionRange.distance;
+  const zoomProgress = Math.max(0, Math.min(rawProgress, 1));
+  const cameraZoomProgress = 1 - Math.pow(1 - zoomProgress, 3);
+  const headingOpacity = Math.max(0, 1 - cameraZoomProgress * 2.4);
 
   return (
     <section 
       ref={sectionRef}
-      className="relative h-[500vh] overflow-hidden"
+      className="relative h-[260vh] overflow-hidden md:h-[280vh]"
       style={{
         background: "linear-gradient(180deg, #030108 0%, #05020f 30%, #080414 60%, #030108 100%)",
       }}
     >
-      <div className="absolute inset-0">
-        <div 
-          className="absolute w-[800px] h-[800px] rounded-full"
-          style={{ 
-            top: "10%", 
-            left: "-20%",
-            background: "radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 60%)",
-            filter: "blur(100px)",
-            transform: `translate(${mouseParallax.x * 0.5}px, ${mouseParallax.y * 0.5}px)`,
-          }}
-        />
-        <div 
-          className="absolute w-[600px] h-[600px] rounded-full"
-          style={{ 
-            bottom: "5%", 
-            right: "-15%",
-            background: "radial-gradient(circle, rgba(34, 211, 238, 0.1) 0%, transparent 60%)",
-            filter: "blur(80px)",
-            transform: `translate(${-mouseParallax.x * 0.3}px, ${-mouseParallax.y * 0.3}px)`,
-          }}
-        />
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute left-1/2 top-[28%] h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-400/10 blur-[150px]" />
+        <div className="absolute right-[12%] top-[42%] h-72 w-72 rounded-full bg-amber-300/10 blur-[170px]" />
+        <div className="absolute left-[10%] bottom-[10%] h-72 w-72 rounded-full bg-purple-500/15 blur-[180px]" />
       </div>
-      
-      <div 
-        ref={canvasRef}
-        className="absolute inset-0"
-      >
-        <Canvas camera={{ position: [0, 0, 20], fov: 45 }}>
-          <ambientLight intensity={0.3} />
-          <pointLight position={[10, 10, 10]} intensity={1.5} color="#a855f7" />
-          <pointLight position={[-10, -10, 10]} intensity={1} color="#22d3ee" />
-          <pointLight position={[0, 5, 0]} intensity={0.8} color="#fbbf24" />
-          <ScrollCamera />
-          <GlowingGlobe />
-          <InnerCaveWorld />
-          <MagicalParticles />
-          <VolumetricFog />
-        </Canvas>
-      </div>
-      
-      <div className="relative z-10 max-w-7xl mx-auto px-6 mb-16">
+
+      <div className="sticky top-0 h-screen overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08),rgba(6,3,15,0.22)_42%,rgba(3,1,8,0.9)_82%)]" />
+          <Canvas
+            camera={{ position: [0, 0.02, 5.8], fov: 28, near: 0.01, far: 80 }}
+            dpr={[1, 1.5]}
+            gl={{ alpha: true, antialias: true }}
+            onCreated={({ gl }) => gl.setClearColor(0x000000, 0)}
+            style={{ pointerEvents: "none" }}
+          >
+            <FeatureAssetCameraRig zoomProgress={cameraZoomProgress} />
+            <ambientLight intensity={1.1} />
+            <hemisphereLight intensity={1.45} color="#f8fafc" groundColor="#0b0516" />
+            <directionalLight position={[0, 4, 5]} intensity={2.4} color="#ffe8ba" />
+            <pointLight position={[-3.2, 1.4, 3.8]} intensity={2.1} color="#7dd3fc" />
+            <pointLight position={[3.2, -0.8, 2.4]} intensity={1.8} color="#c084fc" />
+            <pointLight position={[0, -3, -2]} intensity={1.4} color="#f59e0b" />
+            <Suspense fallback={null}>
+              <Asset3D zoomProgress={cameraZoomProgress} />
+            </Suspense>
+          </Canvas>
+        </div>
+
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-40 bg-gradient-to-b from-[#030108] via-[#030108]/70 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 bg-gradient-to-t from-[#030108] via-[#030108]/70 to-transparent" />
+
+        <div className="absolute inset-x-0 top-10 z-20 px-6 md:top-14">
+          <div className="mx-auto max-w-3xl text-center" style={{ opacity: headingOpacity }}>
         <motion.div
           initial={{ opacity: 0, y: 60 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false }}
+          viewport={{ once: false, amount: 0.35 }}
           transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
           className="text-center"
         >
           <motion.p 
-            className="text-purple-400/50 text-[10px] tracking-[0.6em] uppercase mb-6"
+            className="text-purple-400/50 text-[10px] tracking-[0.6em] uppercase mb-4"
             style={{ fontFamily: "Space Grotesk, sans-serif" }}
           >
             Core Features
           </motion.p>
           <h2 
-            className="text-white mb-6"
+            className="text-white mb-4"
             style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: "clamp(32px, 6vw, 64px)", fontWeight: 700 }}
           >
             CORE FEATURES
@@ -885,9 +951,9 @@ function FeaturesSection() {
             Everything you need for DeFi on Initia with near-zero gas fees.
           </p>
         </motion.div>
+          </div>
+        </div>
       </div>
-      
-      <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-[#030108] to-transparent pointer-events-none z-20" />
     </section>
   );
 }
@@ -1338,7 +1404,7 @@ export default function Home() {
       <div className="relative z-10">
         <Navigation />
         <HeroSection scrollY={scrollY} />
-        <FeaturesSection />
+        <FeaturesSection scrollY={scrollY} />
         <StorySection />
         <TokensSection />
         <CTASection />
