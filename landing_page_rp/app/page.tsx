@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useEffect, useState, useMemo } from "react";
+import { useRef, useEffect, useState, useMemo, Suspense } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { motion, AnimatePresence } from "framer-motion";
+import { useGLTF } from "@react-three/drei";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import * as THREE from "three";
@@ -390,50 +391,503 @@ function HeroSection({ scrollY }: { scrollY: number }) {
   );
 }
 
+function AbstractBackground() {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const particleRef = useRef<THREE.Points>(null);
+  
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime();
+    if (meshRef.current) {
+      meshRef.current.rotation.y = time * 0.1;
+      meshRef.current.rotation.x = Math.sin(time * 0.05) * 0.2;
+    }
+    if (particleRef.current) {
+      particleRef.current.rotation.y = time * 0.05;
+      const positions = particleRef.current.geometry.attributes.position.array as Float32Array;
+      for (let i = 0; i < positions.length; i += 3) {
+        positions[i + 1] += Math.sin(time * 0.3 + i * 0.01) * 0.002;
+      }
+      particleRef.current.geometry.attributes.position.needsUpdate = true;
+    }
+  });
+
+  const torusGeometry = useMemo(() => {
+    return new THREE.TorusKnotGeometry(4, 1.2, 128, 32, 2, 3);
+  }, []);
+
+  const particleGeometry = useMemo(() => {
+    const geo = new THREE.BufferGeometry();
+    const positions = new Float32Array(3000 * 3);
+    const colors = new Float32Array(3000 * 3);
+    for (let i = 0; i < 3000; i++) {
+      const i3 = i * 3;
+      const radius = 8 + Math.random() * 12;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      positions[i3] = radius * Math.sin(phi) * Math.cos(theta);
+      positions[i3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+      positions[i3 + 2] = radius * Math.cos(phi);
+      const color = new THREE.Color();
+      color.setHSL(0.55 + Math.random() * 0.15, 0.7, 0.5 + Math.random() * 0.3);
+      colors[i3] = color.r;
+      colors[i3 + 1] = color.g;
+      colors[i3 + 2] = color.b;
+    }
+    geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    return geo;
+  }, []);
+
+  return (
+    <>
+      <mesh ref={meshRef} geometry={torusGeometry}>
+        <meshStandardMaterial
+          color="#1a0a2e"
+          emissive="#2d1b4e"
+          emissiveIntensity={0.3}
+          metalness={0.8}
+          roughness={0.3}
+          transparent
+          opacity={0.6}
+        />
+      </mesh>
+      <points ref={particleRef} geometry={particleGeometry}>
+        <pointsMaterial size={0.04} vertexColors transparent opacity={0.8} sizeAttenuation blending={THREE.AdditiveBlending} />
+      </points>
+    </>
+  );
+}
+
+function GlowingGlobe() {
+  const groupRef = useRef<THREE.Group>(null);
+  const outerRef = useRef<THREE.Mesh>(null);
+  
+  useFrame((state) => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y = state.clock.getElapsedTime() * 0.08;
+      groupRef.current.rotation.x = Math.sin(state.clock.getElapsedTime() * 0.03) * 0.05;
+    }
+    if (outerRef.current) {
+      const material = outerRef.current.material as THREE.MeshPhysicalMaterial;
+      if (material.opacity) {
+        material.opacity = 0.15 + Math.sin(state.clock.getElapsedTime() * 2) * 0.05;
+      }
+    }
+  });
+
+  return (
+    <group ref={groupRef}>
+      <mesh>
+        <sphereGeometry args={[2.5, 64, 64]} />
+        <meshStandardMaterial
+          color="#0f0a1e"
+          emissive="#6d28d9"
+          emissiveIntensity={0.4}
+          transparent
+          opacity={0.4}
+          side={THREE.BackSide}
+        />
+      </mesh>
+      <mesh ref={outerRef}>
+        <sphereGeometry args={[2.6, 64, 64]} />
+        <meshPhysicalMaterial
+          color="#a78bfa"
+          emissive="#7c3aed"
+          emissiveIntensity={0.6}
+          transparent
+          opacity={0.15}
+          roughness={0.1}
+          metalness={0.3}
+          clearcoat={1}
+          clearcoatRoughness={0.1}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      <mesh>
+        <sphereGeometry args={[2.7, 32, 32]} />
+        <meshBasicMaterial
+          color="#c4b5fd"
+          transparent
+          opacity={0.08}
+          wireframe
+        />
+      </mesh>
+      <pointLight position={[0, 0, 0]} intensity={3} color="#a855f7" distance={15} />
+      <pointLight position={[3, 3, 3]} intensity={1} color="#22d3ee" distance={10} />
+    </group>
+  );
+}
+
+function InnerCaveWorld() {
+  const groupRef = useRef<THREE.Group>(null);
+  const { scene } = useGLTF("/stylized_alien_cave_skybox.glb");
+  const texture = useMemo(() => {
+    const tex = new THREE.TextureLoader().load('/asset/textures/Material_baseColor.jpeg');
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }, []);
+  
+  useEffect(() => {
+    if (scene) {
+      scene.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.material = new THREE.MeshStandardMaterial({
+            map: texture,
+            emissiveMap: texture,
+            emissive: new THREE.Color("#22d3ee"),
+            emissiveIntensity: 1.2,
+            side: THREE.DoubleSide,
+          });
+        }
+      });
+    }
+  }, [scene, texture]);
+
+  useFrame((state) => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y = state.clock.getElapsedTime() * 0.03;
+    }
+  });
+
+  return (
+    <group ref={groupRef} scale={0.4}>
+      <primitive object={scene.clone()} />
+    </group>
+  );
+}
+
+function MagicalParticles() {
+  const pointsRef = useRef<THREE.Points>(null);
+  const particleCount = 3000;
+  
+  const { positions, colors } = useMemo(() => {
+    const pos = new Float32Array(particleCount * 3);
+    const col = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount; i++) {
+      const i3 = i * 3;
+      const radius = 3 + Math.random() * 25;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      pos[i3] = radius * Math.sin(phi) * Math.cos(theta);
+      pos[i3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+      pos[i3 + 2] = radius * Math.cos(phi);
+      
+      const colorChoice = Math.random();
+      if (colorChoice < 0.33) {
+        col[i3] = 0.67; col[i3 + 1] = 0.53; col[i3 + 2] = 1;
+      } else if (colorChoice < 0.66) {
+        col[i3] = 0.13; col[i3 + 1] = 0.83; col[i3 + 2] = 0.93;
+      } else {
+        col[i3] = 1; col[i3 + 1] = 0.84; col[i3 + 2] = 0.5;
+      }
+    }
+    return { positions: pos, colors: col };
+  }, []);
+
+  useFrame((state) => {
+    if (pointsRef.current) {
+      pointsRef.current.rotation.y = -state.clock.getElapsedTime() * 0.01;
+      pointsRef.current.rotation.x = state.clock.getElapsedTime() * 0.005;
+      const posArray = pointsRef.current.geometry.attributes.position.array as Float32Array;
+      for (let i = 0; i < particleCount; i++) {
+        const i3 = i * 3;
+        posArray[i3 + 1] += Math.sin(state.clock.getElapsedTime() * 0.5 + i * 0.1) * 0.003;
+      }
+      pointsRef.current.geometry.attributes.position.needsUpdate = true;
+    }
+  });
+
+  const geometry = useMemo(() => {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    return geo;
+  }, [positions, colors]);
+
+  return (
+    <points ref={pointsRef} geometry={geometry}>
+      <pointsMaterial size={0.04} vertexColors transparent opacity={0.7} sizeAttenuation blending={THREE.AdditiveBlending} />
+    </points>
+  );
+}
+
+function VolumetricFog() {
+  const meshRef = useRef<THREE.Mesh>(null);
+  
+  useFrame((state) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.y = state.clock.getElapsedTime() * 0.02;
+      meshRef.current.rotation.x = Math.sin(state.clock.getElapsedTime() * 0.1) * 0.1;
+    }
+  });
+
+  return (
+    <mesh ref={meshRef} position={[0, 0, 0]}>
+      <sphereGeometry args={[15, 32, 32]} />
+      <meshBasicMaterial
+        color="#1e1b4b"
+        transparent
+        opacity={0.15}
+        side={THREE.BackSide}
+      />
+    </mesh>
+  );
+}
+
+function ScrollCamera() {
+  const { camera } = useThree();
+  const scrollRef = useRef(0);
+  
+  useEffect(() => {
+    const handleScroll = () => {
+      scrollRef.current = window.scrollY;
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+  
+  useFrame(() => {
+    const sectionHeight = window.innerHeight * 5;
+    const scrollProgress = Math.min(scrollRef.current / sectionHeight, 1);
+    
+    const eased = 1 - Math.pow(1 - scrollProgress, 4);
+    
+    const startZ = 20;
+    const endZ = 0;
+    
+    camera.position.z = startZ + (endZ - startZ) * eased;
+    camera.position.y = -eased * 1;
+    (camera as THREE.PerspectiveCamera).fov = 45 + eased * 35;
+    (camera as THREE.PerspectiveCamera).updateProjectionMatrix();
+  });
+  
+  return null;
+}
+
+function GlitchText({ children, className, style }: { children: string; className?: string; style?: React.CSSProperties }) {
+  const [isHovered, setIsHovered] = useState(false);
+  
+  return (
+    <motion.span
+      className={`relative inline-block ${className}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      animate={{
+        x: isHovered ? [0, -2, 2, -1, 1, 0] : 0,
+      }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+      style={style}
+    >
+      {isHovered && (
+        <>
+          <span className="absolute inset-0 text-red-500/50 blur-[2px]" style={{ transform: "translateX(-2px)" }}>{children}</span>
+          <span className="absolute inset-0 text-cyan-500/50 blur-[2px]" style={{ transform: "translateX(2px)" }}>{children}</span>
+        </>
+      )}
+      {children}
+    </motion.span>
+  );
+}
+
+function CinematicCard({ title, subtitle, description, index }: { 
+  title: string; 
+  subtitle: string;
+  description: string;
+  index: number;
+}) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [isHovered, setIsHovered] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
+    const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
+    setMousePos({ x, y });
+  };
+
+  return (
+    <motion.div
+      ref={cardRef}
+      initial={{ opacity: 0, y: 80, scale: 0.9 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: false, amount: 0.3 }}
+      transition={{ duration: 1, delay: index * 0.2, ease: [0.22, 1, 0.36, 1] }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onMouseMove={handleMouseMove}
+      className="relative"
+      animate={{
+        y: [0, 20, 0],
+        rotateZ: isHovered ? 0 : [-1, 1, -1][index % 3],
+      }}
+      style={{
+        width: "100%",
+        maxWidth: index === 0 ? "500px" : "380px",
+        padding: index === 0 ? "48px" : "36px",
+        background: isHovered 
+          ? "rgba(20, 25, 40, 0.75)" 
+          : "rgba(15, 18, 30, 0.65)",
+        backdropFilter: "blur(40px)",
+        WebkitBackdropFilter: "blur(40px)",
+        borderRadius: "24px",
+        border: isHovered 
+          ? "1px solid rgba(34, 211, 238, 0.5)" 
+          : "1px solid rgba(255, 255, 255, 0.06)",
+        boxShadow: isHovered
+          ? "0 40px 80px -20px rgba(34, 211, 238, 0.3), 0 0 60px rgba(139, 92, 246, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
+          : "0 30px 60px -15px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.03)",
+        transformStyle: "preserve-3d",
+        transform: isHovered 
+          ? `perspective(1000px) rotateX(${-mousePos.y * 5}deg) rotateY(${mousePos.x * 5}deg) scale(1.02)`
+          : `perspective(1000px) rotateX(${-mousePos.y * 2}deg) rotateY(${mousePos.x * 2}deg)`,
+        transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+        willChange: "transform, box-shadow",
+        zIndex: 10 - index,
+      }}
+    >
+      <div 
+        className="absolute inset-0 rounded-[24px] pointer-events-none overflow-hidden"
+        style={{
+          background: isHovered
+            ? "linear-gradient(135deg, rgba(34, 211, 238, 0.08) 0%, transparent 40%, rgba(139, 92, 246, 0.05) 100%)"
+            : "linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, transparent 50%, rgba(34, 211, 238, 0.02) 100%)",
+        }}
+      />
+      
+      <div className="relative z-10">
+        <motion.p
+          className="text-cyan-400/70 text-[10px] tracking-[0.3em] uppercase mb-4"
+          style={{ fontFamily: "Space Grotesk, sans-serif" }}
+          animate={{ x: isHovered ? [0, 1, 0] : 0 }}
+        >
+          {subtitle}
+        </motion.p>
+        
+        <div className="w-12 h-0.5 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full mb-6"
+          style={{ boxShadow: isHovered ? "0 0 20px rgba(34, 211, 238, 0.6)" : "none" }}
+        />
+        
+        <GlitchText className="block text-white mb-4 tracking-wide" style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: index === 0 ? "clamp(20px, 2.5vw, 28px)" : "clamp(16px, 2vw, 22px)", fontWeight: 700 }}>
+          {title}
+        </GlitchText>
+        
+        <p 
+          className="text-white/40 text-sm leading-relaxed"
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
+          {description}
+        </p>
+      </div>
+      
+      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/30 to-transparent rounded-b-[24px] pointer-events-none" />
+    </motion.div>
+  );
+}
+
 function FeaturesSection() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const [mouseParallax, setMouseParallax] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!sectionRef.current) return;
+      const rect = sectionRef.current.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      setMouseParallax({
+        x: (e.clientX - centerX) * 0.02,
+        y: (e.clientY - centerY) * 0.02,
+      });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
   const features = [
-    { src: "https://res.cloudinary.com/dfonotyfb/video/upload/v1775585556/dds3_1_rqhg7x.mp4", title: "Smart Swap", description: "Auto-routing with live comparison against 4 external DEX aggregators.", isNew: true },
-    { src: "https://res.cloudinary.com/dfonotyfb/video/upload/v1775585556/dds3_1_rqhg7x.mp4", title: "Limit Orders", description: "Set target price with expiry, auto-executes on-chain.", isNew: true },
-    { src: "https://res.cloudinary.com/dfonotyfb/video/upload/v1775585556/dds3_1_rqhg7x.mp4", title: "Batch Swap", description: "Rebalance portfolio across multiple tokens in one atomic transaction.", isNew: true },
-    { src: "https://res.cloudinary.com/dfonotyfb/video/upload/v1775585556/dds3_1_rqhg7x.mp4", title: "Bridge", description: "Seamless deposit/withdraw between Initia L1 and the appchain.", isNew: true },
+    { title: "SMART SWAP", subtitle: "Protocol 01", description: "Auto-routing with live comparison against 4 external DEX aggregators. Finds the optimal path instantly." },
+    { title: "LIMIT ORDERS", subtitle: "Protocol 02", description: "Set target price with expiry, auto-executes on-chain. Never miss a trade opportunity." },
+    { title: "BATCH SWAP", subtitle: "Protocol 03", description: "Rebalance portfolio across multiple tokens in one atomic transaction." },
+    { title: "CROSS-CHAIN", subtitle: "Protocol 04", description: "Seamless deposit/withdraw between Initia L1 and the appchain." },
   ];
 
   return (
-    <section className="relative z-10 py-32 bg-black">
-      <div className="container mx-auto px-3 md:px-10">
-        <div className="px-5 py-20">
-          <p className="font-circular-web text-lg text-white/60 mb-2">Core Features</p>
-          <p className="font-circular-web text-lg text-white/40 max-w-md">
+    <section 
+      ref={sectionRef}
+      className="relative h-[500vh] overflow-hidden"
+      style={{
+        background: "linear-gradient(180deg, #030108 0%, #05020f 30%, #080414 60%, #030108 100%)",
+      }}
+    >
+      <div className="absolute inset-0">
+        <div 
+          className="absolute w-[800px] h-[800px] rounded-full"
+          style={{ 
+            top: "10%", 
+            left: "-20%",
+            background: "radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 60%)",
+            filter: "blur(100px)",
+            transform: `translate(${mouseParallax.x * 0.5}px, ${mouseParallax.y * 0.5}px)`,
+          }}
+        />
+        <div 
+          className="absolute w-[600px] h-[600px] rounded-full"
+          style={{ 
+            bottom: "5%", 
+            right: "-15%",
+            background: "radial-gradient(circle, rgba(34, 211, 238, 0.1) 0%, transparent 60%)",
+            filter: "blur(80px)",
+            transform: `translate(${-mouseParallax.x * 0.3}px, ${-mouseParallax.y * 0.3}px)`,
+          }}
+        />
+      </div>
+      
+      <div 
+        ref={canvasRef}
+        className="absolute inset-0"
+      >
+        <Canvas camera={{ position: [0, 0, 20], fov: 45 }}>
+          <ambientLight intensity={0.3} />
+          <pointLight position={[10, 10, 10]} intensity={1.5} color="#a855f7" />
+          <pointLight position={[-10, -10, 10]} intensity={1} color="#22d3ee" />
+          <pointLight position={[0, 5, 0]} intensity={0.8} color="#fbbf24" />
+          <ScrollCamera />
+          <GlowingGlobe />
+          <InnerCaveWorld />
+          <MagicalParticles />
+          <VolumetricFog />
+        </Canvas>
+      </div>
+      
+      <div className="relative z-10 max-w-7xl mx-auto px-6 mb-16">
+        <motion.div
+          initial={{ opacity: 0, y: 60 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false }}
+          transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+          className="text-center"
+        >
+          <motion.p 
+            className="text-purple-400/50 text-[10px] tracking-[0.6em] uppercase mb-6"
+            style={{ fontFamily: "Space Grotesk, sans-serif" }}
+          >
+            Core Features
+          </motion.p>
+          <h2 
+            className="text-white mb-6"
+            style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: "clamp(32px, 6vw, 64px)", fontWeight: 700 }}
+          >
+            CORE FEATURES
+          </h2>
+          <p className="text-white/30 text-base max-w-2xl mx-auto" style={{ fontFamily: "Inter, sans-serif" }}>
             Everything you need for DeFi on Initia with near-zero gas fees.
           </p>
-        </div>
-
-        <BentoTilt className="border-hsla relative mb-8 h-80 w-full overflow-hidden rounded-lg md:h-[55vh]">
-          <BentoCard
-            src="https://res.cloudinary.com/dfonotyfb/video/upload/v1775585556/dds3_1_rqhg7x.mp4"
-            title="Smart <b>R</b>outing"
-            description="Auto-routing with live comparison against 4 external DEX aggregators. Finds the optimal path instantly."
-            isNew
-          />
-        </BentoTilt>
-
-        <div className="grid h-[135vh] w-full grid-cols-2 grid-rows-3 gap-6">
-          {features.slice(1).map((feature, i) => (
-            <BentoTilt key={feature.title} className={`bento-tilt_1 row-span-1 ${i === 0 ? "md:col-span-1" : i === 1 ? "ms-32 md:col-span-1 md:ms-0" : "me-14 md:col-span-1 md:me-0"}`}>
-              <BentoCard src={feature.src} title={feature.title} description={feature.description} isNew={feature.isNew} />
-            </BentoTilt>
-          ))}
-          <BentoTilt className="bento-tilt_2">
-            <div className="flex size-full flex-col justify-between bg-gradient-to-br from-purple-900/50 to-pink-900/50 p-6">
-              <h1 className="bento-title text-white max-w-64 font-zentry">More co<b>m</b>ing s<b>o</b>on.</h1>
-              <div className="text-6xl self-end">🚀</div>
-            </div>
-          </BentoTilt>
-          <BentoTilt className="bento-tilt_2">
-            <video src="https://res.cloudinary.com/dfonotyfb/video/upload/v1775585556/dds3_1_rqhg7x.mp4" loop muted autoPlay className="size-full object-cover object-center" />
-          </BentoTilt>
-        </div>
+        </motion.div>
       </div>
+      
+      <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-[#030108] to-transparent pointer-events-none z-20" />
     </section>
   );
 }
