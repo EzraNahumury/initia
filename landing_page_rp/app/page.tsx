@@ -558,7 +558,7 @@ function Asset3D({ zoomProgress = 0 }: { zoomProgress?: number }) {
       const rotationY = THREE.MathUtils.lerp(0.55, 0.67, entryProgress) + time * 0.025;
       const rotationZ = Math.cos(time * 0.45) * wobbleStrength * 0.7;
       const targetY = Math.sin(time * 0.8) * 0.03;
-      const targetScale = THREE.MathUtils.lerp(1.12, 1.82, entryProgress);
+      const targetScale = THREE.MathUtils.lerp(0.7, 1.85, entryProgress);
 
       groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, rotationX, 0.08);
       groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, rotationY, 0.08);
@@ -582,12 +582,12 @@ useGLTF.preload("/asset/scene.gltf");
 function FeatureAssetCameraRig({ zoomProgress = 0 }: { zoomProgress?: number }) {
   const { camera } = useThree();
   const lookTargetRef = useRef(new THREE.Vector3(0, 0, 0));
-  const desiredPositionRef = useRef(new THREE.Vector3(0, 0.02, 5.8));
+  const desiredPositionRef = useRef(new THREE.Vector3(0, 0.04, 10.4));
   const desiredLookRef = useRef(new THREE.Vector3(0, 0, 0));
   const cameraPath = useMemo(() => ({
-    outer: new THREE.Vector3(0, 0.02, 5.8),
-    surface: new THREE.Vector3(0, 0.02, 3.25),
-    threshold: new THREE.Vector3(0, 0.01, 1.65),
+    outer: new THREE.Vector3(0, 0.04, 10.4),
+    surface: new THREE.Vector3(0, 0.03, 5.8),
+    threshold: new THREE.Vector3(0, 0.01, 2.4),
     inner: new THREE.Vector3(0, 0.01, 0.06),
     outerLook: new THREE.Vector3(0.14, 0.03, -0.7),
     surfaceLook: new THREE.Vector3(0.12, 0.03, -1.8),
@@ -613,7 +613,7 @@ function FeatureAssetCameraRig({ zoomProgress = 0 }: { zoomProgress?: number }) 
       .lerp(cameraPath.innerLook, divePhase);
 
     const desiredFov = THREE.MathUtils.lerp(
-      THREE.MathUtils.lerp(28, 34, enlargePhase),
+      THREE.MathUtils.lerp(24, 30, enlargePhase),
       78,
       divePhase
     );
@@ -860,36 +860,55 @@ function CinematicCard({ title, subtitle, description, index }: {
   );
 }
 
-function FeaturesSection({ scrollY }: { scrollY: number }) {
+function FeaturesSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const [sectionRange, setSectionRange] = useState({ start: 0, distance: 1 });
+  const sectionTopRef = useRef(0);
+  const zoomProgressRef = useRef(0);
+  const [zoomProgress, setZoomProgress] = useState(0);
 
   useEffect(() => {
-    const updateSectionRange = () => {
+    const updateSectionTop = () => {
       if (!sectionRef.current) return;
-      const start = sectionRef.current.offsetTop;
-      const distance = Math.max(sectionRef.current.offsetHeight - window.innerHeight, 1);
-      setSectionRange({ start, distance });
+      sectionTopRef.current = sectionRef.current.offsetTop;
     };
 
-    const frame = window.requestAnimationFrame(updateSectionRange);
-    window.addEventListener("resize", updateSectionRange);
+    const handleWheel = (event: WheelEvent) => {
+      if (!sectionRef.current) return;
+      const rect = sectionRef.current.getBoundingClientRect();
+      const isPinned = rect.top <= 1 && rect.bottom >= window.innerHeight - 1;
+      if (!isPinned) return;
+
+      const currentZoom = zoomProgressRef.current;
+      const wantsZoomIn = event.deltaY > 0 && currentZoom < 0.999;
+      const wantsZoomOut = event.deltaY < 0 && currentZoom > 0.001;
+
+      if (!wantsZoomIn && !wantsZoomOut) return;
+
+      event.preventDefault();
+      window.scrollTo({ top: sectionTopRef.current, behavior: "auto" });
+      const nextZoom = THREE.MathUtils.clamp(currentZoom + event.deltaY * 0.0012, 0, 1);
+      zoomProgressRef.current = nextZoom;
+      setZoomProgress(nextZoom);
+    };
+
+    const frame = window.requestAnimationFrame(updateSectionTop);
+    window.addEventListener("resize", updateSectionTop);
+    window.addEventListener("wheel", handleWheel, { passive: false });
 
     return () => {
       window.cancelAnimationFrame(frame);
-      window.removeEventListener("resize", updateSectionRange);
+      window.removeEventListener("resize", updateSectionTop);
+      window.removeEventListener("wheel", handleWheel);
     };
   }, []);
 
-  const rawProgress = (scrollY - sectionRange.start) / sectionRange.distance;
-  const zoomProgress = Math.max(0, Math.min(rawProgress, 1));
   const cameraZoomProgress = 1 - Math.pow(1 - zoomProgress, 3);
   const headingOpacity = Math.max(0, 1 - cameraZoomProgress * 2.4);
 
   return (
     <section 
       ref={sectionRef}
-      className="relative h-[260vh] overflow-hidden md:h-[280vh]"
+      className="relative h-[180vh] overflow-hidden md:h-[200vh]"
       style={{
         background: "linear-gradient(180deg, #030108 0%, #05020f 30%, #080414 60%, #030108 100%)",
       }}
@@ -904,7 +923,7 @@ function FeaturesSection({ scrollY }: { scrollY: number }) {
         <div className="absolute inset-0">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08),rgba(6,3,15,0.22)_42%,rgba(3,1,8,0.9)_82%)]" />
           <Canvas
-            camera={{ position: [0, 0.02, 5.8], fov: 28, near: 0.01, far: 80 }}
+            camera={{ position: [0, 0.04, 10.4], fov: 24, near: 0.01, far: 80 }}
             dpr={[1, 1.5]}
             gl={{ alpha: true, antialias: true }}
             onCreated={({ gl }) => gl.setClearColor(0x000000, 0)}
@@ -1404,7 +1423,7 @@ export default function Home() {
       <div className="relative z-10">
         <Navigation />
         <HeroSection scrollY={scrollY} />
-        <FeaturesSection scrollY={scrollY} />
+        <FeaturesSection />
         <StorySection />
         <TokensSection />
         <CTASection />
