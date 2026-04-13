@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function FrontendOverviewPage() {
   return (
     <article className="prose">
@@ -241,7 +243,7 @@ export default function FrontendOverviewPage() {
       <p>
         Configures wagmi with three connectors (WalletConnect, Coinbase Wallet, Injected), the
         Initia MiniEVM chain, sessionStorage for state persistence, and SSR mode enabled. See
-        the <a href="/frontend/wallet">Wallet Integration</a> page for the anti-auto-connect system.
+        the <Link href="/frontend/wallet">Wallet Integration</Link> page for the anti-auto-connect system.
       </p>
 
       <h3>dex-quotes.ts</h3>
@@ -249,7 +251,7 @@ export default function FrontendOverviewPage() {
         Fetches live swap quotes from four external DEX aggregators (LiFi, OpenOcean, KyberSwap,
         ParaSwap) in parallel via <code>Promise.allSettled()</code>. Each fetcher has an 8-second
         timeout. Only DEXs that return a valid live quote are included in results. Quotes are
-        sorted by output amount descending. See the <a href="/frontend/swap">Swap &amp; Routing</a> page.
+        sorted by output amount descending. See the <Link href="/frontend/swap">Swap &amp; Routing</Link> page.
       </p>
 
       <h3>activity.ts</h3>

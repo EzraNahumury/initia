@@ -56,7 +56,7 @@ npm run dev`}</code></pre>
 
       <h2>First Steps</h2>
       <ol>
-        <li>Click <strong>"Start Routing"</strong> on the welcome page</li>
+        <li>Click <strong>&quot;Start Routing&quot;</strong> on the welcome page</li>
         <li>Connect your wallet (MetaMask, Rabby, etc.)</li>
         <li>Go to <strong>Faucet</strong> tab and claim test tokens</li>
         <li>Go to <strong>Swap</strong> tab and try a swap</li>

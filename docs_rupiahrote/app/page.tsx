@@ -1,3 +1,5 @@
+import Link from "next/link";
+import Image from "next/image";
 import { ParticleBackground } from "./components/ParticleBackground";
 
 export default function IntroductionPage() {
@@ -27,7 +29,7 @@ export default function IntroductionPage() {
 
         {/* Content */}
         <div className="relative z-10 px-8 py-12 text-center">
-          <img src="/logo.png" alt="RupiahRoute" className="w-20 h-20 mx-auto mb-6 rounded-full object-contain"
+          <Image src="/logo.png" alt="RupiahRoute" width={80} height={80} className="mx-auto mb-6 rounded-full object-contain"
             style={{ filter: "drop-shadow(0 0 20px rgba(159,41,255,0.4))" }} />
           <h1 className="text-2xl font-bold text-foreground mb-2"
             style={{ textShadow: "0 0 20px rgba(159,41,255,0.4)" }}>RupiahRoute</h1>
@@ -37,14 +39,14 @@ export default function IntroductionPage() {
             cross-chain bridging, and execution on an Initia EVM appchain with near-zero gas fees.
           </p>
           <div className="flex items-center justify-center gap-3 mt-7">
-            <a href="/quickstart" className="px-6 py-2.5 rounded-lg bg-purple text-sm font-medium hover:bg-purple-light transition-colors"
+            <Link href="/quickstart" className="px-6 py-2.5 rounded-lg bg-purple text-sm font-medium hover:bg-purple-light transition-colors"
               style={{ color: "#ffffff", boxShadow: "0 0 15px rgba(159,41,255,0.3)", textShadow: "1px 1px 0 rgba(0,0,0,0.4)", textDecoration: "none" }}>
               Quick Start
-            </a>
-            <a href="/architecture" className="px-6 py-2.5 rounded-lg border border-purple/30 text-sm hover:border-purple/50 transition-colors"
+            </Link>
+            <Link href="/architecture" className="px-6 py-2.5 rounded-lg border border-purple/30 text-sm hover:border-purple/50 transition-colors"
               style={{ color: "#e0d0ff", textDecoration: "none" }}>
               Architecture
-            </a>
+            </Link>
           </div>
         </div>
       </div>

@@ -129,7 +129,7 @@ cast call $ROUTER_ADDRESS \\
       <h2>Troubleshooting</h2>
       <ul>
         <li>
-          <strong>Transaction reverts with "insufficient gas":</strong> Initia MiniEVM
+          <strong>Transaction reverts with &quot;insufficient gas&quot;:</strong> Initia MiniEVM
           uses the <code>--legacy</code> flag; make sure it is included in all forge commands.
         </li>
         <li>

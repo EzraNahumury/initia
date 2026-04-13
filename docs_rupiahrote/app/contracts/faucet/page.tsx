@@ -123,7 +123,7 @@ function sendToken(
     uint256 amount
 ) external payable`}</code></pre>
       <p>
-        <code>registerUsername</code> maps a <code>.init</code> name to the caller's
+        <code>registerUsername</code> maps a <code>.init</code> name to the caller&apos;s
         address using the ICosmos precompile. <code>sendToUsername</code> resolves the
         name on-chain and transfers tokens. <code>sendToken</code> sends directly to an
         address. Both send functions require a <strong>100 GAS</strong> fee.

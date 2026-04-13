@@ -13,7 +13,7 @@ export default function RouterPage() {
         Pools follow the constant-product formula <code>x * y = k</code> with a 0.3% swap fee.
         On the first deposit, 1000 units of LP tokens are permanently locked to prevent
         price manipulation of empty pools. Subsequent deposits mint LP tokens proportional
-        to the depositor's contribution relative to existing reserves.
+        to the depositor&apos;s contribution relative to existing reserves.
       </p>
 
       <h3>createPool</h3>
@@ -173,7 +173,7 @@ function batchSwap(
       <h3>executeLimitOrder</h3>
       <pre><code>{`function executeLimitOrder(uint256 orderId) external returns (uint256 amountOut)`}</code></pre>
       <p>
-        Callable by anyone. Checks that the current pool price satisfies the order's
+        Callable by anyone. Checks that the current pool price satisfies the order&apos;s
         target price, executes the swap, sends output to the order creator, and pays
         the 0.1% executor fee to <code>msg.sender</code>.
       </p>
