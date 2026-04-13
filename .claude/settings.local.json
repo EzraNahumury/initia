@@ -90,7 +90,14 @@
       "Bash(node:*)",
       "Bash(ls -la C:\\\\\\\\initia\\\\\\\\fe_rupiahrote/*.json C:\\\\\\\\initia\\\\\\\\fe_rupiahrote/*.config.* C:\\\\\\\\initia\\\\\\\\fe_rupiahrote/.env*)",
       "Bash(grep -E \"\\\\\\\\.\\(json|config|env\\)\")",
-      "Bash(cd C:\\\\\\\\initia\\\\\\\\fe_rupiahrote)"
+      "Bash(cd C:\\\\\\\\initia\\\\\\\\fe_rupiahrote)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "WebFetch(domain:cryptologos.cc)",
+      "Bash(curl -sL -o usdc.png \"https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png\")",
+      "Bash(curl -sL -o idrx_test.png \"https://raw.githubusercontent.com/niconiahi/idrx/main/logo.png\")",
+      "Bash(curl -sL -o idrx_test2.png \"https://s2.coinmarketcap.com/static/img/coins/200x200/34758.png\")",
+      "Bash(curl -sL -o gas_test.png \"https://raw.githubusercontent.com/cosmos/chain-registry/master/initia/images/GAS.png\")",
+      "Bash(ls -la *.png)"
     ]
   }
 }
