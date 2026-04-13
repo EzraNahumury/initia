@@ -1,3 +1,5 @@
+import { CodeBlock } from "../../components/CodeBlock";
+
 export default function TokenListPage() {
   return (
     <article className="prose">
@@ -61,7 +63,7 @@ export default function TokenListPage() {
         Token logo images are sourced from the official Initia Registry on
         GitHub. The base URL for all token images is:
       </p>
-      <pre><code>{`https://raw.githubusercontent.com/initia-labs/initia-registry/main/images/`}</code></pre>
+      <CodeBlock>{`https://raw.githubusercontent.com/initia-labs/initia-registry/main/images/`}</CodeBlock>
       <p>
         Each token references its logo by filename from this registry. If a logo
         is missing or fails to load, the <code>TokenSelector</code> component
@@ -130,12 +132,12 @@ export default function TokenListPage() {
           rings and hover outlines around token elements.
         </li>
       </ul>
-      <pre><code>{`// Example usage
+      <CodeBlock>{`// Example usage
 const style = tokenStyle("INIT");
 // Returns: { bg: "bg-blue-500/10", ring: "ring-blue-500/30" }
 
 const style = tokenStyle("IDRX");
-// Returns: { bg: "bg-red-500/10", ring: "ring-red-500/30" }`}</code></pre>
+// Returns: { bg: "bg-red-500/10", ring: "ring-red-500/30" }`}</CodeBlock>
 
       <h2>Faucet Amounts</h2>
       <p>

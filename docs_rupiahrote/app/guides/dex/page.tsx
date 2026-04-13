@@ -1,3 +1,5 @@
+import { CodeBlock } from "../../components/CodeBlock";
+
 export default function DexComparisonPage() {
   return (
     <article className="prose">
@@ -102,7 +104,7 @@ export default function DexComparisonPage() {
           ranked list.
         </li>
       </ul>
-      <pre><code>{`// Simplified fetching logic
+      <CodeBlock>{`// Simplified fetching logic
 const results = await Promise.allSettled([
   fetchLiFiQuote(params),
   fetchOpenOceanQuote(params),
@@ -113,7 +115,7 @@ const results = await Promise.allSettled([
 // Filter out rejected promises, keep only fulfilled quotes
 const externalQuotes = results
   .filter((r) => r.status === "fulfilled")
-  .map((r) => r.value);`}</code></pre>
+  .map((r) => r.value);`}</CodeBlock>
 
       <h2>What Gets Displayed</h2>
       <p>For each quote (both Initia and external), the UI shows:</p>
@@ -139,8 +141,8 @@ const externalQuotes = results
         much the user saves by using RupiahRoute versus the best available
         external quote. This is calculated as:
       </p>
-      <pre><code>{`savings = bestExternalOutput - bestInitiaOutput
-savingsPercent = (savings / bestExternalOutput) * 100`}</code></pre>
+      <CodeBlock>{`savings = bestExternalOutput - bestInitiaOutput
+savingsPercent = (savings / bestExternalOutput) * 100`}</CodeBlock>
       <p>
         When the Initia route offers a better rate, the savings are displayed as
         a positive value with a green highlight. When an external route is

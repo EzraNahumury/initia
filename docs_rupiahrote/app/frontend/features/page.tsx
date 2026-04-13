@@ -1,3 +1,5 @@
+import { CodeBlock } from "../../components/CodeBlock";
+
 export default function FeaturesPage() {
   return (
     <article className="prose">
@@ -235,7 +237,7 @@ export default function FeaturesPage() {
           The delta text disappears after 2 seconds.
         </li>
       </ul>
-      <pre><code>{`// Balance change detection in FaucetCard's BalanceRow
+      <CodeBlock>{`// Balance change detection in FaucetCard's BalanceRow
 useEffect(() => {
   if (prevBalance.current !== undefined && raw > prevBalance.current) {
     const delta = Number(raw - prevBalance.current) / 10 ** token.decimals;
@@ -244,7 +246,7 @@ useEffect(() => {
     setTimeout(() => { setHighlight(false); setDeltaText(null); }, 2000);
   }
   prevBalance.current = raw;
-}, [raw]);`}</code></pre>
+}, [raw]);`}</CodeBlock>
 
       <hr />
 

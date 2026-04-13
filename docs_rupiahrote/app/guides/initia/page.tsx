@@ -1,3 +1,5 @@
+import { CodeBlock } from "../../components/CodeBlock";
+
 export default function InitiaIntegrationPage() {
   return (
     <article className="prose">
@@ -63,7 +65,7 @@ export default function InitiaIntegrationPage() {
         <strong>initia-registry</strong>, which provides canonical chain
         metadata:
       </p>
-      <pre><code>{`// Chain configuration
+      <CodeBlock>{`// Chain configuration
 {
   chainId: <from initia-registry>,
   rpcUrl: "http://localhost:8545",
@@ -72,7 +74,7 @@ export default function InitiaIntegrationPage() {
     symbol: "GAS",
     decimals: 18
   }
-}`}</code></pre>
+}`}</CodeBlock>
       <p>
         The chain ID is pulled dynamically from the initia-registry rather than
         being hardcoded, ensuring the frontend always connects to the correct
@@ -88,9 +90,9 @@ export default function InitiaIntegrationPage() {
       </p>
 
       <h3>Address Conversion</h3>
-      <pre><code>{`// Convert between address formats
+      <CodeBlock>{`// Convert between address formats
 to_cosmos_address(evmAddress) → cosmosAddress
-to_evm_address(cosmosAddress) → evmAddress`}</code></pre>
+to_evm_address(cosmosAddress) → evmAddress`}</CodeBlock>
       <p>
         These functions translate between Ethereum-style hex addresses (
         <code>0x...</code>) and Cosmos-style bech32 addresses (
@@ -98,8 +100,8 @@ to_evm_address(cosmosAddress) → evmAddress`}</code></pre>
       </p>
 
       <h3>IBC Execution</h3>
-      <pre><code>{`// Execute Cosmos SDK messages from EVM
-execute_cosmos(msg) → result`}</code></pre>
+      <CodeBlock>{`// Execute Cosmos SDK messages from EVM
+execute_cosmos(msg) → result`}</CodeBlock>
       <p>
         Allows EVM contracts to trigger Cosmos SDK transactions, including IBC
         transfers. This is the mechanism behind cross-chain token bridging from
@@ -107,8 +109,8 @@ execute_cosmos(msg) → result`}</code></pre>
       </p>
 
       <h3>State Queries</h3>
-      <pre><code>{`// Query Cosmos state from EVM
-query_cosmos(path, data) → response`}</code></pre>
+      <CodeBlock>{`// Query Cosmos state from EVM
+query_cosmos(path, data) → response`}</CodeBlock>
       <p>
         Enables EVM contracts and frontend code to read Cosmos SDK module state
         directly, for example querying IBC channel info or bank balances.
@@ -128,12 +130,12 @@ query_cosmos(path, data) → response`}</code></pre>
         <code>0x031E...72F</code> and provides on-chain price feeds. It exposes
         a single primary function:
       </p>
-      <pre><code>{`// Fetch on-chain price data
+      <CodeBlock>{`// Fetch on-chain price data
 get_price(base, quote) → Price {
   price: uint256,
   timestamp: uint256,
   decimals: uint8
-}`}</code></pre>
+}`}</CodeBlock>
       <p>
         The <code>get_price</code> function accepts a base and quote currency
         pair (e.g., <code>{"\"ETH\", \"USD\""}</code>) and returns a{" "}
@@ -169,9 +171,9 @@ get_price(base, quote) → Price {
         In the RupiahRoute testnet environment, this bridge is simulated via the{" "}
         <code>TokenFaucet</code> contract using two functions:
       </p>
-      <pre><code>{`// Simulated bridge operations in TokenFaucet
+      <CodeBlock>{`// Simulated bridge operations in TokenFaucet
 bridgeDeposit(token, amount)   // L1 → L2 deposit
-bridgeWithdraw(token, amount)  // L2 → L1 withdrawal`}</code></pre>
+bridgeWithdraw(token, amount)  // L2 → L1 withdrawal`}</CodeBlock>
       <p>
         These functions mint or burn tokens on the appchain side to simulate the
         effect of a real bridge deposit or withdrawal, allowing the full user

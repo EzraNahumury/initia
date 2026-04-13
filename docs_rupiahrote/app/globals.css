@@ -26,6 +26,11 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
 body {
   background:
     radial-gradient(circle at 12% 8%, rgba(159,41,255,0.18), transparent 28rem),
@@ -74,6 +79,7 @@ body {
 .prose p { margin-bottom: 1rem; color: #b0b0d0; font-size: 0.9rem; }
 .prose strong { color: var(--foreground); }
 .prose a { color: var(--purple-light); text-decoration: underline; text-underline-offset: 2px; }
+.prose a[target="_blank"]::after { content: " \2197"; font-size: 0.85em; opacity: 0.7; }
 .prose .not-prose a { text-decoration: none; color: inherit; }
 .prose a:hover { color: var(--purple); }
 .prose ul, .prose ol { margin-bottom: 1rem; padding-left: 1.5rem; color: #b0b0d0; font-size: 0.9rem; }

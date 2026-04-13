@@ -1,3 +1,5 @@
+import { CodeBlock } from "../../components/CodeBlock";
+
 export default function DeploymentPage() {
   return (
     <article className="prose">
@@ -17,12 +19,12 @@ export default function DeploymentPage() {
 
       <h2>Environment Variables</h2>
       <p>Set these before running the deployment scripts:</p>
-      <pre><code>{`export DEPLOYER_KEY="0xYOUR_PRIVATE_KEY"
+      <CodeBlock>{`export DEPLOYER_KEY="0xYOUR_PRIVATE_KEY"
 export RPC_URL="http://localhost:8545"
 
 # Set these after deploying the contracts (needed by SetupPools)
 export ROUTER_ADDRESS="0x..."   # RupiahRouter address from step 1
-export USER_ADDRESS="0x..."     # Address to receive initial tokens`}</code></pre>
+export USER_ADDRESS="0x..."     # Address to receive initial tokens`}</CodeBlock>
 
       <h2>Deployment Scripts</h2>
       <p>
@@ -32,10 +34,10 @@ export USER_ADDRESS="0x..."     # Address to receive initial tokens`}</code></pr
 
       <h3>Step 1: Deploy RupiahRouter</h3>
       <p>Deploys the production AMM engine contract.</p>
-      <pre><code>{`forge script script/RupiahRouter.s.sol \\
+      <CodeBlock>{`forge script script/RupiahRouter.s.sol \\
   --rpc-url $RPC_URL \\
   --private-key $DEPLOYER_KEY \\
-  --broadcast --legacy`}</code></pre>
+  --broadcast --legacy`}</CodeBlock>
       <p>
         Save the deployed address from the output. This is your
         <code>ROUTER_ADDRESS</code> for subsequent steps.
@@ -43,10 +45,10 @@ export USER_ADDRESS="0x..."     # Address to receive initial tokens`}</code></pr
 
       <h3>Step 2: Deploy TokenFaucet</h3>
       <p>Deploys the testnet faucet and utility contract.</p>
-      <pre><code>{`forge script script/TokenFaucet.s.sol \\
+      <CodeBlock>{`forge script script/TokenFaucet.s.sol \\
   --rpc-url $RPC_URL \\
   --private-key $DEPLOYER_KEY \\
-  --broadcast --legacy`}</code></pre>
+  --broadcast --legacy`}</CodeBlock>
       <p>
         Save the deployed address. This becomes
         <code>NEXT_PUBLIC_FAUCET_CONTRACT</code> in the frontend <code>.env.local</code>.
@@ -57,9 +59,9 @@ export USER_ADDRESS="0x..."     # Address to receive initial tokens`}</code></pr
         Creates 5 MockERC20 tokens (INIT, USDC, WETH, TIA, IDRX) and seeds 4 initial
         liquidity pools on the RupiahRouter.
       </p>
-      <pre><code>{`forge script script/SetupPools.s.sol \\
+      <CodeBlock>{`forge script script/SetupPools.s.sol \\
   --rpc-url $RPC_URL \\
-  --broadcast --legacy`}</code></pre>
+  --broadcast --legacy`}</CodeBlock>
 
       <h3>Initial Pools Created</h3>
       <table>
@@ -84,7 +86,7 @@ export USER_ADDRESS="0x..."     # Address to receive initial tokens`}</code></pr
       </p>
 
       <h3>Check RupiahRouter</h3>
-      <pre><code>{`# Verify the contract is deployed
+      <CodeBlock>{`# Verify the contract is deployed
 cast code $ROUTER_ADDRESS --rpc-url $RPC_URL
 
 # Check owner
@@ -94,10 +96,10 @@ cast call $ROUTER_ADDRESS "owner()(address)" --rpc-url $RPC_URL
 cast call $ROUTER_ADDRESS \\
   "getQuote(address,address,uint256)(uint256)" \\
   $INIT_TOKEN $USDC_TOKEN 100000000000000000000 \\
-  --rpc-url $RPC_URL`}</code></pre>
+  --rpc-url $RPC_URL`}</CodeBlock>
 
       <h3>Check TokenFaucet</h3>
-      <pre><code>{`# Verify the contract is deployed
+      <CodeBlock>{`# Verify the contract is deployed
 cast code $FAUCET_ADDRESS --rpc-url $RPC_URL
 
 # Get a swap quote
@@ -111,10 +113,10 @@ cast send $FAUCET_ADDRESS \\
   "claimToken(address)" $USDC_TOKEN \\
   --value 1000 \\
   --private-key $DEPLOYER_KEY \\
-  --rpc-url $RPC_URL`}</code></pre>
+  --rpc-url $RPC_URL`}</CodeBlock>
 
       <h3>Check Pool State</h3>
-      <pre><code>{`# Verify a pool exists for INIT/USDC
+      <CodeBlock>{`# Verify a pool exists for INIT/USDC
 cast call $ROUTER_ADDRESS \\
   "getPool(address,address)(address)" \\
   $INIT_TOKEN $USDC_TOKEN \\
@@ -124,7 +126,7 @@ cast call $ROUTER_ADDRESS \\
 cast call $ROUTER_ADDRESS \\
   "getReserves(address,address)(uint256,uint256)" \\
   $INIT_TOKEN $USDC_TOKEN \\
-  --rpc-url $RPC_URL`}</code></pre>
+  --rpc-url $RPC_URL`}</CodeBlock>
 
       <h2>Troubleshooting</h2>
       <ul>

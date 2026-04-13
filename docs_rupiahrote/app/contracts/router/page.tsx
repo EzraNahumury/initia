@@ -1,3 +1,5 @@
+import { CodeBlock } from "../../components/CodeBlock";
+
 export default function RouterPage() {
   return (
     <article className="prose">
@@ -17,19 +19,19 @@ export default function RouterPage() {
       </p>
 
       <h3>createPool</h3>
-      <pre><code>{`function createPool(
+      <CodeBlock>{`function createPool(
     address tokenA,
     address tokenB,
     uint256 amountA,
     uint256 amountB
-) external returns (address pool)`}</code></pre>
+) external returns (address pool)`}</CodeBlock>
       <p>
         Creates a new liquidity pool for a token pair and seeds it with initial liquidity.
         Reverts if a pool for the pair already exists. Locks the first 1000 LP tokens.
       </p>
 
       <h3>addLiquidity</h3>
-      <pre><code>{`function addLiquidity(
+      <CodeBlock>{`function addLiquidity(
     address tokenA,
     address tokenB,
     uint256 amountADesired,
@@ -38,14 +40,14 @@ export default function RouterPage() {
     uint256 amountBMin,
     address to,
     uint256 deadline
-) external returns (uint256 amountA, uint256 amountB, uint256 liquidity)`}</code></pre>
+) external returns (uint256 amountA, uint256 amountB, uint256 liquidity)`}</CodeBlock>
       <p>
         Adds liquidity to an existing pool. The contract calculates the optimal ratio
         and refunds any excess. LP tokens are minted proportional to the contribution.
       </p>
 
       <h3>removeLiquidity</h3>
-      <pre><code>{`function removeLiquidity(
+      <CodeBlock>{`function removeLiquidity(
     address tokenA,
     address tokenB,
     uint256 liquidity,
@@ -53,21 +55,21 @@ export default function RouterPage() {
     uint256 amountBMin,
     address to,
     uint256 deadline
-) external returns (uint256 amountA, uint256 amountB)`}</code></pre>
+) external returns (uint256 amountA, uint256 amountB)`}</CodeBlock>
       <p>
         Burns LP tokens and returns the underlying token pair to the caller.
         Minimum output amounts protect against slippage.
       </p>
 
       <h3>swap</h3>
-      <pre><code>{`function swap(
+      <CodeBlock>{`function swap(
     address tokenIn,
     address tokenOut,
     uint256 amountIn,
     uint256 minOut,
     address to,
     uint256 deadline
-) external returns (uint256 amountOut)`}</code></pre>
+) external returns (uint256 amountOut)`}</CodeBlock>
       <p>
         Executes a single-pool swap. Deducts the 0.3% fee from <code>amountIn</code>,
         computes output via the constant-product formula, and verifies the k-invariant
@@ -75,18 +77,18 @@ export default function RouterPage() {
       </p>
 
       <h3>getAmountOut</h3>
-      <pre><code>{`function getAmountOut(
+      <CodeBlock>{`function getAmountOut(
     uint256 amountIn,
     uint256 reserveIn,
     uint256 reserveOut
-) public pure returns (uint256 amountOut)`}</code></pre>
+) public pure returns (uint256 amountOut)`}</CodeBlock>
       <p>
         Pure helper that calculates the output amount for a given input, including the
         0.3% fee. Used internally and available externally for quote computation.
       </p>
-      <pre><code>{`// Formula:
+      <CodeBlock>{`// Formula:
 // amountInWithFee = amountIn * 997
-// amountOut = (amountInWithFee * reserveOut) / (reserveIn * 1000 + amountInWithFee)`}</code></pre>
+// amountOut = (amountInWithFee * reserveOut) / (reserveIn * 1000 + amountInWithFee)`}</CodeBlock>
 
       <h2>Routing Engine</h2>
       <p>
@@ -95,44 +97,44 @@ export default function RouterPage() {
       </p>
 
       <h3>findBestRoute</h3>
-      <pre><code>{`function findBestRoute(
+      <CodeBlock>{`function findBestRoute(
     address tokenIn,
     address tokenOut,
     uint256 amountIn
-) external view returns (address[] memory path, uint256 expectedOut)`}</code></pre>
+) external view returns (address[] memory path, uint256 expectedOut)`}</CodeBlock>
       <p>
         Compares direct and multi-hop paths (max 3 hops) and returns the route that
         yields the highest output.
       </p>
 
       <h3>executeRoute</h3>
-      <pre><code>{`function executeRoute(
+      <CodeBlock>{`function executeRoute(
     address[] calldata path,
     uint256 amountIn,
     uint256 minOut,
     address to,
     uint256 deadline
-) external returns (uint256 amountOut)`}</code></pre>
+) external returns (uint256 amountOut)`}</CodeBlock>
       <p>
         Executes a pre-computed route. Slippage protection via <code>minOut</code> and
         deadline validation ensure the trade is still viable at execution time.
       </p>
 
       <h3>multiHopSwap</h3>
-      <pre><code>{`function multiHopSwap(
+      <CodeBlock>{`function multiHopSwap(
     address[] calldata path,
     uint256 amountIn,
     uint256 minOut,
     address to,
     uint256 deadline
-) external returns (uint256 amountOut)`}</code></pre>
+) external returns (uint256 amountOut)`}</CodeBlock>
       <p>
         Executes a swap through multiple pools in sequence. Each hop applies the 0.3%
         fee independently.
       </p>
 
       <h3>getQuote &amp; batchSwap</h3>
-      <pre><code>{`function getQuote(
+      <CodeBlock>{`function getQuote(
     address tokenIn,
     address tokenOut,
     uint256 amountIn
@@ -144,7 +146,7 @@ function batchSwap(
     uint256[] calldata amountsIn,
     uint256[] calldata minOuts,
     uint256 deadline
-) external returns (uint256[] memory amountsOut)`}</code></pre>
+) external returns (uint256[] memory amountsOut)`}</CodeBlock>
       <p>
         <code>getQuote</code> returns the expected output without executing.
         <code>batchSwap</code> executes multiple swaps atomically in a single transaction.
@@ -158,20 +160,20 @@ function batchSwap(
       </p>
 
       <h3>placeLimitOrder</h3>
-      <pre><code>{`function placeLimitOrder(
+      <CodeBlock>{`function placeLimitOrder(
     address tokenIn,
     address tokenOut,
     uint256 amountIn,
     uint256 targetPrice,
     uint256 deadline
-) external returns (uint256 orderId)`}</code></pre>
+) external returns (uint256 orderId)`}</CodeBlock>
       <p>
         Transfers <code>amountIn</code> from the caller into the contract and creates a
         pending limit order. Returns a unique order ID.
       </p>
 
       <h3>executeLimitOrder</h3>
-      <pre><code>{`function executeLimitOrder(uint256 orderId) external returns (uint256 amountOut)`}</code></pre>
+      <CodeBlock>{`function executeLimitOrder(uint256 orderId) external returns (uint256 amountOut)`}</CodeBlock>
       <p>
         Callable by anyone. Checks that the current pool price satisfies the order&apos;s
         target price, executes the swap, sends output to the order creator, and pays
@@ -179,38 +181,38 @@ function batchSwap(
       </p>
 
       <h3>cancelLimitOrder</h3>
-      <pre><code>{`function cancelLimitOrder(uint256 orderId) external`}</code></pre>
+      <CodeBlock>{`function cancelLimitOrder(uint256 orderId) external`}</CodeBlock>
       <p>
         Only callable by the order creator. Refunds the locked input tokens in full.
       </p>
 
       <h3>getActiveOrders</h3>
-      <pre><code>{`function getActiveOrders(address user) external view returns (Order[] memory)`}</code></pre>
+      <CodeBlock>{`function getActiveOrders(address user) external view returns (Order[] memory)`}</CodeBlock>
       <p>Returns all pending limit orders for a given user.</p>
 
       <h2>Events</h2>
-      <pre><code>{`event PoolCreated(address indexed tokenA, address indexed tokenB, address pool);
+      <CodeBlock>{`event PoolCreated(address indexed tokenA, address indexed tokenB, address pool);
 event Swapped(address indexed user, address tokenIn, address tokenOut, uint256 amountIn, uint256 amountOut);
 event RouteExecuted(address indexed user, address[] path, uint256 amountIn, uint256 amountOut);
 event BatchSwapExecuted(address indexed user, uint256 swapCount);
 event LimitOrderPlaced(uint256 indexed orderId, address indexed user, address tokenIn, address tokenOut, uint256 amountIn, uint256 targetPrice);
 event LimitOrderExecuted(uint256 indexed orderId, address indexed executor, uint256 amountOut);
-event LimitOrderCancelled(uint256 indexed orderId);`}</code></pre>
+event LimitOrderCancelled(uint256 indexed orderId);`}</CodeBlock>
 
       <h2>Example Flows</h2>
 
       <h3>Single Swap: INIT to USDC</h3>
-      <pre><code>{`// 1. Approve router to spend INIT
+      <CodeBlock>{`// 1. Approve router to spend INIT
 INIT.approve(router, 1000e18);
 
 // 2. Execute swap with 1% slippage tolerance
 uint256 quote = router.getQuote(INIT, USDC, 1000e18);
 uint256 minOut = quote * 99 / 100;
 
-router.swap(INIT, USDC, 1000e18, minOut, msg.sender, block.timestamp + 300);`}</code></pre>
+router.swap(INIT, USDC, 1000e18, minOut, msg.sender, block.timestamp + 300);`}</CodeBlock>
 
       <h3>Multi-Hop: INIT to WETH via USDC</h3>
-      <pre><code>{`// No direct INIT/WETH pool, route through USDC
+      <CodeBlock>{`// No direct INIT/WETH pool, route through USDC
 address[] memory path = new address[](3);
 path[0] = INIT;
 path[1] = USDC;
@@ -220,10 +222,10 @@ path[2] = WETH;
 uint256 quote = router.getQuote(INIT, WETH, 1000e18);
 uint256 minOut = quote * 99 / 100;
 
-router.multiHopSwap(path, 1000e18, minOut, msg.sender, block.timestamp + 300);`}</code></pre>
+router.multiHopSwap(path, 1000e18, minOut, msg.sender, block.timestamp + 300);`}</CodeBlock>
 
       <h3>Limit Order Lifecycle</h3>
-      <pre><code>{`// 1. User places order: sell 500 USDC when INIT price hits 1.05 USDC
+      <CodeBlock>{`// 1. User places order: sell 500 USDC when INIT price hits 1.05 USDC
 USDC.approve(router, 500e6);
 uint256 orderId = router.placeLimitOrder(USDC, INIT, 500e6, 1.05e18, block.timestamp + 86400);
 
@@ -233,7 +235,7 @@ router.executeLimitOrder(orderId);
 
 // OR: User cancels before execution
 router.cancelLimitOrder(orderId);
-// -> 500 USDC refunded to user`}</code></pre>
+// -> 500 USDC refunded to user`}</CodeBlock>
     </article>
   );
 }

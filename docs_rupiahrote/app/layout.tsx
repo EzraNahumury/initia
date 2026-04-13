@@ -4,6 +4,8 @@ import "./globals.css";
 import { Sidebar } from "./components/Sidebar";
 import { Header } from "./components/Header";
 import { TableOfContents } from "./components/TableOfContents";
+import { Breadcrumbs } from "./components/Breadcrumbs";
+import { PageNavigation } from "./components/PageNavigation";
 import { ParticleBackground } from "./components/ParticleBackground";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -25,7 +27,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <Sidebar />
             <main className="flex flex-1 min-w-0 justify-center px-8 py-8 lg:px-12 lg:py-10">
               <div className="w-full max-w-4xl">
+                <Breadcrumbs />
                 {children}
+                <PageNavigation />
               </div>
             </main>
             <TableOfContents />

@@ -1,3 +1,5 @@
+import { CodeBlock } from "../components/CodeBlock";
+
 export default function QuickStartPage() {
   return (
     <article className="prose">
@@ -12,13 +14,13 @@ export default function QuickStartPage() {
       </ul>
 
       <h2>Step 1: Start the Local Rollup</h2>
-      <pre><code>{`# Start an Initia MiniEVM node
+      <CodeBlock>{`# Start an Initia MiniEVM node
 weave start
 
-# This starts a local chain at http://localhost:8545`}</code></pre>
+# This starts a local chain at http://localhost:8545`}</CodeBlock>
 
       <h2>Step 2: Deploy Smart Contracts</h2>
-      <pre><code>{`cd sc_RupiahRote
+      <CodeBlock>{`cd sc_RupiahRote
 
 # Deploy the main router
 forge script script/RupiahRouter.s.sol \\
@@ -35,11 +37,11 @@ forge script script/TokenFaucet.s.sol \\
 # Create tokens + seed liquidity pools
 forge script script/SetupPools.s.sol \\
   --rpc-url http://localhost:8545 \\
-  --broadcast --legacy`}</code></pre>
+  --broadcast --legacy`}</CodeBlock>
       <p>Copy the deployed contract addresses from the output.</p>
 
       <h2>Step 3: Start the Frontend</h2>
-      <pre><code>{`cd fe_rupiahrote
+      <CodeBlock>{`cd fe_rupiahrote
 
 # Create .env.local with your deployed addresses
 cat > .env.local << EOF
@@ -51,7 +53,7 @@ EOF
 
 # Install and run
 npm install
-npm run dev`}</code></pre>
+npm run dev`}</CodeBlock>
       <p>Open <a href="http://localhost:3000">http://localhost:3000</a>. You should see the welcome page.</p>
 
       <h2>First Steps</h2>

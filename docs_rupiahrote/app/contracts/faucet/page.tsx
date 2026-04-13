@@ -1,3 +1,5 @@
+import { CodeBlock } from "../../components/CodeBlock";
+
 export default function FaucetPage() {
   return (
     <article className="prose">
@@ -56,7 +58,7 @@ export default function FaucetPage() {
       <h2>Functions</h2>
 
       <h3>Faucet</h3>
-      <pre><code>{`function claimToken(address token) external payable`}</code></pre>
+      <CodeBlock>{`function claimToken(address token) external payable`}</CodeBlock>
       <p>
         Mints test tokens to the caller. Requires a <strong>1000 GAS</strong> fee
         (sent as <code>msg.value</code>). Each call mints the full claim amount for
@@ -64,7 +66,7 @@ export default function FaucetPage() {
       </p>
 
       <h3>Swap</h3>
-      <pre><code>{`function swap(
+      <CodeBlock>{`function swap(
     address tokenIn,
     address tokenOut,
     uint256 amountIn,
@@ -82,7 +84,7 @@ function getQuote(
     address tokenIn,
     address tokenOut,
     uint256 amountIn
-) external view returns (uint256 amountOut)`}</code></pre>
+) external view returns (uint256 amountOut)`}</CodeBlock>
       <p>
         <code>swap</code> requires a <strong>500 GAS</strong> fee. Prices come from an
         internal USD oracle (see Pricing below) and a 0.3% fee is applied.
@@ -91,7 +93,7 @@ function getQuote(
       </p>
 
       <h3>Bridge Simulation</h3>
-      <pre><code>{`function bridgeDeposit(
+      <CodeBlock>{`function bridgeDeposit(
     address token,
     uint256 amount,
     string calldata destinationChain
@@ -101,7 +103,7 @@ function bridgeWithdraw(
     address token,
     uint256 amount,
     string calldata sourceChain
-) external payable`}</code></pre>
+) external payable`}</CodeBlock>
       <p>
         Simulated bridge operations for testnet. Each requires a <strong>100 GAS</strong>
         fee. <code>bridgeDeposit</code> locks tokens and emits a bridge event.
@@ -109,7 +111,7 @@ function bridgeWithdraw(
       </p>
 
       <h3>Username Registry</h3>
-      <pre><code>{`function registerUsername(string calldata username) external
+      <CodeBlock>{`function registerUsername(string calldata username) external
 
 function sendToUsername(
     string calldata username,
@@ -121,7 +123,7 @@ function sendToken(
     address to,
     address token,
     uint256 amount
-) external payable`}</code></pre>
+) external payable`}</CodeBlock>
       <p>
         <code>registerUsername</code> maps a <code>.init</code> name to the caller&apos;s
         address using the ICosmos precompile. <code>sendToUsername</code> resolves the
@@ -130,7 +132,7 @@ function sendToken(
       </p>
 
       <h3>Limit Orders</h3>
-      <pre><code>{`function placeLimitOrder(
+      <CodeBlock>{`function placeLimitOrder(
     address tokenIn,
     address tokenOut,
     uint256 amountIn,
@@ -140,7 +142,7 @@ function sendToken(
 
 function executeLimitOrder(uint256 orderId) external payable returns (uint256 amountOut)
 
-function cancelLimitOrder(uint256 orderId) external payable`}</code></pre>
+function cancelLimitOrder(uint256 orderId) external payable`}</CodeBlock>
       <p>
         Limit order functions mirror the RupiahRouter interface. Each call requires a
         <strong>500 GAS</strong> fee. The price check uses the internal oracle rather
@@ -154,7 +156,7 @@ function cancelLimitOrder(uint256 orderId) external payable`}</code></pre>
         behavior with a 0.3% fee.
       </p>
       <p>Output is computed as:</p>
-      <pre><code>{`amountOut = (amountIn * priceIn * 10^decOut * 997) / (priceOut * 10^decIn * 1000)`}</code></pre>
+      <CodeBlock>{`amountOut = (amountIn * priceIn * 10^decOut * 997) / (priceOut * 10^decIn * 1000)`}</CodeBlock>
       <p>Where:</p>
       <ul>
         <li><code>priceIn</code> / <code>priceOut</code>: internal USD prices for each token</li>
