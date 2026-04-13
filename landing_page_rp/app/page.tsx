@@ -4,6 +4,7 @@ import { useRef, useEffect, useState, useMemo, Suspense } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { motion } from "framer-motion";
 import { useGLTF } from "@react-three/drei";
+import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import * as THREE from "three";
@@ -61,36 +62,57 @@ function CustomCursor() {
   const cursorRef = useRef<HTMLDivElement>(null);
   const [isHovering, setIsHovering] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const [position, setPosition] = useState({ x: -100, y: -100 });
+  const posRef = useRef({ x: -100, y: -100 });
+  const rafRef = useRef(0);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      setPosition({ x: e.clientX, y: e.clientY });
-      setIsVisible(true);
+      posRef.current = { x: e.clientX, y: e.clientY };
+      if (!rafRef.current) {
+        rafRef.current = requestAnimationFrame(() => {
+          if (cursorRef.current) {
+            cursorRef.current.style.transform = `translate(${posRef.current.x}px, ${posRef.current.y}px)`;
+          }
+          rafRef.current = 0;
+        });
+      }
+      if (!isVisible) setIsVisible(true);
     };
     const handleMouseLeave = () => setIsVisible(false);
     const handleMouseEnter = () => setIsVisible(true);
+    const handleMouseOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest("button, a, [data-interactive], .hoverable")) {
+        setIsHovering(true);
+      }
+    };
+    const handleMouseOut = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest("button, a, [data-interactive], .hoverable")) {
+        setIsHovering(false);
+      }
+    };
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseleave", handleMouseLeave);
     document.addEventListener("mouseenter", handleMouseEnter);
-    const interactiveElements = document.querySelectorAll("button, a, [data-interactive], .hoverable");
-    interactiveElements.forEach(el => {
-      el.addEventListener("mouseenter", () => setIsHovering(true));
-      el.addEventListener("mouseleave", () => setIsHovering(false));
-    });
+    document.addEventListener("mouseover", handleMouseOver);
+    document.addEventListener("mouseout", handleMouseOut);
     return () => {
+      cancelAnimationFrame(rafRef.current);
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseleave", handleMouseLeave);
       document.removeEventListener("mouseenter", handleMouseEnter);
+      document.removeEventListener("mouseover", handleMouseOver);
+      document.removeEventListener("mouseout", handleMouseOut);
     };
-  }, []);
+  }, [isVisible]);
 
   return (
-    <div ref={cursorRef} className="fixed top-0 left-0 z-[9999] pointer-events-none hidden md:block" style={{ opacity: isVisible ? 1 : 0 }}>
-      <motion.div className="relative -translate-x-1/2 -translate-y-1/2" animate={{ scale: isHovering ? 1.8 : 1 }} transition={{ duration: 0.15 }}>
+    <div ref={cursorRef} className="fixed top-0 left-0 z-[9999] pointer-events-none hidden md:block" style={{ opacity: isVisible ? 1 : 0, willChange: "transform" }}>
+      <div className={`relative -translate-x-1/2 -translate-y-1/2 transition-transform duration-150 ${isHovering ? "scale-[1.8]" : "scale-100"}`}>
         <div className={`w-10 h-10 rounded-full border transition-all duration-150 ${isHovering ? "border-purple-400/80 bg-purple-500/20" : "border-white/30 bg-transparent"}`} />
         {isHovering && <div className="absolute inset-[-8px] rounded-full border border-purple-400/30 animate-pulse" />}
-      </motion.div>
+      </div>
     </div>
   );
 }
@@ -162,7 +184,7 @@ function AnimatedTitle({ title, containerClass }: { title: string; containerClas
           trigger: containerRef.current,
           start: "100 bottom",
           end: "center bottom",
-          toggleActions: "play none none reverse",
+          toggleActions: "play none none none",
         },
       });
       titleAnimation.to(".animated-word", {
@@ -170,6 +192,7 @@ function AnimatedTitle({ title, containerClass }: { title: string; containerClas
         transform: "translate3d(0, 0, 0) rotateY(0deg) rotateX(0deg)",
         ease: "power2.inOut",
         stagger: 0.02,
+        duration: 0.5,
       }, 0);
     }, containerRef);
     return () => ctx.revert();
@@ -188,11 +211,12 @@ function AnimatedTitle({ title, containerClass }: { title: string; containerClas
   );
 }
 
-function Web3ParticleField({ scrollY, mousePosition }: { scrollY: number; mousePosition: { x: number; y: number } }) {
+function Web3ParticleField() {
   const meshRef = useRef<THREE.Points>(null);
   const lineRef = useRef<THREE.LineSegments>(null);
-  const particleCount = 200;
+  const particleCount = 80;
   const maxDistance = 3;
+  const maxLines = 300;
 
   const { positions, linePositions } = useMemo(() => {
     const pos = new Float32Array(particleCount * 3);
@@ -208,7 +232,7 @@ function Web3ParticleField({ scrollY, mousePosition }: { scrollY: number; mouseP
       colors[i3 + 1] = color.g;
       colors[i3 + 2] = color.b;
     }
-    const linePos = new Float32Array(particleCount * particleCount * 6);
+    const linePos = new Float32Array(maxLines * 6);
     return { positions: pos, linePositions: linePos };
   }, []);
 
@@ -222,7 +246,7 @@ function Web3ParticleField({ scrollY, mousePosition }: { scrollY: number; mouseP
   const lineGeometry = useMemo(() => {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(linePositions.slice(), 3));
-    geo.setAttribute("color", new THREE.BufferAttribute(new Float32Array(particleCount * particleCount * 6).fill(0.5).map((_, i) => i % 3 === 0 ? 0.3 : i % 3 === 1 ? 0.1 : 0.5), 3));
+    geo.setAttribute("color", new THREE.BufferAttribute(new Float32Array(maxLines * 6).fill(0.5).map((_, i) => i % 3 === 0 ? 0.3 : i % 3 === 1 ? 0.1 : 0.5), 3));
     return geo;
   }, [linePositions]);
 
@@ -240,9 +264,9 @@ function Web3ParticleField({ scrollY, mousePosition }: { scrollY: number; mouseP
       posArray[i3 + 2] += Math.sin(time * 0.1 + i * 0.05) * 0.001;
     }
 
-    for (let i = 0; i < particleCount; i++) {
+    for (let i = 0; i < particleCount && lineIndex < maxLines * 6; i++) {
       const i3 = i * 3;
-      for (let j = i + 1; j < particleCount; j++) {
+      for (let j = i + 1; j < particleCount && lineIndex < maxLines * 6; j++) {
         const j3 = j * 3;
         const dx = posArray[i3] - posArray[j3];
         const dy = posArray[i3 + 1] - posArray[j3 + 1];
@@ -250,7 +274,6 @@ function Web3ParticleField({ scrollY, mousePosition }: { scrollY: number; mouseP
         const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
         if (dist < maxDistance) {
-          const alpha = 1 - dist / maxDistance;
           linePosArray[lineIndex++] = posArray[i3];
           linePosArray[lineIndex++] = posArray[i3 + 1];
           linePosArray[lineIndex++] = posArray[i3 + 2];
@@ -286,13 +309,13 @@ function Web3ParticleField({ scrollY, mousePosition }: { scrollY: number; mouseP
   );
 }
 
-function Scene3D({ scrollY, mousePosition }: { scrollY: number; mousePosition: { x: number; y: number } }) {
+function Scene3D({ scrollYRef, mousePosRef }: { scrollYRef: React.RefObject<number>; mousePosRef: React.RefObject<{ x: number; y: number }> }) {
   const { camera } = useThree();
   useFrame(() => {
-    const scrollFactor = Math.min(scrollY * 0.0005, 1);
+    const scrollFactor = Math.min((scrollYRef.current ?? 0) * 0.0005, 1);
     camera.position.z = 12 - scrollFactor * 4;
-    camera.position.x = mousePosition.x * 0.01;
-    camera.position.y = mousePosition.y * 0.01;
+    camera.position.x = (mousePosRef.current?.x ?? 0) * 0.01;
+    camera.position.y = (mousePosRef.current?.y ?? 0) * 0.01;
     camera.lookAt(0, 0, 0);
   });
   return (
@@ -301,7 +324,7 @@ function Scene3D({ scrollY, mousePosition }: { scrollY: number; mousePosition: {
       <pointLight position={[15, 15, 15]} intensity={0.8} color="#8b5cf6" />
       <pointLight position={[-15, -15, -15]} intensity={0.6} color="#ec4899" />
       <pointLight position={[0, 20, 0]} intensity={0.4} color="#06b6d4" />
-      <Web3ParticleField scrollY={scrollY} mousePosition={mousePosition} />
+      <Web3ParticleField />
     </>
   );
 }
@@ -320,7 +343,7 @@ function Navigation() {
     <nav className={`fixed top-0 left-0 right-0 z-50 px-6 md:px-12 py-5 transition-all duration-700 ${scrolled ? "floating-nav bg-black/80 backdrop-blur-xl" : "bg-transparent"}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 cursor-pointer hoverable">
-          <img src="/logo/logo.png" alt="RupiahRoute" className="h-10 w-10 object-contain" />
+          <Image src="/logo/logo.png" alt="RupiahRoute" width={40} height={40} className="h-10 w-10 object-contain" priority />
           <span className="text-white font-medium tracking-[0.15em] text-sm font-general">RUPIAHROUTE</span>
         </div>
 
@@ -332,31 +355,49 @@ function Navigation() {
           ))}
         </div>
 
-        <motion.button className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-medium tracking-wider px-6 py-2.5 rounded-full hover:opacity-90 transition-opacity hoverable" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+        <button className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-medium tracking-wider px-6 py-2.5 rounded-full hover:opacity-90 hoverable transition-transform duration-150 hover:scale-105 active:scale-95">
           LAUNCH APP
-        </motion.button>
+        </button>
       </div>
     </nav>
   );
 }
 
-function HeroSection({ scrollY }: { scrollY: number }) {
-  const windowHeight = typeof window !== "undefined" ? window.innerHeight : 800;
-  const maxZoomScroll = windowHeight * 1.5;
-  const zoomLevel = scrollY < maxZoomScroll ? 1 + (scrollY / windowHeight) * 1.5 : 2.5;
-  const contentOpacity = scrollY < maxZoomScroll * 0.5 ? 1 : Math.max(0, 1 - (scrollY - maxZoomScroll * 0.5) / (maxZoomScroll * 0.3));
-  const overlayOpacity = scrollY > maxZoomScroll ? Math.min(1, (scrollY - maxZoomScroll) / (windowHeight * 0.3)) : 0;
+function HeroSection({ scrollYRef }: { scrollYRef: React.RefObject<number> }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let animFrame: number;
+    const update = () => {
+      const scrollY = scrollYRef.current ?? 0;
+      const windowHeight = window.innerHeight;
+      const maxZoomScroll = windowHeight * 1.5;
+      const zoomLevel = scrollY < maxZoomScroll ? 1 + (scrollY / windowHeight) * 1.5 : 2.5;
+      const contentOpacity = scrollY < maxZoomScroll * 0.5 ? 1 : Math.max(0, 1 - (scrollY - maxZoomScroll * 0.5) / (maxZoomScroll * 0.3));
+      const overlayOpacity = scrollY > maxZoomScroll ? Math.min(1, (scrollY - maxZoomScroll) / (windowHeight * 0.3)) : 0;
+
+      if (videoRef.current) videoRef.current.style.transform = `scale(${zoomLevel})`;
+      if (contentRef.current) contentRef.current.style.opacity = String(contentOpacity);
+      if (overlayRef.current) overlayRef.current.style.opacity = String(overlayOpacity);
+
+      animFrame = requestAnimationFrame(update);
+    };
+    animFrame = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(animFrame);
+  }, [scrollYRef]);
 
   return (
     <div className="relative">
       <div className="fixed top-0 left-0 w-screen h-screen overflow-hidden z-0">
-        <motion.video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover" style={{ scale: zoomLevel }} transition={{ duration: 0.1 }}>
+        <video ref={videoRef} autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover will-change-transform origin-center">
           <source src="https://res.cloudinary.com/dfonotyfb/video/upload/v1775585556/dds3_1_rqhg7x.mp4" type="video/mp4" />
-        </motion.video>
+        </video>
 
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-purple-900/20 to-black/70 z-[1]" />
 
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center px-6 text-center" style={{ opacity: contentOpacity }}>
+        <div ref={contentRef} className="absolute inset-0 z-10 flex flex-col items-center justify-center px-6 text-center">
           <p className="text-purple-400/60 text-[10px] tracking-[0.5em] uppercase mb-4 font-general">Smart DeFi Router on Initia</p>
 
           <h1 className="special-font hero-heading text-white mb-2">
@@ -370,9 +411,9 @@ function HeroSection({ scrollY }: { scrollY: number }) {
             One interface, one click, best route.<br />The engine handles pool selection, multi-hop routing, cross-chain bridging.
           </p>
 
-          <motion.button className="bg-yellow-300 text-white text-xs font-medium tracking-wider px-8 py-3 rounded-full hover:bg-yellow-400 transition-colors hoverable flex items-center gap-2" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <button className="bg-yellow-300 text-white text-xs font-medium tracking-wider px-8 py-3 rounded-full hover:bg-yellow-400 hoverable flex items-center gap-2 transition-transform duration-150 hover:scale-105 active:scale-95">
             <TiLocationArrow /> GET STARTED
-          </motion.button>
+          </button>
 
           <div className="absolute bottom-12 flex flex-col items-center gap-3">
             <span className="text-white/20 text-[9px] tracking-[0.4em] uppercase">Scroll</span>
@@ -384,7 +425,7 @@ function HeroSection({ scrollY }: { scrollY: number }) {
           </div>
         </div>
 
-        <motion.div className="absolute inset-0 z-20 bg-black" style={{ opacity: overlayOpacity }} />
+        <div ref={overlayRef} className="absolute inset-0 z-20 bg-black" style={{ opacity: 0 }} />
       </div>
       <div className="h-[200vh]" />
     </div>
@@ -581,98 +622,50 @@ useGLTF.preload("/asset/scene.gltf");
 
 function FeatureAssetCameraRig({ zoomProgress = 0 }: { zoomProgress?: number }) {
   const { camera } = useThree();
-  const lookTargetRef = useRef(new THREE.Vector3(0, 0, 0));
+
+  // Phase 1 (zoom 0→0.25): fly from outer into cave center
+  // Phase 2 (zoom 0.25→0.95): 360° rotation inside cave, features at 0°/90°/180°/270°
+  // Phase 3 (zoom 0.95→1.0): stay inside, fade to black transition
+  const outerPos = useMemo(() => new THREE.Vector3(0, 0.04, 10.4), []);
+  const outerLook = useMemo(() => new THREE.Vector3(0, 0.03, -0.7), []);
+  const caveCenter = useMemo(() => new THREE.Vector3(0, 0.02, 0.0), []);
+
+  // Initialize refs to match the outer starting state — no initial lerp jump
+  const lookTargetRef = useRef(new THREE.Vector3(0, 0.03, -0.7));
   const desiredPositionRef = useRef(new THREE.Vector3(0, 0.04, 10.4));
-  const desiredLookRef = useRef(new THREE.Vector3(0, 0, 0));
-  const cameraPath = useMemo(() => ({
-    outer: new THREE.Vector3(0, 0.04, 10.4),
-    surface: new THREE.Vector3(0, 0.03, 5.8),
-    threshold: new THREE.Vector3(0, 0.01, 2.4),
-    inner: new THREE.Vector3(0, 0.01, 0.06),
-    outerLook: new THREE.Vector3(0.14, 0.03, -0.7),
-    surfaceLook: new THREE.Vector3(0.12, 0.03, -1.8),
-    thresholdLook: new THREE.Vector3(0.04, 0.02, -3.3),
-    innerLook: new THREE.Vector3(-0.55, 0.06, -6.5),
-    // Distinct viewpoints inside cave for each feature
-    featurePositions: [
-      new THREE.Vector3(-0.04, 0.02, 0.05),
-      new THREE.Vector3(0.03, 0.015, 0.05),
-      new THREE.Vector3(0.09, 0.025, 0.04),
-      new THREE.Vector3(0.15, 0.012, 0.05),
-    ],
-    featureLookTargets: [
-      new THREE.Vector3(-0.8, 0.1, -6.0),
-      new THREE.Vector3(-0.1, 0.04, -7.0),
-      new THREE.Vector3(0.4, 0.14, -5.8),
-      new THREE.Vector3(0.8, 0.03, -6.5),
-    ],
-  }), []);
+  const desiredLookRef = useRef(new THREE.Vector3(0, 0.03, -0.7));
+
+  // 360° look targets: the camera sits at cave center and rotates to look outward
+  const rotationRadius = 6;
+  const rotationY = 0.05;
 
   useFrame(() => {
     const perspectiveCamera = camera as THREE.PerspectiveCamera;
-    let desiredFov: number;
+    const z = zoomProgress;
 
-    if (zoomProgress <= 0.3) {
-      // Phase 1: Zoom In (0-0.3 mapped to full zoom path)
-      const p = zoomProgress / 0.3;
-      const enlargePhase = THREE.MathUtils.smoothstep(p, 0, 0.72);
-      const thresholdPhase = THREE.MathUtils.smoothstep(p, 0.55, 0.82);
-      const divePhase = THREE.MathUtils.smootherstep(p, 0.8, 1);
-
-      desiredPositionRef.current
-        .copy(cameraPath.outer)
-        .lerp(cameraPath.surface, enlargePhase)
-        .lerp(cameraPath.threshold, thresholdPhase)
-        .lerp(cameraPath.inner, divePhase);
-      desiredLookRef.current
-        .copy(cameraPath.outerLook)
-        .lerp(cameraPath.surfaceLook, enlargePhase)
-        .lerp(cameraPath.thresholdLook, thresholdPhase)
-        .lerp(cameraPath.innerLook, divePhase);
-
-      desiredFov = THREE.MathUtils.lerp(
-        THREE.MathUtils.lerp(24, 30, enlargePhase), 78, divePhase
-      );
-    } else if (zoomProgress <= 0.75) {
-      // Phase 2: Pan through cave interior - each feature at a different viewpoint
-      const featureP = (zoomProgress - 0.3) / 0.45;
-      const segmentP = featureP * 3; // 4 positions = 3 segments
-      const segmentIdx = Math.min(2, Math.floor(segmentP));
-      const localP = THREE.MathUtils.smoothstep(segmentP - segmentIdx, 0, 1);
-
-      desiredPositionRef.current.lerpVectors(
-        cameraPath.featurePositions[segmentIdx],
-        cameraPath.featurePositions[segmentIdx + 1],
-        localP
-      );
-      desiredLookRef.current.lerpVectors(
-        cameraPath.featureLookTargets[segmentIdx],
-        cameraPath.featureLookTargets[segmentIdx + 1],
-        localP
-      );
-      desiredFov = 78;
+    if (z <= 0.25) {
+      // Phase 1: Fly into cave
+      const p = THREE.MathUtils.smootherstep(z / 0.25, 0, 1);
+      desiredPositionRef.current.lerpVectors(outerPos, caveCenter, p);
+      desiredLookRef.current.lerpVectors(outerLook, new THREE.Vector3(0, rotationY, -rotationRadius), p);
+      const desiredFov = THREE.MathUtils.lerp(24, 78, p);
+      perspectiveCamera.fov = THREE.MathUtils.lerp(perspectiveCamera.fov, desiredFov, 0.08);
     } else {
-      // Phase 3: Zoom Out from last feature position to outer view
-      const p = (zoomProgress - 0.75) / 0.25;
-      const zoomOutPhase = THREE.MathUtils.smootherstep(p, 0, 1);
+      // Phase 2 & 3: 360° rotation inside cave
+      const rotateProgress = THREE.MathUtils.clamp((z - 0.25) / 0.70, 0, 1);
+      const angle = rotateProgress * Math.PI * 2; // full 360°
 
-      desiredPositionRef.current.lerpVectors(
-        cameraPath.featurePositions[3],
-        cameraPath.outer,
-        zoomOutPhase
+      desiredPositionRef.current.copy(caveCenter);
+      desiredLookRef.current.set(
+        Math.sin(angle) * rotationRadius,
+        rotationY,
+        -Math.cos(angle) * rotationRadius
       );
-      desiredLookRef.current.lerpVectors(
-        cameraPath.featureLookTargets[3],
-        cameraPath.outerLook,
-        zoomOutPhase
-      );
-
-      desiredFov = THREE.MathUtils.lerp(78, 24, zoomOutPhase);
+      perspectiveCamera.fov = THREE.MathUtils.lerp(perspectiveCamera.fov, 78, 0.08);
     }
 
-    camera.position.lerp(desiredPositionRef.current, 0.06);
-    lookTargetRef.current.lerp(desiredLookRef.current, 0.06);
-    perspectiveCamera.fov = THREE.MathUtils.lerp(perspectiveCamera.fov, desiredFov, 0.06);
+    camera.position.lerp(desiredPositionRef.current, 0.08);
+    lookTargetRef.current.lerp(desiredLookRef.current, 0.08);
     perspectiveCamera.near = 0.01;
     perspectiveCamera.far = 80;
     perspectiveCamera.updateProjectionMatrix();
@@ -836,10 +829,10 @@ function CinematicCard({ title, subtitle, description, index }: {
   return (
     <motion.div
       ref={cardRef}
-      initial={{ opacity: 0, y: 80, scale: 0.9 }}
+      initial={{ opacity: 0, y: 40, scale: 0.95 }}
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: false, amount: 0.3 }}
-      transition={{ duration: 1, delay: index * 0.2, ease: [0.22, 1, 0.36, 1] }}
+      viewport={{ once: true, amount: 0.15 }}
+      transition={{ duration: 0.6, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onMouseMove={handleMouseMove}
@@ -914,8 +907,6 @@ function CinematicCard({ title, subtitle, description, index }: {
 
 function FeaturesSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const sectionTopRef = useRef(0);
-  const zoomProgressRef = useRef(0);
   const [zoomProgress, setZoomProgress] = useState(0);
 
   const features = useMemo(() => [
@@ -945,107 +936,107 @@ function FeaturesSection() {
     },
   ], []);
 
+  // Scroll → zoom mapping
+  // Phase 1: 0→0.25 zoom = fly into cave (scroll 0-15%)
+  // Phase 2: 0.25→0.95 zoom = 360° rotation with 4 feature plateaus (scroll 15-92%)
+  // Phase 3: 0.95→1.0 zoom = fade to black, transition out (scroll 92-100%)
+  const scrollToZoom = (t: number): number => {
+    const W: [number, number][] = [
+      [0.00, 0.00],   // outer
+      [0.15, 0.25],   // arrived inside cave
+      [0.18, 0.34],   // feature 0 starts
+      [0.32, 0.42],   // feature 0 plateau
+      [0.35, 0.51],   // feature 1 starts
+      [0.49, 0.59],   // feature 1 plateau
+      [0.52, 0.68],   // feature 2 starts
+      [0.66, 0.76],   // feature 2 plateau
+      [0.69, 0.81],   // feature 3 starts
+      [0.83, 0.89],   // feature 3 plateau
+      [0.92, 0.95],   // rotation done
+      [1.00, 1.00],   // fade complete
+    ];
+    if (t <= 0) return 0;
+    if (t >= 1) return 1;
+    for (let i = 0; i < W.length - 1; i++) {
+      if (t <= W[i + 1][0]) {
+        const [s0, z0] = W[i];
+        const [s1, z1] = W[i + 1];
+        const p = (t - s0) / (s1 - s0);
+        return z0 + (z1 - z0) * p;
+      }
+    }
+    return 1;
+  };
+
   useEffect(() => {
-    const updateSectionTop = () => {
-      if (!sectionRef.current) return;
-      sectionTopRef.current = sectionRef.current.offsetTop;
-    };
-
-    const handleWheel = (event: WheelEvent) => {
-      if (!sectionRef.current) return;
-      const rect = sectionRef.current.getBoundingClientRect();
-      const isPinned = rect.top <= 1 && rect.bottom >= window.innerHeight - 1;
-      if (!isPinned) return;
-
-      const currentZoom = zoomProgressRef.current;
-      const wantsZoomIn = event.deltaY > 0 && currentZoom < 0.999;
-      const wantsZoomOut = event.deltaY < 0 && currentZoom > 0.001;
-
-      if (!wantsZoomIn && !wantsZoomOut) {
-        // Zoom finished - skip past remaining section height instantly
-        if (event.deltaY > 0 && currentZoom >= 0.999) {
-          event.preventDefault();
-          const sectionEnd = sectionTopRef.current + sectionRef.current.offsetHeight;
-          window.scrollTo({ top: sectionEnd - window.innerHeight + 2, behavior: "auto" });
-        }
-        return;
-      }
-
-      event.preventDefault();
-      window.scrollTo({ top: sectionTopRef.current, behavior: "auto" });
-      const nextZoom = THREE.MathUtils.clamp(currentZoom + event.deltaY * 0.0007, 0, 1);
-      zoomProgressRef.current = nextZoom;
-      setZoomProgress(nextZoom);
-    };
-
-    // Fallback: if momentum scroll bypasses wheel handler, auto-skip dead zone
+    let rafId = 0;
     const handleScroll = () => {
-      if (zoomProgressRef.current < 0.99 || !sectionRef.current) return;
-      const rect = sectionRef.current.getBoundingClientRect();
-      if (rect.top < -5 && rect.bottom > 1 && rect.bottom < window.innerHeight) {
-        window.scrollTo({ top: window.scrollY + rect.bottom + 1, behavior: "auto" });
-      }
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = 0;
+        if (!sectionRef.current) return;
+        const rect = sectionRef.current.getBoundingClientRect();
+        const scrollRange = sectionRef.current.offsetHeight - window.innerHeight;
+        if (scrollRange <= 0) return;
+        const rawProgress = Math.max(0, Math.min(1, -rect.top / scrollRange));
+        setZoomProgress(scrollToZoom(rawProgress));
+      });
     };
-
-    const frame = window.requestAnimationFrame(updateSectionTop);
-    window.addEventListener("resize", updateSectionTop);
-    window.addEventListener("wheel", handleWheel, { passive: false });
     window.addEventListener("scroll", handleScroll, { passive: true });
-
+    handleScroll(); // initial computation
     return () => {
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener("resize", updateSectionTop);
-      window.removeEventListener("wheel", handleWheel);
+      cancelAnimationFrame(rafId);
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
-  // Asset zoom level: 0→1 during zoom-in, stays 1 during features, 1→0 during zoom-out
-  let assetZoomLevel: number;
-  if (zoomProgress <= 0.3) {
-    const t = zoomProgress / 0.3;
-    assetZoomLevel = 1 - Math.pow(1 - t, 3);
-  } else if (zoomProgress <= 0.75) {
-    assetZoomLevel = 1;
-  } else {
-    const t = (zoomProgress - 0.75) / 0.25;
-    assetZoomLevel = Math.pow(1 - t, 3);
-  }
+  // Asset zoom: ramps up during fly-in, stays full inside cave
+  const assetZoomLevel = THREE.MathUtils.smoothstep(zoomProgress, 0, 0.25);
 
-  const headingOpacity = Math.max(0, 1 - zoomProgress / 0.12);
+  // Heading fades out quickly as the fly-in begins
+  const headingOpacity = Math.max(0, 1 - zoomProgress / 0.05);
 
-  // Feature showcase phase - starts after fully inside the cave
-  const featurePhaseProgress = THREE.MathUtils.clamp((zoomProgress - 0.35) / 0.4, 0, 1);
+  // Features only appear inside the cave (zoom 0.25→0.95), evenly distributed
+  const featureZoneStart = 0.28;
+  const featureZoneEnd = 0.92;
+  const featurePhaseProgress = THREE.MathUtils.clamp(
+    (zoomProgress - featureZoneStart) / (featureZoneEnd - featureZoneStart), 0, 1
+  );
 
+  // Vignette: visible once inside the cave
   const featureOverlayOpacity = (() => {
-    if (zoomProgress < 0.33) return 0;
-    if (zoomProgress < 0.38) return THREE.MathUtils.smoothstep(zoomProgress, 0.33, 0.38);
-    if (zoomProgress < 0.72) return 1;
-    if (zoomProgress < 0.78) return 1 - THREE.MathUtils.smoothstep(zoomProgress, 0.72, 0.78);
+    if (zoomProgress < 0.22) return 0;
+    if (zoomProgress < 0.30) return THREE.MathUtils.smoothstep(zoomProgress, 0.22, 0.30);
+    if (zoomProgress < 0.90) return 1;
+    if (zoomProgress < 0.97) return 1 - THREE.MathUtils.smoothstep(zoomProgress, 0.90, 0.97);
     return 0;
   })();
+
+  // Fade to black at the end for transition to Story
+  const exitFadeOpacity = THREE.MathUtils.smoothstep(zoomProgress, 0.92, 1.0);
 
   const getFeatureVisibility = (index: number) => {
     const numFeatures = features.length;
     const featureStart = index / numFeatures;
     const featureEnd = (index + 1) / numFeatures;
-    const fadeLen = (featureEnd - featureStart) * 0.25;
+    const fadeIn = 0.06;
+    const fadeOut = 0.06;
 
     if (featurePhaseProgress < featureStart || featurePhaseProgress > featureEnd) {
-      return { opacity: 0, translateY: 50, scale: 0.95 };
+      return { opacity: 0, translateY: 40, scale: 0.95 };
     }
 
     let opacity: number;
     let translateY: number;
 
-    if (featurePhaseProgress < featureStart + fadeLen) {
-      const t = THREE.MathUtils.smoothstep(featurePhaseProgress, featureStart, featureStart + fadeLen);
+    if (featurePhaseProgress < featureStart + fadeIn) {
+      const t = THREE.MathUtils.smoothstep(featurePhaseProgress, featureStart, featureStart + fadeIn);
       opacity = t;
-      translateY = (1 - t) * 50;
-    } else if (featurePhaseProgress > featureEnd - fadeLen) {
-      const t = THREE.MathUtils.smoothstep(featurePhaseProgress, featureEnd - fadeLen, featureEnd);
+      translateY = (1 - t) * 40;
+    } else if (featurePhaseProgress > featureEnd - fadeOut) {
+      const t = THREE.MathUtils.smoothstep(featurePhaseProgress, featureEnd - fadeOut, featureEnd);
       opacity = 1 - t;
-      translateY = -t * 30;
+      translateY = -t * 25;
     } else {
       opacity = 1;
       translateY = 0;
@@ -1060,20 +1051,20 @@ function FeaturesSection() {
   );
 
   return (
-    <section 
+    <section
       ref={sectionRef}
-      className="relative h-[150vh] overflow-hidden"
-      style={{
-        background: "linear-gradient(180deg, #030108 0%, #05020f 30%, #080414 60%, #030108 100%)",
-      }}
+      className="relative h-[500vh] bg-black"
     >
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-1/2 top-[28%] h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-400/10 blur-[150px]" />
-        <div className="absolute right-[12%] top-[42%] h-72 w-72 rounded-full bg-amber-300/10 blur-[170px]" />
-        <div className="absolute left-[10%] bottom-[10%] h-72 w-72 rounded-full bg-purple-500/15 blur-[180px]" />
-      </div>
-
-      <div className="sticky top-0 h-screen overflow-hidden">
+      <div className="sticky top-0 h-screen overflow-hidden"
+        style={{
+          background: "linear-gradient(180deg, #030108 0%, #05020f 30%, #080414 60%, #030108 100%)",
+        }}
+      >
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute left-1/2 top-[28%] h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-400/10 blur-[150px]" />
+          <div className="absolute right-[12%] top-[42%] h-72 w-72 rounded-full bg-amber-300/10 blur-[170px]" />
+          <div className="absolute left-[10%] bottom-[10%] h-72 w-72 rounded-full bg-purple-500/15 blur-[180px]" />
+        </div>
         <div className="absolute inset-0">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08),rgba(6,3,15,0.22)_42%,rgba(3,1,8,0.9)_82%)]" />
           <Canvas
@@ -1099,31 +1090,31 @@ function FeaturesSection() {
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-40 bg-gradient-to-b from-[#030108] via-[#030108]/70 to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 bg-gradient-to-t from-[#030108] via-[#030108]/70 to-transparent" />
 
-        <div className="absolute inset-x-0 top-10 z-20 px-6 md:top-14">
-          <div className="mx-auto max-w-3xl text-center" style={{ opacity: headingOpacity }}>
-        <motion.div
-          initial={{ opacity: 0, y: 60 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.35 }}
-          transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-          className="text-center"
-        >
-          <motion.p 
-            className="text-purple-400/50 text-[10px] tracking-[0.6em] uppercase mb-4"
-            style={{ fontFamily: "Space Grotesk, sans-serif" }}
-          >
-            Core Features
-          </motion.p>
-          <h2 
-            className="text-white mb-4"
-            style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: "clamp(32px, 6vw, 64px)", fontWeight: 700 }}
-          >
-            CORE FEATURES
-          </h2>
-          <p className="text-white/30 text-base max-w-2xl mx-auto" style={{ fontFamily: "Inter, sans-serif" }}>
-            Everything you need for DeFi on Initia with near-zero gas fees.
-          </p>
-        </motion.div>
+        <div className="absolute inset-x-0 top-6 z-20 px-6 md:top-8">
+          <div className="mx-auto max-w-2xl text-center" style={{ opacity: headingOpacity }}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              className="text-center"
+            >
+              <p
+                className="text-purple-400/50 text-[10px] tracking-[0.6em] uppercase mb-2"
+                style={{ fontFamily: "Space Grotesk, sans-serif" }}
+              >
+                Core Features
+              </p>
+              <h2
+                className="text-white mb-2"
+                style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: "clamp(24px, 4vw, 48px)", fontWeight: 700 }}
+              >
+                CORE FEATURES
+              </h2>
+              <p className="text-white/30 text-sm max-w-lg mx-auto" style={{ fontFamily: "Inter, sans-serif" }}>
+                Everything you need for DeFi on Initia with near-zero gas fees.
+              </p>
+            </motion.div>
           </div>
         </div>
 
@@ -1219,56 +1210,224 @@ function FeaturesSection() {
             ))}
           </div>
         )}
+
+        {/* Fade to black at end — seamless transition to Story */}
+        {exitFadeOpacity > 0 && (
+          <div className="absolute inset-0 z-40 bg-black pointer-events-none" style={{ opacity: exitFadeOpacity }} />
+        )}
       </div>
     </section>
   );
 }
 
+// SVG icons for contract blocks — clean line art, no emojis
+const BlockIcons = {
+  router: () => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>
+    </svg>
+  ),
+  pool: () => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2v6m0 8v6M2 12h6m8 0h6"/><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/>
+    </svg>
+  ),
+  bridge: () => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="6" width="6" height="6" rx="1"/><rect x="16" y="6" width="6" height="6" rx="1"/><path d="M8 9h8"/><path d="M6 15v3m12-3v3"/><path d="M2 21h20"/>
+    </svg>
+  ),
+  validator: () => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>
+    </svg>
+  ),
+  oracle: () => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+    </svg>
+  ),
+};
+
 function StorySection() {
-  const frameRef = useRef<HTMLImageElement>(null);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [revealProgress, setRevealProgress] = useState(0);
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const tiltRef = useRef<HTMLDivElement>(null);
+
+  const blocks = useMemo(() => [
+    { label: "ROUTER", icon: BlockIcons.router, x: "25%", y: "22%", color: "#a78bfa" },
+    { label: "POOL", icon: BlockIcons.pool, x: "72%", y: "18%", color: "#22d3ee" },
+    { label: "BRIDGE", icon: BlockIcons.bridge, x: "20%", y: "72%", color: "#f59e0b" },
+    { label: "VALIDATOR", icon: BlockIcons.validator, x: "78%", y: "68%", color: "#34d399" },
+    { label: "ORACLE", icon: BlockIcons.oracle, x: "50%", y: "45%", color: "#c084fc" },
+  ], []);
+
+  const connections = useMemo(() => [
+    { from: 0, to: 4 }, { from: 1, to: 4 }, { from: 2, to: 4 },
+    { from: 3, to: 4 }, { from: 0, to: 2 }, { from: 1, to: 3 },
+  ], []);
+
+  // Scroll-driven reveal: each block appears one at a time
+  useEffect(() => {
+    let rafId = 0;
+    const handleScroll = () => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = 0;
+        if (!sectionRef.current) return;
+        const rect = sectionRef.current.getBoundingClientRect();
+        const scrollRange = sectionRef.current.offsetHeight - window.innerHeight;
+        if (scrollRange <= 0) return;
+        const p = Math.max(0, Math.min(1, -rect.top / scrollRange));
+        setRevealProgress(p);
+      });
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => { cancelAnimationFrame(rafId); window.removeEventListener("scroll", handleScroll); };
+  }, []);
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!frameRef.current) return;
-    const { clientX, clientY } = e;
-    const rect = frameRef.current.getBoundingClientRect();
-    const xPos = clientX - rect.left;
-    const yPos = clientY - rect.top;
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    const rotateX = ((yPos - centerY) / centerY) * -10;
-    const rotateY = ((xPos - centerX) / centerX) * 10;
-    gsap.to(frameRef.current, { duration: 0.3, rotateX, rotateY, transformPerspective: 500, ease: "power1.inOut" });
+    if (!tiltRef.current) return;
+    const rect = tiltRef.current.getBoundingClientRect();
+    setTilt({
+      x: ((e.clientX - rect.left) / rect.width - 0.5) * 8,
+      y: ((e.clientY - rect.top) / rect.height - 0.5) * -8,
+    });
   };
 
-  const handleMouseLeave = () => {
-    if (frameRef.current) {
-      gsap.to(frameRef.current, { duration: 0.3, rotateX: 0, rotateY: 0, ease: "power1.inOut" });
-    }
+  // Each block reveals at an even interval, description at the end
+  const getBlockOpacity = (index: number) => {
+    const blockCount = blocks.length;
+    // First 80% of scroll reveals blocks, last 20% shows description
+    const revealZone = 0.80;
+    const blockStart = (index / blockCount) * revealZone;
+    const blockFadeIn = revealZone / blockCount * 0.4;
+    if (revealProgress < blockStart) return 0;
+    if (revealProgress < blockStart + blockFadeIn) return (revealProgress - blockStart) / blockFadeIn;
+    return 1;
   };
+
+  // Connection line appears after both its blocks are visible
+  const getLineOpacity = (connIndex: number) => {
+    const conn = connections[connIndex];
+    const a = getBlockOpacity(conn.from);
+    const b = getBlockOpacity(conn.to);
+    return Math.min(a, b);
+  };
+
+  const descriptionOpacity = Math.max(0, (revealProgress - 0.82) / 0.15);
+  const titleOpacity = Math.max(0, Math.min(1, revealProgress / 0.08));
 
   return (
-    <div className="min-h-dvh w-screen bg-black text-white py-20 -mt-[50vh] relative z-[1]">
-      <div className="flex flex-col items-center pb-24">
-        <p className="font-general text-sm uppercase md:text-[10px] text-white/40">The Multiversal DeFi World</p>
+    <div ref={sectionRef} className="relative h-[350vh] bg-black -mt-[50vh] z-[1]">
+      <div className="sticky top-0 h-screen overflow-hidden flex flex-col items-center justify-center text-white">
 
-        <AnimatedTitle title="the fu<b>t</b>ure of <br /> defi is <b>h</b>ere" containerClass="mt-8 pointer-events-none relative z-10" />
-
-        <div className="story-img-container mt-12">
-          <div className="story-img-mask">
-            <div className="story-img-content">
-              <img ref={frameRef} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave} src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=1200&q=80" alt="DeFi" className="object-contain" />
-            </div>
+        {/* Title */}
+        <div className="absolute inset-x-0 top-8 z-20 px-6" style={{ opacity: titleOpacity }}>
+          <p className="text-center font-general text-sm uppercase md:text-[10px] text-white/40">The Multiversal DeFi World</p>
+          <div className="mt-6">
+            <AnimatedTitle title="the fu<b>t</b>ure of <br /> defi is <b>h</b>ere" containerClass="pointer-events-none relative z-10" />
           </div>
         </div>
 
-        <div className="-mt-64 flex w-full justify-center md:-mt-48 md:me-44 md:justify-end">
-          <div className="flex h-full w-fit flex-col items-center md:items-start">
-            <p className="mt-3 max-w-sm text-center font-circular-web text-white/40 md:text-start">
-              Where DeFi meets innovation. Discover the power of smart routing and shape your financial future.
+        {/* Block visualization */}
+        <div
+          ref={tiltRef}
+          className="relative w-full max-w-3xl mx-auto px-6"
+          style={{ height: "55vh", perspective: "1000px", marginTop: "8vh" }}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={() => setTilt({ x: 0, y: 0 })}
+        >
+          <div
+            className="relative w-full h-full"
+            style={{
+              transformStyle: "preserve-3d",
+              transform: `rotateX(${tilt.y}deg) rotateY(${tilt.x}deg)`,
+              transition: "transform 0.3s ease-out",
+            }}
+          >
+            {/* Grid background */}
+            <div
+              className="absolute inset-0 rounded-2xl pointer-events-none"
+              style={{
+                backgroundImage: "linear-gradient(rgba(139,92,246,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.05) 1px, transparent 1px)",
+                backgroundSize: "40px 40px",
+                maskImage: "radial-gradient(ellipse at center, black 30%, transparent 70%)",
+                WebkitMaskImage: "radial-gradient(ellipse at center, black 30%, transparent 70%)",
+                opacity: Math.min(1, revealProgress * 3),
+              }}
+            />
+
+            {/* Connection lines */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none">
+              <defs>
+                <linearGradient id="line-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="rgba(139,92,246,0.4)" />
+                  <stop offset="50%" stopColor="rgba(34,211,238,0.3)" />
+                  <stop offset="100%" stopColor="rgba(139,92,246,0.4)" />
+                </linearGradient>
+              </defs>
+              {connections.map((conn, i) => (
+                <line
+                  key={i}
+                  x1={blocks[conn.from].x} y1={blocks[conn.from].y}
+                  x2={blocks[conn.to].x} y2={blocks[conn.to].y}
+                  stroke="url(#line-grad)"
+                  strokeWidth="1"
+                  style={{ opacity: getLineOpacity(i), transition: "opacity 0.5s ease" }}
+                />
+              ))}
+            </svg>
+
+            {/* Blocks */}
+            {blocks.map((block, i) => {
+              const opacity = getBlockOpacity(i);
+              const Icon = block.icon;
+              return (
+                <div
+                  key={block.label}
+                  className="absolute hoverable"
+                  style={{
+                    left: block.x, top: block.y,
+                    transform: `translate(-50%, -50%) scale(${0.6 + opacity * 0.4}) translateY(${(1 - opacity) * 30}px)`,
+                    opacity,
+                    transition: "opacity 0.5s ease, transform 0.5s ease",
+                  }}
+                >
+                  <div
+                    className="relative p-4 md:p-5 rounded-xl cursor-pointer group"
+                    style={{
+                      background: "rgba(10, 12, 25, 0.85)",
+                      border: `1px solid ${opacity > 0.9 ? block.color + "40" : "rgba(255,255,255,0.06)"}`,
+                      backdropFilter: "blur(20px)",
+                      boxShadow: opacity > 0.9 ? `0 12px 40px -10px ${block.color}30` : "0 10px 40px -10px rgba(0,0,0,0.6)",
+                      transition: "all 0.4s ease",
+                    }}
+                  >
+                    <div className="mb-2 transition-colors" style={{ color: block.color }}><Icon /></div>
+                    <p className="text-white/80 text-[10px] md:text-xs font-bold tracking-wider" style={{ fontFamily: "Space Grotesk, sans-serif" }}>{block.label}</p>
+                    <div className="absolute -inset-px rounded-xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: `linear-gradient(135deg, ${block.color}20, transparent 60%)` }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Description — appears after all blocks revealed */}
+        <div
+          className="absolute bottom-12 inset-x-0 px-6 flex justify-center md:justify-end md:pr-20"
+          style={{ opacity: descriptionOpacity, transform: `translateY(${(1 - descriptionOpacity) * 20}px)`, transition: "opacity 0.4s ease, transform 0.4s ease" }}
+        >
+          <div className="flex flex-col items-center md:items-start max-w-sm">
+            <p className="text-center font-circular-web text-white/40 md:text-start text-sm">
+              Where DeFi meets innovation. Smart contracts, routing, and bridging — all connected in one seamless protocol.
             </p>
-            <motion.button className="mt-5 bg-yellow-300 text-white text-xs font-medium tracking-wider px-6 py-3 rounded-full hover:bg-yellow-400 transition-colors hoverable flex items-center gap-2" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <button className="mt-4 bg-yellow-300 text-white text-xs font-medium tracking-wider px-6 py-3 rounded-full hover:bg-yellow-400 hoverable flex items-center gap-2 transition-transform duration-150 hover:scale-105 active:scale-95">
               <TiLocationArrow /> EXPLORE
-            </motion.button>
+            </button>
           </div>
         </div>
       </div>
@@ -1293,10 +1452,10 @@ function TokenCard({ token, index }: { token: { symbol: string; name: string; lo
   return (
     <motion.div
       ref={cardRef}
-      initial={{ opacity: 0, y: 40, scale: 0.9 }}
+      initial={{ opacity: 0, y: 25, scale: 0.95 }}
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: false, amount: 0.3 }}
-      transition={{ duration: 0.6, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
+      viewport={{ once: true, amount: 0.1 }}
+      transition={{ duration: 0.45, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => { setIsHovered(false); setMousePos({ x: 0, y: 0 }); }}
       onMouseMove={handleMouseMove}
@@ -1380,19 +1539,19 @@ function TokensSection() {
     <section className="relative z-10 py-32 bg-black">
       <div className="container mx-auto px-6 text-center">
         <motion.p
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false }}
-          transition={{ duration: 0.6 }}
+          viewport={{ once: true, amount: 0.1 }}
+          transition={{ duration: 0.4 }}
           className="text-purple-400/50 text-[10px] tracking-[0.4em] mb-4 uppercase"
         >
           Supported Tokens
         </motion.p>
         <motion.h2
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false }}
-          transition={{ duration: 0.8, delay: 0.1 }}
+          viewport={{ once: true, amount: 0.1 }}
+          transition={{ duration: 0.5, delay: 0.05 }}
           className="text-4xl md:text-6xl font-zentry font-black text-white tracking-tight mb-16"
         >
           Multi-Chain <span className="italic text-purple-400">Assets</span>
@@ -1418,9 +1577,9 @@ function CTASection() {
           </div>
           <h2 className="text-3xl md:text-5xl font-zentry font-black text-white tracking-tight mb-4">Ready to start?</h2>
           <p className="text-white/40 text-sm mb-10 max-w-lg mx-auto">Join the future of DeFi on Initia. One click, best route, zero hassle.</p>
-          <motion.button className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-xs tracking-[0.2em] px-10 py-4 rounded-full hover:opacity-90 transition-opacity hoverable" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
+          <button className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-xs tracking-[0.2em] px-10 py-4 rounded-full hover:opacity-90 hoverable transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98]">
             LAUNCH APP
-          </motion.button>
+          </button>
         </div>
       </div>
     </section>
@@ -1430,8 +1589,9 @@ function CTASection() {
 function FooterWeb3Particles() {
   const meshRef = useRef<THREE.Points>(null);
   const lineRef = useRef<THREE.LineSegments>(null);
-  const particleCount = 1000;
+  const particleCount = 150;
   const maxDistance = 8;
+  const maxLines = 400;
 
   const { positions } = useMemo(() => {
     const pos = new Float32Array(particleCount * 3);
@@ -1452,7 +1612,7 @@ function FooterWeb3Particles() {
 
   const lineGeometry = useMemo(() => {
     const geo = new THREE.BufferGeometry();
-    geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(particleCount * particleCount * 6), 3));
+    geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(maxLines * 6), 3));
     return geo;
   }, []);
 
@@ -1469,9 +1629,9 @@ function FooterWeb3Particles() {
       posArray[i3 + 1] += Math.cos(time * 0.6 + i * 0.12) * 0.015;
     }
 
-    for (let i = 0; i < particleCount; i++) {
+    for (let i = 0; i < particleCount && lineIndex < maxLines * 6; i++) {
       const i3 = i * 3;
-      for (let j = i + 1; j < particleCount; j++) {
+      for (let j = i + 1; j < particleCount && lineIndex < maxLines * 6; j++) {
         const j3 = j * 3;
         const dx = posArray[i3] - posArray[j3];
         const dy = posArray[i3 + 1] - posArray[j3 + 1];
@@ -1512,16 +1672,29 @@ function FooterWeb3Particles() {
 
 function Footer() {
   const footerRef = useRef<HTMLElement>(null);
+  const [footerVisible, setFooterVisible] = useState(false);
+
+  useEffect(() => {
+    if (!footerRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setFooterVisible(true); },
+      { rootMargin: "200px" }
+    );
+    observer.observe(footerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <footer ref={footerRef} className="relative py-16 bg-black flex flex-col items-center justify-center overflow-hidden">
       <div className="absolute inset-0">
-        <Canvas camera={{ position: [0, 0, 25], fov: 90 }}>
-          <ambientLight intensity={0.3} />
-          <pointLight position={[10, 10, 10]} intensity={0.5} color="#8b5cf6" />
-          <pointLight position={[-10, -10, -10]} intensity={0.3} color="#a855f7" />
-          <FooterWeb3Particles />
-        </Canvas>
+        {footerVisible && (
+          <Canvas camera={{ position: [0, 0, 25], fov: 90 }}>
+            <ambientLight intensity={0.3} />
+            <pointLight position={[10, 10, 10]} intensity={0.5} color="#8b5cf6" />
+            <pointLight position={[-10, -10, -10]} intensity={0.3} color="#a855f7" />
+            <FooterWeb3Particles />
+          </Canvas>
+        )}
       </div>
       
       <div className="relative z-10">
@@ -1545,15 +1718,15 @@ function Footer() {
 }
 
 export default function Home() {
-  const [scrollY, setScrollY] = useState(0);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
+  const scrollYRef = useRef(0);
+  const mousePosRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 2000);
-    const handleScroll = () => setScrollY(window.scrollY);
-    const handleMouseMove = (e: MouseEvent) => setMousePosition({ x: e.clientX, y: e.clientY });
+    const handleScroll = () => { scrollYRef.current = window.scrollY; };
+    const handleMouseMove = (e: MouseEvent) => { mousePosRef.current = { x: e.clientX, y: e.clientY }; };
     window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
     return () => {
@@ -1564,13 +1737,11 @@ export default function Home() {
   }, []);
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-black text-white overflow-x-hidden">
+    <div ref={containerRef} className="min-h-screen bg-black text-white" style={{ overflowX: "clip" }}>
       <LoadingScreen isLoading={isLoading} />
       <CustomCursor />
 
       <style jsx global>{`
-        @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
-        
         .border-hsla { border: 1px solid rgba(255, 255, 255, 0.2); }
         
         .nav-hover-btn {
@@ -1753,7 +1924,7 @@ export default function Home() {
           50% { transform: translateY(66%) scale(0.65); opacity: 0.8; }
         }
         
-        html { scroll-behavior: smooth; }
+        html { scroll-behavior: auto; }
         body { cursor: default; overflow-x: hidden; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -1763,13 +1934,13 @@ export default function Home() {
 
       <div className="fixed inset-0 z-0 pointer-events-none">
         <Canvas camera={{ position: [0, 0, 8], fov: 75 }}>
-          <Scene3D scrollY={scrollY} mousePosition={mousePosition} />
+          <Scene3D scrollYRef={scrollYRef} mousePosRef={mousePosRef} />
         </Canvas>
       </div>
 
       <div className="relative z-10">
         <Navigation />
-        <HeroSection scrollY={scrollY} />
+        <HeroSection scrollYRef={scrollYRef} />
         <FeaturesSection />
         <StorySection />
         <TokensSection />

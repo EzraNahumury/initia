@@ -97,7 +97,19 @@
       "Bash(curl -sL -o idrx_test.png \"https://raw.githubusercontent.com/niconiahi/idrx/main/logo.png\")",
       "Bash(curl -sL -o idrx_test2.png \"https://s2.coinmarketcap.com/static/img/coins/200x200/34758.png\")",
       "Bash(curl -sL -o gas_test.png \"https://raw.githubusercontent.com/cosmos/chain-registry/master/initia/images/GAS.png\")",
-      "Bash(ls -la *.png)"
+      "Bash(ls -la *.png)",
+      "Bash(awk '{print $5, $9}')",
+      "Bash(ls -lh /c/initia/landing_page_rp/public/asset*.glb /c/initia/landing_page_rp/public/asset3d/*)",
+      "Bash(ls -lh /c/initia/landing_page_rp/public/tokens/*.png)",
+      "Bash(du:*)",
+      "Bash(grep -c \"useEffect\\\\|useState\\\\|useCallback\\\\|useMemo\" /c/initia/landing_page_rp/app/page.tsx /c/initia/fe_rupiahrote/components/*.tsx)",
+      "Bash(wc:*)",
+      "Bash(rm -f public/stylized_alien_cave_skybox.glb public/jozsef_gruber_water_reservoir.glb)",
+      "Bash(rm -rf public/asset3d)",
+      "Bash(identify /c/initia/landing_page_rp/public/asset/textures/Material_baseColor.jpeg)",
+      "Bash(npx --yes sharp-cli -i /c/initia/landing_page_rp/public/asset/textures/Material_baseColor.jpeg -o /c/initia/landing_page_rp/public/asset/textures/Material_baseColor_opt.jpeg --quality 75 -- resize 4096 2048)",
+      "Bash(mv Material_baseColor.jpeg Material_baseColor_original.jpeg)",
+      "Bash(mv Material_baseColor_opt.jpeg Material_baseColor.jpeg)"
     ]
   }
 }
