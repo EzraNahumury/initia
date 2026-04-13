@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ParticleBackground } from "./components/ParticleBackground";
+import { Zap, Binary, BookText } from "lucide-react";
 
 export default function IntroductionPage() {
   return (
@@ -126,7 +127,7 @@ export default function IntroductionPage() {
           <div className="p-4 space-y-3">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center text-base" style={{ background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.25)" }}>
-                ⚡
+                <Zap className="w-4 h-4 text-indigo-400" />
               </div>
               <div>
                 <div className="text-[11px] font-mono font-bold text-foreground">fe_rupiahrote/</div>
@@ -160,7 +161,7 @@ export default function IntroductionPage() {
           <div className="p-4 space-y-3" style={{ borderLeft: "1px solid rgba(139,92,246,0.15)" }}>
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center text-base" style={{ background: "rgba(159,41,255,0.15)", border: "1px solid rgba(159,41,255,0.25)" }}>
-                🔗
+                <Binary className="w-4 h-4 text-purple-400" />
               </div>
               <div>
                 <div className="text-[11px] font-mono font-bold text-foreground">sc_RupiahRote/</div>
@@ -194,7 +195,7 @@ export default function IntroductionPage() {
           <div className="p-4 space-y-3" style={{ borderLeft: "1px solid rgba(139,92,246,0.15)" }}>
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center text-base" style={{ background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.2)" }}>
-                📖
+                <BookText className="w-4 h-4 text-green-500" />
               </div>
               <div>
                 <div className="text-[11px] font-mono font-bold text-foreground">docs_rupiahrote/</div>
