@@ -18,7 +18,7 @@ export function Header() {
       <header className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-md">
         <div className="flex items-center justify-between h-14 px-6">
           <div className="flex items-center gap-4">
-            <button 
+            <button
               className="lg:hidden p-1.5 -ml-1.5 text-muted hover:text-foreground"
               onClick={() => setMobileMenuOpen(true)}
             >
@@ -31,7 +31,7 @@ export function Header() {
           </div>
 
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={() => setSearchOpen(true)}
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-card/50 text-muted hover:text-foreground hover:border-purple/30 hover:bg-card/80 transition-colors text-sm cursor-pointer"
             >
@@ -45,7 +45,7 @@ export function Header() {
           </div>
         </div>
       </header>
-      
+
       <SearchModal open={searchOpen} onOpenChange={setSearchOpen} />
 
       {/* Mobile Drawer */}
@@ -53,7 +53,7 @@ export function Header() {
         <div className="fixed inset-0 z-[100] flex lg:hidden">
           <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
           <div className="relative w-64 max-w-sm h-full bg-card border-r border-border shadow-2xl flex flex-col pt-6 overflow-y-auto animate-in slide-in-from-left">
-            <button 
+            <button
               className="absolute top-5 right-5 p-1 text-muted hover:text-foreground"
               onClick={() => setMobileMenuOpen(false)}
             >
@@ -78,11 +78,10 @@ export function Header() {
                         <li key={item.href}>
                           <Link href={item.href}
                             onClick={() => setMobileMenuOpen(false)}
-                            className={`block px-2 py-1.5 rounded-lg text-sm transition-colors ${
-                              active
+                            className={`block px-2 py-1.5 rounded-lg text-sm transition-colors ${active
                                 ? "bg-purple/10 text-purple-light font-medium"
                                 : "text-muted hover:text-foreground hover:bg-purple/5"
-                            }`}>
+                              }`}>
                             {item.title}
                           </Link>
                         </li>
