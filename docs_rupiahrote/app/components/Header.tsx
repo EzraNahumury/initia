@@ -68,7 +68,7 @@ export function Header() {
             <nav className="space-y-6 px-4 pb-6">
               {NAV.map((group) => (
                 <div key={group.label}>
-                  <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2 px-2">
+                  <h4 className="text-xs font-bold text-foreground/70 uppercase tracking-wider mb-2 px-2">
                     {group.label}
                   </h4>
                   <ul className="space-y-0.5">

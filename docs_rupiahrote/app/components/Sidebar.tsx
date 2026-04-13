@@ -13,7 +13,7 @@ export function Sidebar() {
       <nav className="px-4 py-6 space-y-6 flex-1">
         {NAV.map((group) => (
           <div key={group.label}>
-            <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2 px-2">
+            <h4 className="text-xs font-bold text-foreground/70 uppercase tracking-wider mb-2 px-2">
               {group.label}
             </h4>
             <ul className="space-y-0.5">
