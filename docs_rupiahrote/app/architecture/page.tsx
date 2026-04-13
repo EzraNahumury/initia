@@ -1,4 +1,30 @@
+import {
+  ArrowRightLeft,
+  BarChart3,
+  Droplets,
+  Orbit,
+  Plug,
+  Send,
+  TrendingUp,
+  Waypoints,
+  Workflow,
+} from "lucide-react";
 import { Mermaid } from "../components/Mermaid";
+
+const rootLayoutCards = [
+  { name: "BackgroundEffect", description: "FaultyTerminal - WebGL canvas", icon: Orbit },
+  { name: "Providers", description: "WagmiProvider - QueryClient", icon: Plug },
+];
+
+const featurePages = [
+  { route: "/", component: "SwapView", label: "Swap + HeroSection", icon: ArrowRightLeft, color: "99,102,241" },
+  { route: "/limit", component: "LimitOrderCard", label: "Limit Orders", icon: BarChart3, color: "139,92,246" },
+  { route: "/batch", component: "BatchSwapCard", label: "Batch Swap", icon: Workflow, color: "245,158,11" },
+  { route: "/bridge", component: "BridgeCard", label: "L1 <-> L2 Bridge", icon: Waypoints, color: "6,182,212" },
+  { route: "/send", component: "SendCard", label: "Send Tokens", icon: Send, color: "34,197,94" },
+  { route: "/faucet", component: "FaucetCard", label: "Testnet Faucet", icon: Droplets, color: "249,115,22" },
+  { route: "/dashboard", component: "DashboardView", label: "Portfolio + Stats", icon: TrendingUp, color: "159,41,255" },
+];
 
 export default function ArchitecturePage() {
   return (
@@ -97,20 +123,22 @@ export default function ArchitecturePage() {
           <div className="rounded-xl p-4" style={{ background: "rgba(159,41,255,0.06)", border: "1px solid rgba(159,41,255,0.25)" }}>
             <div className="text-[10px] font-mono font-bold text-purple-light mb-3 uppercase tracking-wider">Root Layout</div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-lg p-3 space-y-1" style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)" }}>
-                <div className="flex items-center gap-2">
-                  <span className="text-base">🌌</span>
-                  <span className="text-[10px] font-mono font-semibold text-foreground">BackgroundEffect</span>
-                </div>
-                <div className="text-[9px] text-muted pl-7">FaultyTerminal · WebGL canvas</div>
-              </div>
-              <div className="rounded-lg p-3 space-y-1" style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)" }}>
-                <div className="flex items-center gap-2">
-                  <span className="text-base">🔌</span>
-                  <span className="text-[10px] font-mono font-semibold text-foreground">Providers</span>
-                </div>
-                <div className="text-[9px] text-muted pl-7">WagmiProvider · QueryClient</div>
-              </div>
+              {rootLayoutCards.map((card) => {
+                const Icon = card.icon;
+                return (
+                  <div
+                    key={card.name}
+                    className="rounded-lg p-3 space-y-1"
+                    style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)" }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Icon className="h-4 w-4 shrink-0 text-purple-light" strokeWidth={1.8} />
+                      <span className="text-[10px] font-mono font-semibold text-foreground">{card.name}</span>
+                    </div>
+                    <div className="text-[9px] text-muted pl-6">{card.description}</div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -126,28 +154,29 @@ export default function ArchitecturePage() {
           <div className="rounded-xl p-4" style={{ background: "rgba(10,10,26,0.7)", border: "1px solid rgba(139,92,246,0.18)" }}>
             <div className="text-[10px] font-mono font-bold text-muted mb-3 uppercase tracking-wider">Feature Pages</div>
             <div className="grid grid-cols-2 gap-2">
-              {[
-                { route: "/",          component: "SwapView",       label: "Swap + HeroSection", icon: "⇄",  color: "99,102,241"  },
-                { route: "/limit",     component: "LimitOrderCard", label: "Limit Orders",        icon: "📊", color: "139,92,246"  },
-                { route: "/batch",     component: "BatchSwapCard",  label: "Batch Swap",          icon: "🔀", color: "245,158,11"  },
-                { route: "/bridge",    component: "BridgeCard",     label: "L1 ↔ L2 Bridge",     icon: "🌉", color: "6,182,212"   },
-                { route: "/send",      component: "SendCard",        label: "Send Tokens",         icon: "📤", color: "34,197,94"   },
-                { route: "/faucet",    component: "FaucetCard",      label: "Testnet Faucet",      icon: "🚰", color: "249,115,22"  },
-                { route: "/dashboard", component: "DashboardView",   label: "Portfolio + Stats",   icon: "📈", color: "159,41,255"  },
-              ].map((page) => (
-                <div key={page.route}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5"
-                  style={{ background: `rgba(${page.color},0.07)`, border: `1px solid rgba(${page.color},0.2)` }}>
-                  <span className="text-sm shrink-0">{page.icon}</span>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <code className="text-[10px] font-mono font-bold" style={{ color: `rgba(${page.color},1)` }}>{page.route}</code>
+              {featurePages.map((page) => {
+                const Icon = page.icon;
+                return (
+                  <div
+                    key={page.route}
+                    className="flex items-center gap-3 rounded-lg px-3 py-2.5"
+                    style={{ background: `rgba(${page.color},0.07)`, border: `1px solid rgba(${page.color},0.2)` }}
+                  >
+                    <Icon
+                      className="h-4 w-4 shrink-0"
+                      strokeWidth={1.8}
+                      style={{ color: `rgba(${page.color},0.96)` }}
+                    />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <code className="text-[10px] font-mono font-bold" style={{ color: `rgba(${page.color},1)` }}>{page.route}</code>
+                      </div>
+                      <div className="text-[9px] font-mono text-muted truncate">{page.component}</div>
+                      <div className="text-[9px] text-muted opacity-70">{page.label}</div>
                     </div>
-                    <div className="text-[9px] font-mono text-muted truncate">{page.component}</div>
-                    <div className="text-[9px] text-muted opacity-70">{page.label}</div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

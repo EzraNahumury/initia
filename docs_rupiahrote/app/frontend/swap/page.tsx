@@ -1,3 +1,4 @@
+import { Globe } from "lucide-react";
 import { CodeBlock } from "../../components/CodeBlock";
 
 export default function SwapRoutingPage() {
@@ -115,7 +116,9 @@ export default function SwapRoutingPage() {
                 <span className="text-[9px] text-muted">When no input</span>
               </div>
               <div className="rounded-lg p-3 text-center" style={{ background: "rgba(159,41,255,0.06)", border: "1px solid rgba(139,92,246,0.15)" }}>
-                <div className="text-base mb-1">🌐</div>
+                <div className="mb-1 flex justify-center">
+                  <Globe className="h-5 w-5 text-purple-light" strokeWidth={1.8} />
+                </div>
                 <div className="text-[9px] text-muted">3D Globe (Three.js / react-three-fiber)</div>
                 <div className="text-[9px] text-muted opacity-70 mt-0.5">+ orbiting chain icons</div>
               </div>

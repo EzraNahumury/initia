@@ -1,3 +1,14 @@
+import {
+  Component as ComponentIcon,
+  FileCode,
+  Folder,
+  FolderOpen,
+  Image as ImageIcon,
+  Palette,
+  PanelsTopLeft,
+  Route,
+  Wrench,
+} from "lucide-react";
 import Link from "next/link";
 
 export default function FrontendOverviewPage() {
@@ -82,7 +93,7 @@ export default function FrontendOverviewPage() {
           {/* app/ column */}
           <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(99,102,241,0.2)" }}>
             <div className="flex items-center gap-2 px-3 py-2" style={{ background: "rgba(99,102,241,0.1)", borderBottom: "1px solid rgba(99,102,241,0.15)" }}>
-              <span className="text-sm">📁</span>
+              <Folder className="h-4 w-4 text-[#93c5fd]" strokeWidth={1.8} />
               <span className="text-[10px] font-mono font-bold text-foreground">app/</span>
               <span className="text-[9px] text-muted ml-1">App Router pages</span>
             </div>
@@ -98,16 +109,23 @@ export default function FrontendOverviewPage() {
                 { name: "send/page.tsx",        desc: "/send → SendCard", route: true },
                 { name: "faucet/page.tsx",      desc: "/faucet → FaucetCard", route: true },
                 { name: "dashboard/page.tsx",   desc: "/dashboard → DashboardView", route: true },
-              ].map((f) => (
-                <div key={f.name} className="flex items-start gap-2 px-2 py-1.5 rounded-lg group"
-                  style={{ background: f.route ? "rgba(99,102,241,0.06)" : f.special ? "rgba(159,41,255,0.05)" : "transparent" }}>
-                  <span className="text-[10px] shrink-0 mt-px">{f.css ? "🎨" : f.route ? "🔷" : f.special ? "⚙️" : "📄"}</span>
-                  <div className="min-w-0">
-                    <div className="text-[9px] font-mono font-semibold truncate" style={{ color: f.route ? "#93c5fd" : f.css ? "#f9a8d4" : "#d4d4f5" }}>{f.name}</div>
-                    <div className="text-[8px] text-muted leading-tight">{f.desc}</div>
+              ].map((f) => {
+                const FileIcon = f.css ? Palette : f.route ? Route : f.special ? PanelsTopLeft : FileCode;
+                return (
+                  <div key={f.name} className="flex items-start gap-2 px-2 py-1.5 rounded-lg group"
+                    style={{ background: f.route ? "rgba(99,102,241,0.06)" : f.special ? "rgba(159,41,255,0.05)" : "transparent" }}>
+                    <FileIcon
+                      className="mt-px h-3.5 w-3.5 shrink-0"
+                      strokeWidth={1.8}
+                      style={{ color: f.route ? "#93c5fd" : f.css ? "#f9a8d4" : f.special ? "#b44dff" : "#d4d4f5" }}
+                    />
+                    <div className="min-w-0">
+                      <div className="text-[9px] font-mono font-semibold truncate" style={{ color: f.route ? "#93c5fd" : f.css ? "#f9a8d4" : "#d4d4f5" }}>{f.name}</div>
+                      <div className="text-[8px] text-muted leading-tight">{f.desc}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -117,7 +135,7 @@ export default function FrontendOverviewPage() {
             {/* components/ */}
             <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(159,41,255,0.2)" }}>
               <div className="flex items-center gap-2 px-3 py-2" style={{ background: "rgba(159,41,255,0.1)", borderBottom: "1px solid rgba(159,41,255,0.15)" }}>
-                <span className="text-sm">📁</span>
+                <Folder className="h-4 w-4 text-[#b44dff]" strokeWidth={1.8} />
                 <span className="text-[10px] font-mono font-bold text-foreground">components/</span>
                 <span className="text-[9px] text-muted ml-1">25+ React components</span>
               </div>
@@ -127,30 +145,37 @@ export default function FrontendOverviewPage() {
                   { name: "SwapView",      desc: "Main swap + route comparison" },
                   { name: "LimitOrderCard",desc: "Limit orders + active orders" },
                   { name: "BatchSwapCard", desc: "Multi-target batch swap" },
-                  { name: "BridgeCard",    desc: "L1 ↔ L2 bridge UI" },
+                  { name: "BridgeCard",    desc: "L1 <-> L2 bridge UI" },
                   { name: "SendCard",      desc: "Send to address / .init" },
                   { name: "FaucetCard",    desc: "Testnet token faucet" },
                   { name: "DashboardView", desc: "Portfolio + stats + activity" },
                   { name: "ActivityHistory", desc: "Scrollable tx list + popups" },
                   { name: "WalletButton",  desc: "Connect / account modal" },
                   { name: "Header",        desc: "Nav bar · links · language" },
-                ].map((c) => (
-                  <div key={c.name} className="flex items-start gap-2 px-2 py-1 rounded-lg"
-                    style={{ background: c.folder ? "rgba(159,41,255,0.08)" : "transparent" }}>
-                    <span className="text-[10px] shrink-0 mt-px">{c.folder ? "📂" : "⚛️"}</span>
-                    <div>
-                      <div className="text-[9px] font-mono font-semibold" style={{ color: c.folder ? "#b44dff" : "#d4d4f5" }}>{c.name}{!c.folder ? ".tsx" : ""}</div>
-                      <div className="text-[8px] text-muted leading-tight">{c.desc}</div>
+                ].map((c) => {
+                  const EntryIcon = c.folder ? FolderOpen : ComponentIcon;
+                  return (
+                    <div key={c.name} className="flex items-start gap-2 px-2 py-1 rounded-lg"
+                      style={{ background: c.folder ? "rgba(159,41,255,0.08)" : "transparent" }}>
+                      <EntryIcon
+                        className="mt-px h-3.5 w-3.5 shrink-0"
+                        strokeWidth={1.8}
+                        style={{ color: c.folder ? "#b44dff" : "#d4d4f5" }}
+                      />
+                      <div>
+                        <div className="text-[9px] font-mono font-semibold" style={{ color: c.folder ? "#b44dff" : "#d4d4f5" }}>{c.name}{!c.folder ? ".tsx" : ""}</div>
+                        <div className="text-[8px] text-muted leading-tight">{c.desc}</div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
             {/* lib/ */}
             <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(6,182,212,0.2)" }}>
               <div className="flex items-center gap-2 px-3 py-2" style={{ background: "rgba(6,182,212,0.08)", borderBottom: "1px solid rgba(6,182,212,0.15)" }}>
-                <span className="text-sm">📁</span>
+                <Folder className="h-4 w-4 text-[#22d3ee]" strokeWidth={1.8} />
                 <span className="text-[10px] font-mono font-bold text-foreground">lib/</span>
                 <span className="text-[9px] text-muted ml-1">Utilities · config · i18n</span>
               </div>
@@ -166,22 +191,29 @@ export default function FrontendOverviewPage() {
                   { name: "xp.ts",         desc: "XP reward system" },
                   { name: "utils.ts",      desc: "Tailwind cn() merge" },
                   { name: "i18n/",         desc: "EN · ID · ZH translations", folder: true },
-                ].map((l) => (
-                  <div key={l.name} className="flex items-start gap-1.5 px-1.5 py-1 rounded"
-                    style={{ background: l.folder ? "rgba(6,182,212,0.08)" : "transparent" }}>
-                    <span className="text-[9px] shrink-0 mt-px">{l.folder ? "📂" : "🔧"}</span>
-                    <div className="min-w-0">
-                      <div className="text-[8px] font-mono font-semibold truncate" style={{ color: l.folder ? "#22d3ee" : "#a5b4fc" }}>{l.name}</div>
-                      <div className="text-[7px] text-muted leading-tight">{l.desc}</div>
+                ].map((l) => {
+                  const EntryIcon = l.folder ? FolderOpen : Wrench;
+                  return (
+                    <div key={l.name} className="flex items-start gap-1.5 px-1.5 py-1 rounded"
+                      style={{ background: l.folder ? "rgba(6,182,212,0.08)" : "transparent" }}>
+                      <EntryIcon
+                        className="mt-px h-3.5 w-3.5 shrink-0"
+                        strokeWidth={1.8}
+                        style={{ color: l.folder ? "#22d3ee" : "#a5b4fc" }}
+                      />
+                      <div className="min-w-0">
+                        <div className="text-[8px] font-mono font-semibold truncate" style={{ color: l.folder ? "#22d3ee" : "#a5b4fc" }}>{l.name}</div>
+                        <div className="text-[7px] text-muted leading-tight">{l.desc}</div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
             {/* public/ */}
             <div className="rounded-xl px-3 py-2.5 flex items-center gap-3" style={{ background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.15)" }}>
-              <span className="text-sm">🖼️</span>
+              <ImageIcon className="h-4 w-4 text-[#4ade80]" strokeWidth={1.8} />
               <div>
                 <div className="text-[10px] font-mono font-bold text-green">public/</div>
                 <div className="text-[9px] text-muted">Static assets · logos · token icons</div>
