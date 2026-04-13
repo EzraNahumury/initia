@@ -37,7 +37,7 @@ export function Header() {
             >
               <Search className="w-4 h-4" />
               <span className="hidden sm:inline">Search docs...</span>
-              <kbd className="hidden sm:inline ml-2 text-[10px] font-mono border border-border/50 rounded px-1.5 py-0.5 opacity-60">⌘K</kbd>
+              <kbd className="hidden sm:inline ml-2 text-[10px] font-mono border border-border/50 rounded px-1.5 py-0.5 opacity-60">Ctrl+K</kbd>
             </button>
             <a href="https://github.com/EzraNahumury/initia" target="_blank" rel="noopener noreferrer" className="text-sm text-muted hover:text-foreground transition-colors hidden sm:block">
               GitHub
