@@ -1,3 +1,5 @@
+import { CodeBlock } from "../../components/CodeBlock";
+
 export default function SwapRoutingPage() {
   return (
     <article className="prose">
@@ -193,7 +195,7 @@ export default function SwapRoutingPage() {
         <li>Results are sorted by <code>outputAmount</code> descending (best rate first)</li>
         <li>React Query manages caching with 15-second stale time and 30-second refetch interval</li>
       </ul>
-      <pre><code>{`// lib/dex-quotes.ts - parallel fetch pattern
+      <CodeBlock>{`// lib/dex-quotes.ts - parallel fetch pattern
 const promises = ALL_DEXS
   .filter((d) => d.fetcher)
   .map(async (dex) => {
@@ -203,7 +205,7 @@ const promises = ALL_DEXS
 
 const liveResults = await Promise.allSettled(promises);
 // Only include DEXs with real results
-return quotes.sort((a, b) => b.outputAmount - a.outputAmount);`}</code></pre>
+return quotes.sort((a, b) => b.outputAmount - a.outputAmount);`}</CodeBlock>
 
       <h2>Route Selection</h2>
       <p>
@@ -227,14 +229,14 @@ return quotes.sort((a, b) => b.outputAmount - a.outputAmount);`}</code></pre>
         animation. The output <code>&lt;span&gt;</code> has <code>key=&#123;formattedOut&#125;</code>,
         which forces React to remount it on each value change, triggering the animation:
       </p>
-      <pre><code>{`<span
+      <CodeBlock>{`<span
   key={formattedOut}
   className={formattedOut !== "0"
     ? "text-green animate-[rollIn_0.3s_ease-out]"
     : "text-text-muted/30"}
 >
   {formattedOut}
-</span>`}</code></pre>
+</span>`}</CodeBlock>
       <p>
         The <code>rollIn</code> keyframe is defined in <code>globals.css</code> and translates the
         element from slightly below with opacity 0 to its final position.
@@ -256,12 +258,12 @@ return quotes.sort((a, b) => b.outputAmount - a.outputAmount);`}</code></pre>
           <tr><td>15+</td><td>14px</td></tr>
         </tbody>
       </table>
-      <pre><code>{`style={{
+      <CodeBlock>{`style={{
   fontSize: value.length > 14 ? 14
           : value.length > 10 ? 18
           : value.length > 7  ? 22
           : 28
-}}`}</code></pre>
+}}`}</CodeBlock>
 
       <h2>State Persistence</h2>
       <p>
@@ -289,8 +291,8 @@ return quotes.sort((a, b) => b.outputAmount - a.outputAmount);`}</code></pre>
         Price impact is calculated by comparing the best route output against the ideal output
         (amount * spot rate with zero fees):
       </p>
-      <pre><code>{`const idealOutput = amountIn * spotRate;
-const priceImpact = ((idealOutput - bestRouteOutput) / idealOutput) * 100;`}</code></pre>
+      <CodeBlock>{`const idealOutput = amountIn * spotRate;
+const priceImpact = ((idealOutput - bestRouteOutput) / idealOutput) * 100;`}</CodeBlock>
       <p>The impact is displayed via the <code>PriceImpactBadge</code> component:</p>
       <ul>
         <li><strong>Green</strong> (<code>&lt;1%</code>): Normal, no warning</li>

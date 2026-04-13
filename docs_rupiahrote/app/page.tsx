@@ -1,4 +1,7 @@
+import Link from "next/link";
+import Image from "next/image";
 import { ParticleBackground } from "./components/ParticleBackground";
+import { Zap, Binary, BookText } from "lucide-react";
 
 export default function IntroductionPage() {
   return (
@@ -27,7 +30,7 @@ export default function IntroductionPage() {
 
         {/* Content */}
         <div className="relative z-10 px-8 py-12 text-center">
-          <img src="/logo.png" alt="RupiahRoute" className="w-20 h-20 mx-auto mb-6 rounded-full object-contain"
+          <Image src="/logo.png" alt="RupiahRoute" width={80} height={80} className="mx-auto mb-6 rounded-full object-contain"
             style={{ filter: "drop-shadow(0 0 20px rgba(159,41,255,0.4))" }} />
           <h1 className="text-2xl font-bold text-foreground mb-2"
             style={{ textShadow: "0 0 20px rgba(159,41,255,0.4)" }}>RupiahRoute</h1>
@@ -37,14 +40,14 @@ export default function IntroductionPage() {
             cross-chain bridging, and execution on an Initia EVM appchain with near-zero gas fees.
           </p>
           <div className="flex items-center justify-center gap-3 mt-7">
-            <a href="/quickstart" className="px-6 py-2.5 rounded-lg bg-purple text-sm font-medium hover:bg-purple-light transition-colors"
+            <Link href="/quickstart" className="px-6 py-2.5 rounded-lg bg-purple text-sm font-medium hover:bg-purple-light transition-colors"
               style={{ color: "#ffffff", boxShadow: "0 0 15px rgba(159,41,255,0.3)", textShadow: "1px 1px 0 rgba(0,0,0,0.4)", textDecoration: "none" }}>
               Quick Start
-            </a>
-            <a href="/architecture" className="px-6 py-2.5 rounded-lg border border-purple/30 text-sm hover:border-purple/50 transition-colors"
+            </Link>
+            <Link href="/architecture" className="px-6 py-2.5 rounded-lg border border-purple/30 text-sm hover:border-purple/50 transition-colors"
               style={{ color: "#e0d0ff", textDecoration: "none" }}>
               Architecture
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -124,7 +127,7 @@ export default function IntroductionPage() {
           <div className="p-4 space-y-3">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center text-base" style={{ background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.25)" }}>
-                ⚡
+                <Zap className="w-4 h-4 text-indigo-400" />
               </div>
               <div>
                 <div className="text-[11px] font-mono font-bold text-foreground">fe_rupiahrote/</div>
@@ -158,7 +161,7 @@ export default function IntroductionPage() {
           <div className="p-4 space-y-3" style={{ borderLeft: "1px solid rgba(139,92,246,0.15)" }}>
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center text-base" style={{ background: "rgba(159,41,255,0.15)", border: "1px solid rgba(159,41,255,0.25)" }}>
-                🔗
+                <Binary className="w-4 h-4 text-purple-400" />
               </div>
               <div>
                 <div className="text-[11px] font-mono font-bold text-foreground">sc_RupiahRote/</div>
@@ -192,7 +195,7 @@ export default function IntroductionPage() {
           <div className="p-4 space-y-3" style={{ borderLeft: "1px solid rgba(139,92,246,0.15)" }}>
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center text-base" style={{ background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.2)" }}>
-                📖
+                <BookText className="w-4 h-4 text-green-500" />
               </div>
               <div>
                 <div className="text-[11px] font-mono font-bold text-foreground">docs_rupiahrote/</div>

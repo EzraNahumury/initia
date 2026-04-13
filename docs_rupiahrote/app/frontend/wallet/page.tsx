@@ -1,3 +1,5 @@
+import { CodeBlock } from "../../components/CodeBlock";
+
 export default function WalletIntegrationPage() {
   return (
     <article className="prose">
@@ -44,7 +46,7 @@ export default function WalletIntegrationPage() {
       </table>
 
       <h2>wagmi Configuration</h2>
-      <pre><code>{`// lib/wagmi.ts
+      <CodeBlock>{`// lib/wagmi.ts
 import { http, createConfig, createStorage } from "wagmi";
 import { injected, walletConnect, coinbaseWallet } from "wagmi/connectors";
 import { rupiahRouteChain } from "./chain";
@@ -63,7 +65,7 @@ export const config = createConfig({
     storage: typeof window !== "undefined" ? window.sessionStorage : undefined,
   }),
   ssr: true,
-});`}</code></pre>
+});`}</CodeBlock>
       <p>Key configuration choices:</p>
       <ul>
         <li><strong>Chain:</strong> Initia MiniEVM (<code>rupiahRouteChain</code>) defined via viem <code>defineChain()</code> with chain ID <code>1212385660403083</code>, native currency GAS (18 decimals), and local RPC at <code>http://localhost:8545</code>. Falls back to Sepolia when <code>NEXT_PUBLIC_USE_LOCAL_ROLLUP</code> is not set.</li>
@@ -91,7 +93,7 @@ export const config = createConfig({
         RupiahRoute uses a <code>sessionStorage</code> flag (<code>rr_user_connected</code>) as a
         guard to distinguish user-initiated connections from auto-connections:
       </p>
-      <pre><code>{`// In WalletButton component:
+      <CodeBlock>{`// In WalletButton component:
 
 // Check if the user explicitly initiated the connection
 const userInitiated = typeof window !== "undefined"
@@ -105,7 +107,7 @@ useEffect(() => {
 }, [isConnected, disconnect]);
 
 // Only show connected state if user-initiated
-const showConnected = isConnected && address && userInitiated;`}</code></pre>
+const showConnected = isConnected && address && userInitiated;`}</CodeBlock>
 
       <h3>Connection Flow</h3>
       <table>
@@ -242,7 +244,7 @@ const showConnected = isConnected && address && userInitiated;`}</code></pre>
         <li><strong>Connector icon:</strong> If the wagmi connector provides an <code>icon</code> URL, render it as an <code>&lt;img&gt;</code></li>
         <li><strong>Brand color fallback:</strong> If no icon is available, render a colored circle with the wallet&apos;s first letter, using a hardcoded brand color map:</li>
       </ol>
-      <pre><code>{`const BRAND_COLORS = {
+      <CodeBlock>{`const BRAND_COLORS = {
   MetaMask:         "#F6851B",
   WalletConnect:    "#3B99FC",
   "Coinbase Wallet":"#0052FF",
@@ -253,7 +255,7 @@ const showConnected = isConnected && address && userInitiated;`}</code></pre>
   Phantom:          "#AB9FF2",
   Zerion:           "#2962EF",
   Injected:         "#6366F1",
-};`}</code></pre>
+};`}</CodeBlock>
 
       <h2>Internationalization</h2>
       <p>
