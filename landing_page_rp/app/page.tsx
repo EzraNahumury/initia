@@ -8,6 +8,7 @@ import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import * as THREE from "three";
+import PixelBlast from "@/components/PixelBlast";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -1586,90 +1587,6 @@ function CTASection() {
   );
 }
 
-function FooterWeb3Particles() {
-  const meshRef = useRef<THREE.Points>(null);
-  const lineRef = useRef<THREE.LineSegments>(null);
-  const particleCount = 150;
-  const maxDistance = 8;
-  const maxLines = 400;
-
-  const { positions } = useMemo(() => {
-    const pos = new Float32Array(particleCount * 3);
-    for (let i = 0; i < particleCount; i++) {
-      const i3 = i * 3;
-      pos[i3] = (Math.random() - 0.5) * 180;
-      pos[i3 + 1] = (Math.random() - 0.5) * 50;
-      pos[i3 + 2] = (Math.random() - 0.5) * 15;
-    }
-    return { positions: pos };
-  }, []);
-
-  const geometry = useMemo(() => {
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute("position", new THREE.BufferAttribute(positions.slice(), 3));
-    return geo;
-  }, [positions]);
-
-  const lineGeometry = useMemo(() => {
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(maxLines * 6), 3));
-    return geo;
-  }, []);
-
-  useFrame((state) => {
-    if (!meshRef.current || !lineRef.current) return;
-    const time = state.clock.getElapsedTime();
-    const posArray = meshRef.current.geometry.attributes.position.array as Float32Array;
-    const linePosArray = lineRef.current.geometry.attributes.position.array as Float32Array;
-    let lineIndex = 0;
-
-    for (let i = 0; i < particleCount; i++) {
-      const i3 = i * 3;
-      posArray[i3] += Math.sin(time * 0.8 + i * 0.15) * 0.02;
-      posArray[i3 + 1] += Math.cos(time * 0.6 + i * 0.12) * 0.015;
-    }
-
-    for (let i = 0; i < particleCount && lineIndex < maxLines * 6; i++) {
-      const i3 = i * 3;
-      for (let j = i + 1; j < particleCount && lineIndex < maxLines * 6; j++) {
-        const j3 = j * 3;
-        const dx = posArray[i3] - posArray[j3];
-        const dy = posArray[i3 + 1] - posArray[j3 + 1];
-        const dz = posArray[i3 + 2] - posArray[j3 + 2];
-        const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-
-        if (dist < maxDistance) {
-          linePosArray[lineIndex++] = posArray[i3];
-          linePosArray[lineIndex++] = posArray[i3 + 1];
-          linePosArray[lineIndex++] = posArray[i3 + 2];
-          linePosArray[lineIndex++] = posArray[j3];
-          linePosArray[lineIndex++] = posArray[j3 + 1];
-          linePosArray[lineIndex++] = posArray[j3 + 2];
-        }
-      }
-    }
-
-    for (let i = lineIndex; i < linePosArray.length; i++) {
-      linePosArray[i] = 0;
-    }
-
-    meshRef.current.geometry.attributes.position.needsUpdate = true;
-    lineRef.current.geometry.attributes.position.needsUpdate = true;
-    lineRef.current.geometry.setDrawRange(0, lineIndex / 3);
-  });
-
-  return (
-    <>
-      <points ref={meshRef} geometry={geometry}>
-        <pointsMaterial size={0.15} color="#a855f7" transparent opacity={0.8} sizeAttenuation blending={THREE.AdditiveBlending} />
-      </points>
-      <lineSegments ref={lineRef} geometry={lineGeometry}>
-        <lineBasicMaterial color="#7c3aed" transparent opacity={0.3} blending={THREE.AdditiveBlending} />
-      </lineSegments>
-    </>
-  );
-}
-
 function Footer() {
   const footerRef = useRef<HTMLElement>(null);
   const [footerVisible, setFooterVisible] = useState(false);
@@ -1688,12 +1605,25 @@ function Footer() {
     <footer ref={footerRef} className="relative py-16 bg-black flex flex-col items-center justify-center overflow-hidden">
       <div className="absolute inset-0">
         {footerVisible && (
-          <Canvas camera={{ position: [0, 0, 25], fov: 90 }}>
-            <ambientLight intensity={0.3} />
-            <pointLight position={[10, 10, 10]} intensity={0.5} color="#8b5cf6" />
-            <pointLight position={[-10, -10, -10]} intensity={0.3} color="#a855f7" />
-            <FooterWeb3Particles />
-          </Canvas>
+          <PixelBlast
+            variant="square"
+            pixelSize={4}
+            color="#B19EEF"
+            patternScale={2}
+            patternDensity={1}
+            pixelSizeJitter={0}
+            enableRipples
+            rippleSpeed={0.4}
+            rippleThickness={0.12}
+            rippleIntensityScale={1.5}
+            liquid={false}
+            liquidStrength={0.12}
+            liquidRadius={1.2}
+            liquidWobbleSpeed={5}
+            speed={0.5}
+            edgeFade={0.25}
+            transparent
+          />
         )}
       </div>
       
