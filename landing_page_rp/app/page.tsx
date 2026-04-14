@@ -332,7 +332,12 @@ function Scene3D({ scrollYRef, mousePosRef }: { scrollYRef: React.RefObject<numb
 
 function Navigation() {
   const [scrolled, setScrolled] = useState(false);
-  const navItems = ["Features", "Architecture", "Tokens", "Docs"];
+  const navItems = [
+    { label: "Features", href: "#features" },
+    { label: "Architecture", href: "#architecture" },
+    { label: "Tokens", href: "#tokens" },
+    { label: "Docs", href: "https://docsrupiahroute.vercel.app/", external: true }
+  ];
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -340,19 +345,46 @@ function Navigation() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const handleNavClick = (href: string, external?: boolean) => {
+    if (external) {
+      window.open(href, "_blank", "noopener,noreferrer");
+    } else {
+      const element = document.querySelector(href);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
+
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 px-6 md:px-12 py-5 transition-all duration-700 ${scrolled ? "floating-nav bg-black/80 backdrop-blur-xl" : "bg-transparent"}`}>
+    <nav className={`fixed top-0 left-0 right-0 z-[100] px-6 md:px-12 py-5 transition-all duration-700 ${scrolled ? "floating-nav bg-black/80 backdrop-blur-xl" : "bg-transparent"}`}>
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3 cursor-pointer hoverable">
+        <a href="/" className="flex items-center gap-3 cursor-pointer hoverable">
           <Image src="/logo/logo.png" alt="RupiahRoute" width={40} height={40} className="h-10 w-10 object-contain" priority />
           <span className="text-white font-medium tracking-[0.15em] text-sm font-general">RUPIAHROUTE</span>
-        </div>
+        </a>
 
         <div className="hidden lg:flex items-center gap-8">
           {navItems.map((item) => (
-            <span key={item} className="nav-hover-btn text-blue-50 text-xs uppercase font-general cursor-pointer">
-              {item}
-            </span>
+            item.external ? (
+              <a
+                key={item.label}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="nav-hover-btn text-blue-50 text-xs uppercase font-general cursor-pointer"
+              >
+                {item.label}
+              </a>
+            ) : (
+              <button
+                key={item.label}
+                onClick={() => handleNavClick(item.href!)}
+                className="nav-hover-btn text-blue-50 text-xs uppercase font-general cursor-pointer bg-transparent border-none"
+              >
+                {item.label}
+              </button>
+            )
           ))}
         </div>
 
@@ -1326,9 +1358,9 @@ function StorySection() {
       <div className="sticky top-0 h-screen overflow-hidden flex flex-col items-center justify-center text-white">
 
         {/* Title */}
-        <div className="absolute inset-x-0 top-8 z-20 px-6" style={{ opacity: titleOpacity }}>
+        <div className="absolute inset-x-0 top-12 z-20 px-6" style={{ opacity: titleOpacity }}>
           <p className="text-center font-general text-sm uppercase md:text-[10px] text-white/40">The Multiversal DeFi World</p>
-          <div className="mt-6">
+          <div className="mt-8">
             <AnimatedTitle title="the fu<b>t</b>ure of <br /> defi is <b>h</b>ere" containerClass="pointer-events-none relative z-10" />
           </div>
         </div>
@@ -1570,18 +1602,135 @@ function TokensSection() {
 
 function CTASection() {
   return (
-    <section className="relative z-10 py-32 bg-black">
-      <div className="container mx-auto px-6 text-center">
-        <div className="border-hsla p-12 md:p-16 rounded-lg bg-gradient-to-br from-purple-900/20 to-pink-900/20">
-          <div className="w-16 h-16 mx-auto mb-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-2xl">
-            🚀
-          </div>
-          <h2 className="text-3xl md:text-5xl font-zentry font-black text-white tracking-tight mb-4">Ready to start?</h2>
-          <p className="text-white/40 text-sm mb-10 max-w-lg mx-auto">Join the future of DeFi on Initia. One click, best route, zero hassle.</p>
-          <button className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-xs tracking-[0.2em] px-10 py-4 rounded-full hover:opacity-90 hoverable transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98]">
-            LAUNCH APP
-          </button>
-        </div>
+    <section className="relative z-10 py-40 bg-black overflow-hidden">
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <motion.div
+          animate={{ 
+            scale: [1, 1.15, 1],
+            opacity: [0.4, 0.6, 0.4]
+          }}
+          transition={{ 
+            duration: 6,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="w-[500px] h-[500px] rounded-full bg-[#B19EEF]/10 blur-[120px]"
+        />
+        <motion.div
+          animate={{ 
+            scale: [1.1, 1, 1.1],
+            opacity: [0.3, 0.5, 0.3]
+          }}
+          transition={{ 
+            duration: 5,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1
+          }}
+          className="absolute w-[350px] h-[350px] rounded-full bg-purple-500/15 blur-[100px]"
+        />
+        <motion.div
+          animate={{ 
+            scale: [0.9, 1.1, 0.9],
+            opacity: [0.2, 0.4, 0.2]
+          }}
+          transition={{ 
+            duration: 7,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 2
+          }}
+          className="absolute w-[250px] h-[250px] rounded-full bg-pink-500/10 blur-[80px]"
+        />
+      </div>
+      
+      <div className="relative z-10 max-w-2xl mx-auto px-6 text-center">
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
+          viewport={{ once: true }}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            viewport={{ once: true }}
+            className="mb-10"
+          >
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="inline-block"
+            >
+              <Image
+                src="/logo/logo.png"
+                alt="Initia"
+                width={64}
+                height={64}
+                className="mx-auto rounded-2xl"
+              />
+            </motion.div>
+          </motion.div>
+          
+          <motion.h2
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+            viewport={{ once: true }}
+            className="text-5xl md:text-7xl font-zentry font-black text-white tracking-tight mb-6 leading-[1.05]"
+          >
+            Ready to start?
+          </motion.h2>
+          
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+            viewport={{ once: true }}
+            className="text-white/50 text-base md:text-lg mb-12 max-w-md mx-auto leading-relaxed"
+          >
+            Join the future of DeFi on Initia. One click, best route, zero hassle.
+          </motion.p>
+          
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
+            viewport={{ once: true }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4"
+          >
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.05, y: -3 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ duration: 0.15 }}
+              className="group relative px-8 py-4 bg-white text-black font-semibold text-sm tracking-wide rounded-full overflow-hidden shadow-lg shadow-white/10"
+            >
+              <span className="relative z-10">Launch App</span>
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500"
+                initial={{ x: "-100%" }}
+                whileHover={{ x: 0 }}
+                transition={{ duration: 0.3 }}
+              />
+              <div className="absolute -inset-[1px] bg-gradient-to-r from-purple-500 to-pink-500 rounded-full opacity-30 group-hover:opacity-60 transition-opacity duration-300 blur-[3px]" />
+            </motion.button>
+            
+            <motion.a
+              href="https://docsrupiahroute.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              whileHover={{ scale: 1.05, y: -3 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ duration: 0.15 }}
+              className="px-8 py-4 border border-white/15 text-white/80 font-medium text-sm tracking-wide rounded-full hover:bg-white/5 hover:border-white/25 hover:text-white transition-all duration-200"
+            >
+              Learn more
+            </motion.a>
+          </motion.div>
+        </motion.div>
       </div>
     </section>
   );
@@ -1717,9 +1866,9 @@ export default function Home() {
         .animated-title-container {
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 6px;
           text-transform: uppercase;
-          line-height: 0.85;
+          line-height: 1.1;
           font-size: clamp(1rem, 3vw, 2rem);
           font-family: "Press Start 2P", cursive;
           font-weight: 900;
