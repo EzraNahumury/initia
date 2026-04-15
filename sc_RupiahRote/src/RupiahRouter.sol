@@ -11,8 +11,15 @@ import {IConnectOracle} from "./interfaces/IConnectOracle.sol";
 contract RupiahRouter {
     // ========== CONSTANTS ==========
 
-    ICosmos public constant COSMOS = ICosmos(0x00000000000000000000000000000000000000f1);
-    IConnectOracle public constant ORACLE = IConnectOracle(0x031ECb63480983FD216D17BB6e1d393f3816b72F);
+    /// @notice Canonical Initia Cosmos precompile address (IBC + address resolution).
+    address public constant DEFAULT_COSMOS = 0x00000000000000000000000000000000000000f1;
+    /// @notice Canonical Slinky oracle precompile address.
+    address public constant DEFAULT_ORACLE = 0x031ECb63480983FD216D17BB6e1d393f3816b72F;
+
+    /// @notice Initia Cosmos precompile — injectable for devnet/alt-chain deployments.
+    ICosmos public immutable COSMOS;
+    /// @notice Slinky price-feed oracle — injectable for devnet/alt-chain deployments.
+    IConnectOracle public immutable ORACLE;
 
     uint256 public constant MINIMUM_LIQUIDITY = 1000;
     uint256 public constant FEE_DENOMINATOR = 10000;
@@ -108,6 +115,10 @@ contract RupiahRouter {
     event LimitOrderCancelled(uint256 indexed orderId);
     event BatchSwapExecuted(address indexed user, uint256 swapCount, uint256 totalGasSaved);
     event SentToUsername(address indexed sender, string username, address token, uint256 amount);
+    event SwapFeeUpdated(uint256 oldFee, uint256 newFee);
+    event PoolSwapFeeRateUpdated(uint256 indexed poolId, uint256 oldFeeRate, uint256 newFeeRate);
+    event FeesWithdrawn(address indexed to, uint256 amount);
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     // ========== MODIFIERS ==========
 
@@ -123,15 +134,28 @@ contract RupiahRouter {
 
     // ========== CONSTRUCTOR ==========
 
-    constructor() {
+    /// @notice Deploy with optional precompile overrides.
+    /// @dev Pass `address(0)` for either argument to use the canonical Initia
+    /// address (see DEFAULT_COSMOS / DEFAULT_ORACLE). Tests and alt-chain
+    /// deployments can inject mock or relocated addresses explicitly.
+    /// @param cosmos ICosmos precompile address, or address(0) for canonical.
+    /// @param oracle Slinky oracle precompile address, or address(0) for canonical.
+    constructor(address cosmos, address oracle) {
         owner = msg.sender;
+        COSMOS = ICosmos(cosmos == address(0) ? DEFAULT_COSMOS : cosmos);
+        ORACLE = IConnectOracle(oracle == address(0) ? DEFAULT_ORACLE : oracle);
     }
 
     // ================================================================
     //                        AMM ENGINE (x * y = k)
     // ================================================================
 
-    /// @notice Create a new liquidity pool for a token pair
+    /// @notice Create a new liquidity pool for a token pair.
+    /// @dev Intentionally permissionless — any account may create a pool by
+    /// seeding both sides. This mirrors Uniswap-style AMM design so new pairs
+    /// can bootstrap without owner intervention. Low-liquidity pools rank
+    /// poorly in routing weights, so a griefer cannot meaningfully pollute
+    /// quote outcomes by spamming empty pools.
     /// @param tokenA First token address
     /// @param tokenB Second token address
     /// @param amountA Amount of tokenA to seed
@@ -365,13 +389,17 @@ contract RupiahRouter {
 
     /// @notice Update swap fee (owner only)
     function setSwapFee(uint256 _fee) external onlyOwner {
+        uint256 old = swapFee;
         swapFee = _fee;
+        emit SwapFeeUpdated(old, _fee);
     }
 
     /// @notice Withdraw collected fees (owner only)
     function withdrawFees() external onlyOwner {
-        (bool ok,) = owner.call{value: address(this).balance}("");
+        uint256 amount = address(this).balance;
+        (bool ok,) = owner.call{value: amount}("");
         require(ok, "RR: withdraw failed");
+        emit FeesWithdrawn(owner, amount);
     }
 
     receive() external payable {}
@@ -706,13 +734,17 @@ contract RupiahRouter {
     /// @notice Update swap fee rate for a pool
     function setSwapFeeRate(uint256 poolId, uint256 newFeeRate) external onlyOwner {
         require(newFeeRate <= 1000, "RR: fee too high"); // max 10%
+        uint256 old = pools[poolId].swapFeeRate;
         pools[poolId].swapFeeRate = newFeeRate;
+        emit PoolSwapFeeRateUpdated(poolId, old, newFeeRate);
     }
 
     /// @notice Transfer ownership
     function transferOwnership(address newOwner) external onlyOwner {
         require(newOwner != address(0), "RR: zero address");
+        address previous = owner;
         owner = newOwner;
+        emit OwnershipTransferred(previous, newOwner);
     }
 
     // ================================================================

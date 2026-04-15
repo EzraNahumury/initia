@@ -5,20 +5,13 @@ import { useAccount, useBalance, useWriteContract, useReadContract, useWaitForTr
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { CORE_TOKENS, type Token } from "@/lib/contract";
+import { FAUCET_ABI, ERC20_BALANCE_ABI } from "@/lib/abis";
 import { HiBeaker, HiArrowPath, HiWallet, HiExclamationTriangle } from "react-icons/hi2";
 
 const FAUCET_ADDRESS = (process.env.NEXT_PUBLIC_FAUCET_CONTRACT ||
   "0x0000000000000000000000000000000000000000") as `0x${string}`;
 
 const CLAIM_FEE = 1000n * 10n ** 18n; // 1000 GAS
-
-const FAUCET_ABI = [
-  { name: "claimToken", type: "function", stateMutability: "payable", inputs: [{ name: "token", type: "address" }], outputs: [] },
-] as const;
-
-const ERC20_BALANCE_ABI = [
-  { name: "balanceOf", type: "function", stateMutability: "view", inputs: [{ name: "account", type: "address" }], outputs: [{ name: "", type: "uint256" }] },
-] as const;
 
 const MINT_AMOUNTS: Record<string, string> = {
   INIT: "10,000",
@@ -130,7 +123,7 @@ function TokenFaucetRow({ token, address, onMinted, hasEnoughGas }: { token: Tok
 /* ── Balance row in wallet view ── */
 
 function BalanceRow({ token, address }: { token: Token; address: `0x${string}` }) {
-  const { data: balance } = useReadContract({
+  const { data: balance, isError } = useReadContract({
     address: token.address,
     abi: ERC20_BALANCE_ABI,
     functionName: "balanceOf",
@@ -180,9 +173,13 @@ function BalanceRow({ token, address }: { token: Token; address: `0x${string}` }
         {deltaText && (
           <span className="text-[6px] font-medium text-white animate-[floatUpFade_2s_ease_forwards]">{deltaText}</span>
         )}
-        <span className={`text-[8px] font-bold transition-colors duration-500 ${num > 0 ? "text-green" : "text-text-sub"}`}>
-          {formatted}
-        </span>
+        {isError ? (
+          <span className="text-[7px] font-medium text-red" title="Balance refresh failed">refresh failed</span>
+        ) : (
+          <span className={`text-[8px] font-bold transition-colors duration-500 ${num > 0 ? "text-green" : "text-text-sub"}`}>
+            {formatted}
+          </span>
+        )}
       </div>
     </div>
   );

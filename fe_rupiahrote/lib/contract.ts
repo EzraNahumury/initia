@@ -51,7 +51,29 @@ export function parseAmount(amount: string, decimals: number): bigint {
   return BigInt(whole + fracPadded);
 }
 
+// Live USD→IDR rate. Seeded from localStorage cache (if present) on module load,
+// then updated from the CoinGecko feed in SwapView. Falls back to 16000 if no
+// data is available yet.
+let _usdToIdr = 16000;
+if (typeof window !== "undefined") {
+  const cached = window.localStorage.getItem("_usdToIdr");
+  const parsed = cached ? Number(cached) : NaN;
+  if (parsed > 0) _usdToIdr = parsed;
+}
+
+export function setUsdToIdr(rate: number) {
+  if (!rate || !Number.isFinite(rate) || rate <= 0) return;
+  _usdToIdr = rate;
+  if (typeof window !== "undefined") {
+    try { window.localStorage.setItem("_usdToIdr", String(rate)); } catch { /* ignore */ }
+  }
+}
+
+export function getUsdToIdr(): number {
+  return _usdToIdr;
+}
+
 export function formatRupiah(usd: number): string {
-  const idr = usd * 16000;
+  const idr = usd * _usdToIdr;
   return `Rp ${idr.toLocaleString("id-ID")}`;
 }

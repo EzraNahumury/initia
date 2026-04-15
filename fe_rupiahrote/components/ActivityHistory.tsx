@@ -3,6 +3,14 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { getActivities, type ActivityRecord } from "@/lib/activity";
+import {
+  HiArrowsRightLeft,
+  HiLink,
+  HiPaperAirplane,
+  HiAdjustmentsHorizontal,
+  HiSquares2X2,
+} from "react-icons/hi2";
+import type { IconType } from "react-icons";
 
 const TYPE_LABELS: Record<string, string> = {
   swap: "Swap",
@@ -12,13 +20,17 @@ const TYPE_LABELS: Record<string, string> = {
   limit: "Limit",
 };
 
-const TYPE_COLORS: Record<string, string> = {
-  swap: "bg-blue-500",
-  bridge: "bg-purple",
-  send: "bg-cyan-500",
-  batch: "bg-amber-500",
-  limit: "bg-indigo-500",
+// Icon + accent color per activity type. Mirrors the nav tab icons so the
+// summary/activity list feels connected to the tabs that produced them.
+export const TYPE_META: Record<string, { Icon: IconType; color: string }> = {
+  swap:   { Icon: HiArrowsRightLeft,       color: "text-blue-500" },
+  bridge: { Icon: HiLink,                  color: "text-purple" },
+  send:   { Icon: HiPaperAirplane,         color: "text-cyan-500" },
+  batch:  { Icon: HiSquares2X2,            color: "text-amber-500" },
+  limit:  { Icon: HiAdjustmentsHorizontal, color: "text-indigo-500" },
 };
+
+const FALLBACK_META = { Icon: HiArrowsRightLeft, color: "text-purple" } as const;
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "text-amber bg-amber/10",
@@ -94,7 +106,10 @@ function ActivityDetail({ activity, onClose }: { activity: ActivityRecord; onClo
       >
         {/* Header */}
         <div className="flex items-center gap-2.5 mb-4">
-          <div className={`w-2.5 h-2.5 rounded-full ${TYPE_COLORS[activity.type] ?? "bg-purple"}`} />
+          {(() => {
+            const { Icon, color } = TYPE_META[activity.type] ?? FALLBACK_META;
+            return <Icon className={`w-3.5 h-3.5 shrink-0 ${color}`} />;
+          })()}
           <h3 className="text-[10px] font-bold text-text">{TYPE_LABELS[activity.type] ?? activity.type} Details</h3>
           <span className={`text-[7px] font-bold px-1.5 py-0.5 rounded ${STATUS_STYLES[activity.status]}`}>
             {activity.status}
@@ -179,8 +194,8 @@ function ActivityDetail({ activity, onClose }: { activity: ActivityRecord; onClo
                   <div className="py-2 border-b border-border">
                     <span className="text-[7px] text-text-muted block mb-1.5">Allocations</span>
                     <div className="space-y-1">
-                      {allocs.map((a, i) => (
-                        <div key={i} className="flex items-center justify-between">
+                      {allocs.map((a) => (
+                        <div key={a} className="flex items-center justify-between">
                           <span className="text-[7px] text-text">{a}</span>
                         </div>
                       ))}
@@ -233,13 +248,15 @@ export function ActivityHistory({ address }: { address: string }) {
         <span className="text-[7px] text-text-muted">{activities.length} txns</span>
       </div>
       <div className="space-y-1 max-h-[280px] overflow-y-auto pr-1">
-        {activities.map((a) => (
+        {activities.map((a) => {
+          const { Icon, color } = TYPE_META[a.type] ?? FALLBACK_META;
+          return (
           <button
             key={a.id}
             onClick={() => setSelected(a)}
             className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-bg/60 transition-colors cursor-pointer text-left"
           >
-            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${TYPE_COLORS[a.type] ?? "bg-purple"}`} />
+            <Icon className={`w-3 h-3 shrink-0 ${color}`} />
             <div className="flex-1 min-w-0">
               <div className="text-[8px] font-medium text-text truncate">
                 {formatDetail(a)}
@@ -250,7 +267,8 @@ export function ActivityHistory({ address }: { address: string }) {
               {a.status}
             </span>
           </button>
-        ))}
+          );
+        })}
       </div>
 
       {selected && <ActivityDetail activity={selected} onClose={() => setSelected(null)} />}

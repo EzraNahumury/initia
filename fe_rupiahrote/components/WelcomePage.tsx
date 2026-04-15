@@ -1,27 +1,58 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
+import { CORE_TOKENS } from "@/lib/contract";
 
 const FaultyTerminal = dynamic(
   () => import("./FaultyTerminal").then((m) => m.FaultyTerminal),
   { ssr: false }
 );
 
+const ROUTED_TOKENS = CORE_TOKENS.map((t) => ({
+  symbol: t.symbol,
+  logo: t.logoURI ?? t.icon,
+}));
+
 const FEATURES = [
   { title: "Smart Routing", desc: "Automatically finds the cheapest and fastest swap path across Initia." },
   { title: "Limit Orders", desc: "Set your target price — executes automatically when the market hits it." },
   { title: "Batch Swap", desc: "Rebalance your portfolio in a single transaction. One click, multiple swaps." },
   { title: "Bridge", desc: "Move tokens between Initia L1 and RupiahRoute appchain seamlessly." },
+  { title: ".init Usernames", desc: "Send to human-readable .init names — no copy-pasting 0x addresses." },
   { title: "Near-Zero Gas", desc: "Powered by Initia's appchain — gas fees so low they're practically free." },
 ];
 
 export function WelcomePage({ onEnter }: { onEnter: () => void }) {
   const [visible, setVisible] = useState(false);
+  const [tokenIdx, setTokenIdx] = useState(0);
+  const midSwapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true));
+    // Preload every token logo so src swaps are instantaneous (no fetch flash).
+    ROUTED_TOKENS.forEach(({ logo }) => {
+      const img = new window.Image();
+      img.src = logo;
+    });
+    // First mid-cycle swap happens at 2s (when coin first arrives behind Initia logo).
+    // Subsequent swaps are driven by onAnimationIteration so they stay synced with CSS.
+    midSwapTimer.current = setTimeout(() => {
+      setTokenIdx((i) => (i + 1) % ROUTED_TOKENS.length);
+    }, 2000);
+    return () => {
+      if (midSwapTimer.current) clearTimeout(midSwapTimer.current);
+    };
   }, []);
+
+  // Runs each time the CSS animation loops (coin is behind logo A at this moment).
+  const handleIteration = () => {
+    setTokenIdx((i) => (i + 1) % ROUTED_TOKENS.length);
+    if (midSwapTimer.current) clearTimeout(midSwapTimer.current);
+    midSwapTimer.current = setTimeout(() => {
+      setTokenIdx((i) => (i + 1) % ROUTED_TOKENS.length);
+    }, 2000);
+  };
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden"
@@ -54,9 +85,48 @@ export function WelcomePage({ onEnter }: { onEnter: () => void }) {
       {/* Content */}
       <div className={`relative z-10 max-w-[780px] px-8 text-center transition-all duration-1000 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
 
-        {/* Logo pulse */}
-        <div className="w-28 h-28 mx-auto mb-8 rounded-3xl bg-purple/10 border border-purple/30 flex items-center justify-center animate-[pulseOpacity_3s_ease-in-out_infinite]">
-          <img src="/logo/logo.png" alt="RupiahRoute" className="w-20 h-20 rounded-2xl object-cover" />
+        {/* Hackathon badge */}
+        <div className="inline-flex items-center mb-6 px-3 py-1.5 rounded-full border border-purple/30 bg-purple/5">
+          <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-purple-light">
+            Initia Hackathon · 2026
+          </span>
+        </div>
+
+        {/* Co-brand logos with routing beam (coin travels BEHIND the logos) */}
+        <div className="relative flex items-center w-fit mx-auto mb-8">
+          {/* Traveling token — sits on z-0 so logo tiles (z-10) occlude it at each endpoint */}
+          <div
+            onAnimationIteration={handleIteration}
+            className="absolute top-1/2 z-0 w-6 h-6 rounded-full bg-white/95 ring-1 ring-purple-light/60 flex items-center justify-center overflow-hidden animate-[routeBeam_4s_ease-in-out_infinite]"
+            style={{
+              boxShadow: "0 0 12px 2px rgba(159,41,255,0.9), 0 0 24px 4px rgba(159,41,255,0.4)",
+            }}
+          >
+            <img
+              src={ROUTED_TOKENS[tokenIdx].logo}
+              alt={ROUTED_TOKENS[tokenIdx].symbol}
+              className="w-5 h-5 rounded-full object-contain"
+            />
+          </div>
+
+          <div className="relative z-10 w-20 h-20 rounded-2xl bg-[#0a0a1a] border border-purple/30 flex items-center justify-center">
+            <img src="/logo/logo.png" alt="RupiahRoute" className="w-14 h-14 rounded-xl object-cover" />
+          </div>
+
+          {/* Beam lane: connection line only */}
+          <div className="relative w-20 h-20 flex items-center justify-center">
+            <div
+              className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px animate-[beamGlow_4s_ease-in-out_infinite]"
+              style={{
+                background:
+                  "linear-gradient(to right, transparent 0%, rgba(159,41,255,0.6) 20%, rgba(159,41,255,0.6) 80%, transparent 100%)",
+              }}
+            />
+          </div>
+
+          <div className="relative z-10 w-20 h-20 rounded-2xl bg-[#0a0a1a] border border-purple/30 flex items-center justify-center">
+            <img src="/chains/initia-favicon.svg" alt="Initia" className="w-14 h-14" />
+          </div>
         </div>
 
         <h1
@@ -71,7 +141,7 @@ export function WelcomePage({ onEnter }: { onEnter: () => void }) {
         </h1>
 
         <p className="text-[12px] text-purple-light font-medium mb-8 uppercase tracking-widest">
-          Smart DeFi Router on Initia
+          Built for Initia MiniEVM
         </p>
 
         <p className="text-[10px] text-text-muted leading-relaxed max-w-[520px] mx-auto mb-10">

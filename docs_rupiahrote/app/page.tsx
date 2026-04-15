@@ -34,7 +34,7 @@ export default function IntroductionPage() {
             style={{ filter: "drop-shadow(0 0 20px rgba(159,41,255,0.4))" }} />
           <h1 className="text-2xl font-bold text-foreground mb-2"
             style={{ textShadow: "0 0 20px rgba(159,41,255,0.4)" }}>RupiahRoute</h1>
-          <p className="text-sm text-purple-light font-medium mb-5 uppercase tracking-widest">Smart DeFi Router on Initia</p>
+          <p className="text-sm text-purple-light font-medium mb-5 uppercase tracking-widest">Built for Initia MiniEVM</p>
           <p className="text-sm text-muted max-w-lg mx-auto leading-relaxed">
             One interface, one click, best route. The engine handles pool selection, multi-hop routing,
             cross-chain bridging, and execution on an Initia EVM appchain with near-zero gas fees.

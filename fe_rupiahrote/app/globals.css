@@ -197,6 +197,17 @@ input[type="number"] { -moz-appearance: textfield; }
   50%      { opacity: 1; }
 }
 
+@keyframes routeBeam {
+  0%, 10%   { left: 16.67%; transform: translate(-50%, -50%); } /* behind logo A — icon swap window */
+  45%, 55%  { left: 83.33%; transform: translate(-50%, -50%); } /* behind logo B — icon swap window */
+  90%, 100% { left: 16.67%; transform: translate(-50%, -50%); } /* back behind logo A */
+}
+
+@keyframes beamGlow {
+  0%, 100% { opacity: 0.25; }
+  50%      { opacity: 0.7; }
+}
+
 @keyframes scanDown {
   0%   { top: -2px; opacity: 0; }
   5%   { opacity: 1; }

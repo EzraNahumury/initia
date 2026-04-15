@@ -248,7 +248,7 @@ export default function FrontendOverviewPage() {
           <tr><td><code>SendCard</code></td><td>Send tokens to address or <code>.init</code> username. Includes username registration and send history.</td></tr>
           <tr><td><code>FaucetCard</code></td><td>Testnet faucet: claim tokens, balance panel with highlight animation on increase, +delta float-up effect.</td></tr>
           <tr><td><code>DashboardView</code></td><td>Portfolio (native GAS + ERC20 balances), stats grid, activity breakdown with bridge deposit/withdraw split, scrollable recent activity.</td></tr>
-          <tr><td><code>ActivityHistory</code></td><td>Scrollable list of recent transactions with clickable detail popups.</td></tr>
+          <tr><td><code>ActivityHistory</code></td><td>Scrollable list of recent transactions with clickable detail popups. Exports <code>TYPE_META</code> (nav-icon + accent color per activity type) so the Dashboard summary stays in sync with the activity list.</td></tr>
           <tr><td><code>WalletButton</code></td><td>Connect/disconnect wallet. Shows connect modal with installed + popular wallets, account popup with balance and copy address.</td></tr>
           <tr><td><code>Header</code></td><td>Top navigation bar with logo, page links, language toggle, and wallet button.</td></tr>
           <tr><td><code>LanguageToggle</code></td><td>Language switcher dropdown (EN, ID, ZH).</td></tr>
@@ -267,8 +267,23 @@ export default function FrontendOverviewPage() {
       <p>
         Defines the <code>Token</code> interface, the five core tokens (INIT, USDC, WETH, TIA, IDRX),
         the router contract reference, and utility functions <code>formatAmount()</code>,
-        <code>parseAmount()</code>, and <code>formatRupiah()</code> (USD to IDR conversion at 16,000 rate).
-        Token logos are sourced from the initia-registry GitHub repository.
+        <code>parseAmount()</code>, and <code>formatRupiah()</code>. The rupiah conversion now
+        uses a <strong>live USD→IDR rate</strong> sourced from the CoinGecko feed (USDC price in
+        IDR, since USDC is 1:1 with USD), cached in <code>localStorage</code>, and updated via
+        the exported <code>setUsdToIdr()</code> / <code>getUsdToIdr()</code> helpers. Falls back
+        to a flat 16,000 rate only when no live or cached value is available. Token logos are
+        sourced from the initia-registry GitHub repository.
+      </p>
+
+      <h3>abis.ts</h3>
+      <p>
+        Single source of truth for on-chain contract ABIs used by the frontend. Exports
+        <code>FAUCET_ABI</code> (union of every <code>TokenFaucet</code> method the app calls:
+        swap, batch, bridge, send, username registry, and limit orders) and{" "}
+        <code>ERC20_BALANCE_ABI</code>. Six feature components (<code>BridgeCard</code>,{" "}
+        <code>SendCard</code>, <code>LimitOrderCard</code>, <code>FaucetCard</code>,{" "}
+        <code>BatchSwapCard</code>, <code>DashboardView</code>) import from here instead of
+        redeclaring inline slices — so a contract change only needs a single ABI update.
       </p>
 
       <h3>wagmi.ts</h3>

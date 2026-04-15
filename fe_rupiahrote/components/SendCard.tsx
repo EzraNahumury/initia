@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { useTranslation } from "react-i18next";
 import { parseAmount, TOKENS, type Token } from "@/lib/contract";
+import { FAUCET_ABI, ERC20_BALANCE_ABI } from "@/lib/abis";
 import { addActivity } from "@/lib/activity";
 import { TokenSelector } from "./TokenSelector";
 import { HiCheck, HiCheckCircle, HiXCircle, HiPaperAirplane, HiClock } from "react-icons/hi2";
@@ -39,17 +40,6 @@ const FAUCET_ADDRESS = (process.env.NEXT_PUBLIC_FAUCET_CONTRACT ||
   "0x0000000000000000000000000000000000000000") as `0x${string}`;
 
 const SEND_FEE = 100n * 10n ** 18n;
-
-const FAUCET_ABI = [
-  { name: "sendToken", type: "function", stateMutability: "payable", inputs: [{ name: "token", type: "address" }, { name: "to", type: "address" }, { name: "amount", type: "uint256" }], outputs: [] },
-  { name: "sendToUsername", type: "function", stateMutability: "payable", inputs: [{ name: "token", type: "address" }, { name: "name", type: "string" }, { name: "amount", type: "uint256" }], outputs: [] },
-  { name: "registerUsername", type: "function", stateMutability: "nonpayable", inputs: [{ name: "name", type: "string" }], outputs: [] },
-  { name: "resolveUsername", type: "function", stateMutability: "view", inputs: [{ name: "name", type: "string" }], outputs: [{ name: "", type: "address" }] },
-] as const;
-
-const ERC20_BALANCE_ABI = [
-  { name: "balanceOf", type: "function", stateMutability: "view", inputs: [{ name: "account", type: "address" }], outputs: [{ name: "", type: "uint256" }] },
-] as const;
 
 export function SendCard() {
   const { address, isConnected } = useAccount();
@@ -147,18 +137,29 @@ export function SendCard() {
     }
   }, [isSuccess]);
 
-  // Register username
+  // Register username — precheck so users don't waste gas on a taken name.
+  const registerFullName = registerName
+    ? (registerName.endsWith(".init") ? registerName : `${registerName}.init`)
+    : "";
+  const { data: registerResolved } = useReadContract({
+    address: FAUCET_ADDRESS,
+    abi: FAUCET_ABI,
+    functionName: "resolveUsername",
+    args: [registerFullName],
+    query: { enabled: registerFullName.length > 5 },
+  });
+  const registerTaken = !!registerResolved && registerResolved !== "0x0000000000000000000000000000000000000000";
+
   const { writeContract: writeRegister, data: regTxHash, isPending: isRegistering } = useWriteContract();
   const { isLoading: isRegConfirming, isSuccess: isRegSuccess } = useWaitForTransactionReceipt({ hash: regTxHash });
 
   const handleRegister = () => {
-    if (!registerName) return;
-    const name = registerName.endsWith(".init") ? registerName : `${registerName}.init`;
+    if (!registerName || registerTaken) return;
     writeRegister({
       address: FAUCET_ADDRESS,
       abi: FAUCET_ABI,
       functionName: "registerUsername",
-      args: [name],
+      args: [registerFullName],
     });
   };
 
@@ -169,7 +170,12 @@ export function SendCard() {
       {/* Left: Send form */}
       <div className="flex-1 min-w-0 glass rounded-2xl glow-purple-sm p-5 space-y-3">
         <div className="px-1 pb-1">
-          <h2 className="text-[10px] font-bold text-text">{t("send.title")}</h2>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-[10px] font-bold text-text">{t("send.title")}</h2>
+            <span className="text-[7px] font-bold uppercase tracking-[0.15em] text-purple-light border border-purple/30 rounded-full px-2 py-0.5 bg-purple/5">
+              Initia-native usernames
+            </span>
+          </div>
           <p className="text-[8px] text-text-muted mt-0.5">{t("send.description")}</p>
         </div>
 
@@ -257,17 +263,22 @@ export function SendCard() {
               className="flex-1 bg-transparent text-[8px] outline-none placeholder-text-muted/40 min-w-0" />
             <span className="text-[8px] text-text-muted font-medium">.init</span>
           </div>
-          <button onClick={handleRegister} disabled={!registerName || isRegistering || isRegConfirming}
+          <button onClick={handleRegister} disabled={!registerName || isRegistering || isRegConfirming || registerTaken}
             className={`px-4 py-2.5 rounded-xl text-[8px] font-semibold transition-all cursor-pointer ${
-              !registerName || isRegistering || isRegConfirming
+              !registerName || isRegistering || isRegConfirming || registerTaken
                 ? "bg-purple/20 text-text-muted cursor-not-allowed"
                 : "bg-purple text-white hover:bg-purple-light"
             }`}>
-            {isRegistering || isRegConfirming ? "Registering..." : "Register"}
+            {isRegistering || isRegConfirming ? "Registering..." : registerTaken ? "Taken" : "Register"}
           </button>
         </div>
+        {registerTaken && (
+          <div className="flex items-center gap-1.5 text-[7px] text-red font-medium">
+            <HiXCircle className="w-3 h-3" />{registerFullName} is already registered
+          </div>
+        )}
         {isRegSuccess && (
-          <div className="text-[8px] text-green font-medium">Username registered! Others can now send to {registerName.endsWith(".init") ? registerName : `${registerName}.init`}</div>
+          <div className="text-[8px] text-green font-medium">Username registered! Others can now send to {registerFullName}</div>
         )}
 
         {/* Without / With .init */}

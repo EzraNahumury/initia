@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <circle fill="white" cx="16" cy="16" r="16"/>
+  <path fill="black" d="M20.078 25.75v-3.186a2.946 2.946 0 0 1-2.502-2.908v-7.312a2.946 2.946 0 0 1 2.502-2.908V6.25a6.14 6.14 0 0 0-4.084 2.01 6.187 6.187 0 0 0-4.084-2.01v3.186a2.946 2.946 0 0 1 2.502 2.908v7.312a2.946 2.946 0 0 1-2.502 2.908v3.186a6.14 6.14 0 0 0 4.084-2.01 6.187 6.187 0 0 0 4.084 2.01Z"/>
+  <style>
+    @media (prefers-color-scheme: light) {
+      circle { fill: black }
+      path { fill: white; transform: scale(0.9); transform-origin: center }
+    }
+  </style>
+</svg>

@@ -5,6 +5,7 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { useTranslation } from "react-i18next";
 import { encodeFunctionData, decodeFunctionResult } from "viem";
 import { parseAmount, formatAmount, TOKENS, type Token } from "@/lib/contract";
+import { FAUCET_ABI, ERC20_BALANCE_ABI } from "@/lib/abis";
 import { addActivity } from "@/lib/activity";
 import { TokenSelector } from "./TokenSelector";
 import { HiXMark, HiCheckCircle, HiClock, HiPlay } from "react-icons/hi2";
@@ -13,20 +14,6 @@ const FAUCET_ADDRESS = (process.env.NEXT_PUBLIC_FAUCET_CONTRACT ||
   "0x0000000000000000000000000000000000000000") as `0x${string}`;
 
 const LIMIT_FEE = 500n * 10n ** 18n;
-
-const FAUCET_ABI = [
-  { name: "placeLimitOrder", type: "function", stateMutability: "payable", inputs: [{ name: "tokenIn", type: "address" }, { name: "tokenOut", type: "address" }, { name: "amountIn", type: "uint256" }, { name: "targetPrice", type: "uint256" }, { name: "expiryHours", type: "uint256" }], outputs: [] },
-  { name: "executeLimitOrder", type: "function", stateMutability: "nonpayable", inputs: [{ name: "orderId", type: "uint256" }], outputs: [] },
-  { name: "cancelLimitOrder", type: "function", stateMutability: "nonpayable", inputs: [{ name: "orderId", type: "uint256" }], outputs: [] },
-  { name: "getUserOrderCount", type: "function", stateMutability: "view", inputs: [{ name: "user", type: "address" }], outputs: [{ name: "", type: "uint256" }] },
-  { name: "getUserOrderId", type: "function", stateMutability: "view", inputs: [{ name: "user", type: "address" }, { name: "index", type: "uint256" }], outputs: [{ name: "", type: "uint256" }] },
-  { name: "getOrder", type: "function", stateMutability: "view", inputs: [{ name: "orderId", type: "uint256" }], outputs: [{ name: "_owner", type: "address" }, { name: "_tokenIn", type: "address" }, { name: "_tokenOut", type: "address" }, { name: "_amountIn", type: "uint256" }, { name: "_targetPrice", type: "uint256" }, { name: "_expiry", type: "uint256" }, { name: "_executed", type: "bool" }, { name: "_cancelled", type: "bool" }] },
-  { name: "getQuote", type: "function", stateMutability: "view", inputs: [{ name: "tokenIn", type: "address" }, { name: "tokenOut", type: "address" }, { name: "amountIn", type: "uint256" }], outputs: [{ name: "", type: "uint256" }] },
-] as const;
-
-const ERC20_BALANCE_ABI = [
-  { name: "balanceOf", type: "function", stateMutability: "view", inputs: [{ name: "account", type: "address" }], outputs: [{ name: "", type: "uint256" }] },
-] as const;
 
 interface OrderData {
   id: number;

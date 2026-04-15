@@ -10,6 +10,24 @@ export default function RouterPage() {
         batch operations. Address: <code>0x3072a5b043ea67c4c597b1e2e82dd63a50ada23d</code>
       </p>
 
+      <h2>Constructor &amp; Precompile Injection</h2>
+      <CodeBlock>{`constructor(address cosmos, address oracle)
+
+// Canonical deployment — uses DEFAULT_COSMOS and DEFAULT_ORACLE:
+new RupiahRouter(address(0), address(0));
+
+// Devnet / mock — pass explicit precompile addresses:
+new RupiahRouter(mockCosmos, mockOracle);`}</CodeBlock>
+      <p>
+        The router takes two constructor arguments: the <code>ICosmos</code> precompile address
+        (IBC + <code>.init</code> username resolution) and the <code>IConnectOracle</code> precompile
+        address (Slinky price feeds). Passing <code>address(0)</code> falls back to the canonical
+        Initia addresses stored in <code>DEFAULT_COSMOS</code> and <code>DEFAULT_ORACLE</code>
+        constants. Both precompile references are declared <code>immutable</code>, so they&apos;re
+        baked in at deploy time and can&apos;t be swapped later — this lets tests inject mocks
+        while keeping production deployments tamper-proof.
+      </p>
+
       <h2>AMM Engine</h2>
       <p>
         Pools follow the constant-product formula <code>x * y = k</code> with a 0.3% swap fee.
@@ -28,6 +46,12 @@ export default function RouterPage() {
       <p>
         Creates a new liquidity pool for a token pair and seeds it with initial liquidity.
         Reverts if a pool for the pair already exists. Locks the first 1000 LP tokens.
+      </p>
+      <p>
+        <strong>Permissionless by design.</strong> Any account can create a pool by seeding both
+        sides — there&apos;s no whitelist. This mirrors Uniswap-style AMMs so new pairs can
+        bootstrap without owner intervention. Low-liquidity pools rank poorly in routing
+        weights, so spammy empty pools can&apos;t meaningfully pollute quote outcomes.
       </p>
 
       <h3>addLiquidity</h3>

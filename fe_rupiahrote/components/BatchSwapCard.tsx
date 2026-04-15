@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { useTranslation } from "react-i18next";
 import { parseAmount, formatAmount, TOKENS, type Token } from "@/lib/contract";
+import { FAUCET_ABI, ERC20_BALANCE_ABI } from "@/lib/abis";
 import { addActivity } from "@/lib/activity";
 import { TokenSelector } from "./TokenSelector";
 import { HiPlus, HiTrash, HiCheckCircle } from "react-icons/hi2";
@@ -12,15 +13,6 @@ const FAUCET_ADDRESS = (process.env.NEXT_PUBLIC_FAUCET_CONTRACT ||
   "0x0000000000000000000000000000000000000000") as `0x${string}`;
 
 const SWAP_FEE = 500n * 10n ** 18n;
-
-const FAUCET_ABI = [
-  { name: "batchSwap", type: "function", stateMutability: "payable", inputs: [{ name: "tokenIn", type: "address" }, { name: "tokensOut", type: "address[]" }, { name: "amounts", type: "uint256[]" }], outputs: [] },
-  { name: "getQuote", type: "function", stateMutability: "view", inputs: [{ name: "tokenIn", type: "address" }, { name: "tokenOut", type: "address" }, { name: "amountIn", type: "uint256" }], outputs: [{ name: "", type: "uint256" }] },
-] as const;
-
-const ERC20_BALANCE_ABI = [
-  { name: "balanceOf", type: "function", stateMutability: "view", inputs: [{ name: "account", type: "address" }], outputs: [{ name: "", type: "uint256" }] },
-] as const;
 
 interface Allocation { token: Token; percentage: number; }
 
@@ -165,8 +157,8 @@ export function BatchSwapCard() {
       {/* Preview */}
       {sourceAmount && total === 100 && (
         <div className="rounded-xl bg-bg p-3 space-y-1">
-          {allocations.map((a, i) => (
-            <div key={i} className="flex justify-between text-[8px] text-text-sub">
+          {allocations.map((a) => (
+            <div key={a.token.address} className="flex justify-between text-[8px] text-text-sub">
               <span>{((Number(sourceAmount) * a.percentage) / 100).toFixed(2)} {sourceToken.symbol} &rarr; {a.token.symbol}</span>
               <span className="font-semibold">{a.percentage}%</span>
             </div>

@@ -1,27 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Header } from "@/components/Header";
 import { SwapView } from "@/components/SwapView";
 import { HeroSection } from "@/components/HeroSection";
 import { WelcomePage } from "@/components/WelcomePage";
 
-export default function Home() {
-  const [showWelcome, setShowWelcome] = useState(false);
-  const [checked, setChecked] = useState(false);
+// Module-level flag — persists across route navigation within a session but
+// resets on full page reload. So the welcome appears on first load per build
+// and is skipped when the user clicks back to the swap tab.
+let welcomeShownThisSession = false;
 
-  useEffect(() => {
-    const seen = localStorage.getItem("rr_welcomed");
-    if (!seen) setShowWelcome(true);
-    setChecked(true);
-  }, []);
+export default function Home() {
+  const [showWelcome, setShowWelcome] = useState(() => {
+    if (welcomeShownThisSession) return false;
+    welcomeShownThisSession = true;
+    return true;
+  });
 
   const handleEnter = () => {
-    localStorage.setItem("rr_welcomed", "1");
     setShowWelcome(false);
   };
-
-  if (!checked) return null;
 
   if (showWelcome) return <WelcomePage onEnter={handleEnter} />;
 

@@ -15,6 +15,7 @@ import {
   formatAmount,
   TOKENS,
   type Token,
+  setUsdToIdr,
 } from "@/lib/contract";
 import { routerContract, ROUTER_ADDRESS } from "@/lib/contract";
 import { TokenSelector } from "./TokenSelector";
@@ -127,7 +128,8 @@ const COINGECKO_IDS: Record<string, string> = {
   BTC: "bitcoin",
 };
 
-const IDRX_USD_RATE = 1 / 16050;
+const PRICE_CACHE_KEY = "_priceCache";
+const PRICE_CACHE_TTL = 10 * 60_000; // 10 min
 
 function useLivePrices() {
   const ids = [...new Set(Object.values(COINGECKO_IDS))].join(",");
@@ -135,7 +137,7 @@ function useLivePrices() {
     queryKey: ["coingecko-prices"],
     queryFn: async (): Promise<Record<string, number>> => {
       const res = await fetch(
-        `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`,
+        `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,idr`,
       );
       if (!res.ok) throw new Error("CoinGecko API error");
       const data = await res.json();
@@ -143,8 +145,26 @@ function useLivePrices() {
       for (const [symbol, geckoId] of Object.entries(COINGECKO_IDS)) {
         if (data[geckoId]?.usd) prices[symbol] = data[geckoId].usd;
       }
-      prices["IDRX"] = IDRX_USD_RATE;
+      // Derive live USD→IDR from USDC (1:1 with USD) and cache so formatRupiah picks it up everywhere.
+      const usdToIdr = data["usd-coin"]?.idr ?? data["tether"]?.idr;
+      if (usdToIdr) setUsdToIdr(usdToIdr);
+      prices["IDRX"] = usdToIdr ? 1 / usdToIdr : 1 / 16000;
+      if (typeof window !== "undefined") {
+        try {
+          window.localStorage.setItem(PRICE_CACHE_KEY, JSON.stringify({ ts: Date.now(), prices }));
+        } catch { /* ignore */ }
+      }
       return prices;
+    },
+    initialData: () => {
+      if (typeof window === "undefined") return undefined;
+      try {
+        const raw = window.localStorage.getItem(PRICE_CACHE_KEY);
+        if (!raw) return undefined;
+        const { ts, prices } = JSON.parse(raw) as { ts: number; prices: Record<string, number> };
+        if (!ts || Date.now() - ts > PRICE_CACHE_TTL) return undefined;
+        return prices;
+      } catch { return undefined; }
     },
     refetchInterval: 60_000,
     staleTime: 30_000,
@@ -779,7 +799,7 @@ export function SwapView() {
                     const isSelected = selectedRoute === i;
                     return (
                       <button
-                        key={i}
+                        key={r.name}
                         onClick={() => setSelectedRoute(i)}
                         className={`w-full text-left rounded-xl p-3.5 border transition-all cursor-pointer relative overflow-hidden ${
                           isSelected
@@ -854,13 +874,13 @@ export function SwapView() {
                       )}
                     </div>
                     <div className="space-y-1.5">
-                      {(externalQuotes ?? []).map((q, i) => {
+                      {(externalQuotes ?? []).map((q) => {
                         const bestInitia = simRoutes[0]?.outputNum ?? 0;
                         const diff = bestInitia > 0 ? -((bestInitia - q.outputAmount) / bestInitia * 100) : 0;
                         const dec = Math.min(tokenOut.decimals, 6);
                         return (
                           <div
-                            key={i}
+                            key={q.name}
                             className="rounded-lg px-3 py-2.5 border border-border bg-bg/30 hover:bg-bg/60 transition-colors"
                           >
                             <div className="flex items-center justify-between">

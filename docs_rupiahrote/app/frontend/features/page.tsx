@@ -461,6 +461,37 @@ useEffect(() => {
         The activity list refreshes every 5 seconds via a <code>setInterval</code> that re-reads
         from localStorage.
       </p>
+
+      <hr />
+
+      <h2>Welcome Page</h2>
+      <p>
+        Component: <code>WelcomePage</code> | Entry point: <code>app/page.tsx</code>
+      </p>
+      <p>
+        A full-screen overlay shown on the user&apos;s first visit to the app in a given browser
+        session. It presents the RupiahRoute ✕ Initia co-brand (with an animated routing coin
+        cycling through the core token logos between them), the current hackathon badge, and a
+        pill list of core features: Smart Routing, Limit Orders, Batch Swap, Bridge,{" "}
+        <code>.init</code> Usernames, and Near-Zero Gas.
+      </p>
+
+      <h3>Display Logic</h3>
+      <p>
+        The overlay uses a <strong>module-level flag</strong> (<code>welcomeShownThisSession</code>)
+        in <code>app/page.tsx</code> rather than <code>localStorage</code>. The effect:
+      </p>
+      <ul>
+        <li>First visit per page load → welcome shows.</li>
+        <li>Navigation between tabs (Swap ↔ Bridge ↔ Send, etc.) → welcome does <strong>not</strong> re-appear.</li>
+        <li>Full page refresh or fresh tab → welcome shows again (new module instance).</li>
+        <li>Fresh build / redeploy → welcome shows on first user landing (clean slate).</li>
+      </ul>
+      <p>
+        This matches the intent &quot;show once per session/build&quot; without persisting a flag
+        across sessions, so judges or new users always see the onboarding on a cold start without
+        it becoming annoying during normal usage.
+      </p>
     </article>
   );
 }

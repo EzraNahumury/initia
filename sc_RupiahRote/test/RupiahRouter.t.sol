@@ -19,7 +19,7 @@ contract RupiahRouterTest is Test {
     uint256 constant INITIAL_BALANCE = 1_000_000e6; // 1M tokens (6 decimals)
 
     function setUp() public {
-        router = new RupiahRouter();
+        router = new RupiahRouter(address(0), address(0));
 
         // Deploy mock tokens
         init = new MockERC20("Initia", "INIT", 6);
@@ -537,5 +537,104 @@ contract RupiahRouterTest is Test {
 
     function test_getPoolId_returnsZeroForNonexistent() public view {
         assertEq(router.getPoolId(address(init), address(usdc)), 0);
+    }
+
+    // ================================================================
+    //                    COVERAGE-GAP TESTS
+    // ================================================================
+
+    /// @notice Executing a limit order after its expiry must revert.
+    function test_executeLimitOrder_revertsAfterExpiry() public {
+        vm.startPrank(alice);
+        router.createPool(address(init), address(usdc), 100_000e6, 100_000e6);
+
+        uint256 expiry = block.timestamp + 1 hours;
+        uint256 orderId = router.placeLimitOrder(
+            address(init),
+            address(usdc),
+            1_000e6,
+            0.5e18, // easily met target
+            expiry
+        );
+        vm.stopPrank();
+
+        // Fast-forward past expiry.
+        vm.warp(expiry + 1);
+
+        vm.prank(keeper);
+        vm.expectRevert("RR: order expired");
+        router.executeLimitOrder(orderId);
+    }
+
+    /// @notice The owner may still cancel (and recover funds from) an expired order.
+    function test_cancelLimitOrder_worksAfterExpiry() public {
+        vm.startPrank(alice);
+        router.createPool(address(init), address(usdc), 100_000e6, 100_000e6);
+
+        uint256 aliceInitBefore = init.balanceOf(alice);
+        uint256 expiry = block.timestamp + 1 hours;
+        uint256 orderId = router.placeLimitOrder(
+            address(init), address(usdc), 1_000e6, 0.9e18, expiry
+        );
+
+        vm.warp(expiry + 1);
+        router.cancelLimitOrder(orderId);
+        assertEq(init.balanceOf(alice), aliceInitBefore, "funds refunded after expiry cancel");
+        vm.stopPrank();
+    }
+
+    /// @notice A batch with one impossible-slippage leg reverts the entire batch —
+    /// no partial swaps land. This is the atomicity guarantee users rely on.
+    function test_batchSwap_atomicity_revertsEntireBatchOnOneFailure() public {
+        vm.startPrank(alice);
+        router.createPool(address(init), address(usdc), 100_000e6, 100_000e6);
+        router.createPool(address(init), address(eth_), 100_000e6, 100_000e6);
+        vm.stopPrank();
+
+        uint256 bobUsdcBefore = usdc.balanceOf(bob);
+        uint256 bobEthBefore = eth_.balanceOf(bob);
+        uint256 bobInitBefore = init.balanceOf(bob);
+
+        // Two swaps: first is feasible, second has impossible minOut.
+        RupiahRouter.BatchSwapParam[] memory swaps = new RupiahRouter.BatchSwapParam[](2);
+        swaps[0] = RupiahRouter.BatchSwapParam(address(init), address(usdc), 1_000e6, 0);
+        swaps[1] = RupiahRouter.BatchSwapParam(address(init), address(eth_), 1_000e6, 2_000e6); // impossible
+
+        vm.prank(bob);
+        vm.expectRevert("RR: batch swap slippage");
+        router.batchSwap(swaps, block.timestamp + 1 hours);
+
+        // No partial state: every balance is untouched.
+        assertEq(usdc.balanceOf(bob), bobUsdcBefore, "USDC should be unchanged");
+        assertEq(eth_.balanceOf(bob), bobEthBefore, "ETH should be unchanged");
+        assertEq(init.balanceOf(bob), bobInitBefore, "INIT should be unchanged");
+    }
+
+    /// @notice Routing across MAX_HOPS=3 pools must succeed end-to-end when the
+    /// path hops 4 tokens (3 pools: init→eth→tia→usdc).
+    function test_multiHopSwap_maxHops() public {
+        vm.startPrank(alice);
+        router.createPool(address(init), address(eth_), 100_000e6, 100_000e6);
+        router.createPool(address(eth_), address(tia),  100_000e6, 100_000e6);
+        router.createPool(address(tia),  address(usdc), 100_000e6, 100_000e6);
+        vm.stopPrank();
+
+        address[] memory path = new address[](4);
+        path[0] = address(init);
+        path[1] = address(eth_);
+        path[2] = address(tia);
+        path[3] = address(usdc);
+
+        uint256[] memory poolIds = new uint256[](3);
+        poolIds[0] = router.getPoolId(address(init), address(eth_));
+        poolIds[1] = router.getPoolId(address(eth_), address(tia));
+        poolIds[2] = router.getPoolId(address(tia),  address(usdc));
+
+        vm.prank(bob);
+        uint256 finalAmount = router.multiHopSwap(path, poolIds, 1_000e6, 0, block.timestamp + 1 hours);
+
+        // Three hops at ~0.3% fee each ≈ 1000 * 0.997^3 ≈ 991, minus price impact.
+        assertGt(finalAmount, 0, "swap produced output");
+        assertLt(finalAmount, 1_000e6, "fees are taken");
     }
 }

@@ -83,8 +83,18 @@ export default function ContractsPage() {
           transactions from being mined after market conditions have changed.
         </li>
         <li>
-          <strong>Admin-only functions:</strong> pool creation, fee changes, and emergency
-          operations are gated behind <code>onlyOwner</code>.
+          <strong>Admin-only fee &amp; ownership functions:</strong> <code>setSwapFee</code>,{" "}
+          <code>setSwapFeeRate</code>, <code>withdrawFees</code>, and{" "}
+          <code>transferOwnership</code> are gated behind <code>onlyOwner</code>. Each one now
+          emits a corresponding event — <code>SwapFeeUpdated</code>,{" "}
+          <code>PoolSwapFeeRateUpdated</code>, <code>FeesWithdrawn</code>, and{" "}
+          <code>OwnershipTransferred</code> — so block explorers and indexers surface admin
+          actions transparently instead of showing opaque state changes.
+        </li>
+        <li>
+          <strong>Pool creation is permissionless by design:</strong> any account can seed a
+          new pool. Routing weights de-prioritize low-liquidity pools, so griefers can&apos;t
+          meaningfully pollute quote outcomes with empty pools.
         </li>
         <li>
           <strong>Safe ERC-20 wrappers:</strong> all token interactions use safe transfer

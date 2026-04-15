@@ -109,7 +109,12 @@
       "Bash(identify /c/initia/landing_page_rp/public/asset/textures/Material_baseColor.jpeg)",
       "Bash(npx --yes sharp-cli -i /c/initia/landing_page_rp/public/asset/textures/Material_baseColor.jpeg -o /c/initia/landing_page_rp/public/asset/textures/Material_baseColor_opt.jpeg --quality 75 -- resize 4096 2048)",
       "Bash(mv Material_baseColor.jpeg Material_baseColor_original.jpeg)",
-      "Bash(mv Material_baseColor_opt.jpeg Material_baseColor.jpeg)"
+      "Bash(mv Material_baseColor_opt.jpeg Material_baseColor.jpeg)",
+      "Bash(echo \"EXIT_CODE: $?\")",
+      "Bash(npx eslint *)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(grep -l \"IconType\" C:/initia/fe_rupiahrote/node_modules/react-icons/lib/*.d.ts)"
     ]
   }
 }

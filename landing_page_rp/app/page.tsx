@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState, useMemo, Suspense } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { useGLTF } from "@react-three/drei";
 import Image from "next/image";
 import gsap from "gsap";
@@ -165,7 +165,7 @@ function BentoCard({ src, title, description, isNew }: { src?: string; title: Re
         </div>
         {isNew && (
           <div ref={hoverButtonRef} onMouseMove={handleMouseMove} onMouseEnter={() => setHoverOpacity(1)} onMouseLeave={() => setHoverOpacity(0)} className="border-hsla relative flex w-fit cursor-pointer items-center gap-2 overflow-hidden rounded-full bg-black/50 px-5 py-2 text-xs uppercase text-white/40 backdrop-blur-sm">
-            <div className="pointer-events-none absolute -inset-px opacity-0 transition duration-300" style={{ opacity: hoverOpacity, background: `radial-gradient(120px circle at ${cursorPosition.x}px ${cursorPosition.y}px, rgba(139,92,246,0.4), transparent)` }} />
+            <div className="pointer-events-none absolute -inset-px opacity-0 transition duration-300" style={{ opacity: hoverOpacity, background: `radial-gradient(120px circle at ${cursorPosition.x}px ${cursorPosition.y}px, rgba(159,41,255,0.4), transparent)` }} />
             <TiLocationArrow />
             <span className="relative z-20">coming soon</span>
           </div>
@@ -322,7 +322,7 @@ function Scene3D({ scrollYRef, mousePosRef }: { scrollYRef: React.RefObject<numb
   return (
     <>
       <ambientLight intensity={0.3} />
-      <pointLight position={[15, 15, 15]} intensity={0.8} color="#8b5cf6" />
+      <pointLight position={[15, 15, 15]} intensity={0.8} color="#9f29ff" />
       <pointLight position={[-15, -15, -15]} intensity={0.6} color="#ec4899" />
       <pointLight position={[0, 20, 0]} intensity={0.4} color="#06b6d4" />
       <Web3ParticleField />
@@ -332,16 +332,30 @@ function Scene3D({ scrollYRef, mousePosRef }: { scrollYRef: React.RefObject<numb
 
 function Navigation() {
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const lastYRef = useRef(0);
   const navItems = [
+    { label: "Problem", href: "#problem" },
     { label: "Features", href: "#features" },
-    { label: "Architecture", href: "#architecture" },
-    { label: "Tokens", href: "#tokens" },
+    { label: "How", href: "#how" },
+    { label: "Impact", href: "#impact" },
+    { label: "Roadmap", href: "#roadmap" },
     { label: "Docs", href: "https://docsrupiahroute.vercel.app/", external: true }
   ];
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", handleScroll);
+    const handleScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 50);
+      // hide when scrolling DOWN past a small threshold; reveal on any upward motion
+      if (y > lastYRef.current + 4 && y > 120) {
+        setHidden(true);
+      } else if (y < lastYRef.current - 4) {
+        setHidden(false);
+      }
+      lastYRef.current = y;
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -349,15 +363,17 @@ function Navigation() {
     if (external) {
       window.open(href, "_blank", "noopener,noreferrer");
     } else {
-      const element = document.querySelector(href);
+      const element = document.querySelector(href) as HTMLElement | null;
       if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
+        smoothScrollTo(element, 700);
       }
     }
   };
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-[100] px-6 md:px-12 py-5 transition-all duration-700 ${scrolled ? "floating-nav bg-black/80 backdrop-blur-xl" : "bg-transparent"}`}>
+    <nav
+      className={`fixed top-0 left-0 right-0 z-[100] px-6 md:px-12 py-5 transition-all duration-500 ease-out ${scrolled ? "floating-nav bg-black/80 backdrop-blur-xl" : "bg-transparent"} ${hidden ? "-translate-y-full" : "translate-y-0"}`}
+    >
       <div className="flex items-center justify-between">
         <a href="/" className="flex items-center gap-3 cursor-pointer hoverable">
           <Image src="/logo/logo.png" alt="RupiahRoute" width={40} height={40} className="h-10 w-10 object-contain" priority />
@@ -388,7 +404,7 @@ function Navigation() {
           ))}
         </div>
 
-        <button className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-medium tracking-wider px-6 py-2.5 rounded-full hover:opacity-90 hoverable transition-transform duration-150 hover:scale-105 active:scale-95">
+        <button className="bg-[#9f29ff] hover:bg-[#a78bfa] text-white text-xs font-medium tracking-wider px-6 py-2.5 rounded-full hoverable transition-all duration-200 hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(159,41,255,0.35)]">
           LAUNCH APP
         </button>
       </div>
@@ -421,17 +437,65 @@ function HeroSection({ scrollYRef }: { scrollYRef: React.RefObject<number> }) {
     return () => cancelAnimationFrame(animFrame);
   }, [scrollYRef]);
 
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    let reverseFrame = 0;
+    let lastTs = 0;
+
+    const stepReverse = (ts: number) => {
+      const dt = Math.min(0.05, (ts - lastTs) / 1000);
+      lastTs = ts;
+      const next = video.currentTime - dt;
+      if (next <= 0) {
+        video.currentTime = 0;
+        video.play().catch(() => {});
+        return;
+      }
+      video.currentTime = next;
+      reverseFrame = requestAnimationFrame(stepReverse);
+    };
+
+    const onEnded = () => {
+      video.pause();
+      video.currentTime = Math.max(0, video.duration - 0.001);
+      lastTs = performance.now();
+      reverseFrame = requestAnimationFrame(stepReverse);
+    };
+
+    video.addEventListener("ended", onEnded);
+    return () => {
+      video.removeEventListener("ended", onEnded);
+      if (reverseFrame) cancelAnimationFrame(reverseFrame);
+    };
+  }, []);
+
   return (
     <div className="relative">
       <div className="fixed top-0 left-0 w-screen h-screen overflow-hidden z-0">
-        <video ref={videoRef} autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover will-change-transform origin-center">
+        <video ref={videoRef} autoPlay muted playsInline className="absolute inset-0 w-full h-full object-cover will-change-transform origin-center">
           <source src="https://res.cloudinary.com/dfonotyfb/video/upload/v1775585556/dds3_1_rqhg7x.mp4" type="video/mp4" />
         </video>
 
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-purple-900/20 to-black/70 z-[1]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-purple-950/40 to-black/90 z-[1]" />
+        <div
+          className="absolute inset-0 z-[2] pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.15) 45%, rgba(0,0,0,0.65) 85%, rgba(0,0,0,0.9) 100%)",
+          }}
+        />
+        <div
+          className="absolute inset-0 z-[2] pointer-events-none mix-blend-overlay"
+          style={{
+            background:
+              "radial-gradient(ellipse 60% 40% at 50% 55%, rgba(139, 92, 246, 0.18), transparent 70%)",
+          }}
+        />
 
         <div ref={contentRef} className="absolute inset-0 z-10 flex flex-col items-center justify-center px-6 text-center">
-          <p className="text-purple-400/60 text-[10px] tracking-[0.5em] uppercase mb-4 font-general">Smart DeFi Router on Initia</p>
+          <p className="text-purple-400/60 text-[10px] tracking-[0.5em] uppercase mb-4 font-general">Built for Initia MiniEVM</p>
 
           <h1 className="special-font hero-heading text-white mb-2">
             RUPIAH
@@ -440,11 +504,11 @@ function HeroSection({ scrollYRef }: { scrollYRef: React.RefObject<number> }) {
             ROUTE
           </h1>
 
-          <p className="font-robert-regular text-white/50 text-sm max-w-md mt-6 mb-10">
+          <p className="text-white/50 text-sm max-w-md mt-6 mb-10 leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
             One interface, one click, best route.<br />The engine handles pool selection, multi-hop routing, cross-chain bridging.
           </p>
 
-          <button className="bg-yellow-300 text-white text-xs font-medium tracking-wider px-8 py-3 rounded-full hover:bg-yellow-400 hoverable flex items-center gap-2 transition-transform duration-150 hover:scale-105 active:scale-95">
+          <button className="bg-[#9f29ff] hover:bg-[#a78bfa] text-white text-xs font-medium tracking-wider px-8 py-3 rounded-full hoverable flex items-center gap-2 transition-all duration-200 hover:scale-105 active:scale-95 shadow-[0_0_24px_rgba(159,41,255,0.4)]">
             <TiLocationArrow /> GET STARTED
           </button>
 
@@ -864,7 +928,7 @@ function CinematicCard({ title, subtitle, description, index }: {
       ref={cardRef}
       initial={{ opacity: 0, y: 40, scale: 0.95 }}
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true, amount: 0.15 }}
+      viewport={{ once: false, amount: 0.15 }}
       transition={{ duration: 0.6, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -967,24 +1031,32 @@ function FeaturesSection() {
       subtitle: "Minimal Fees",
       description: "Experience DeFi with near-zero gas fees powered by Initia's innovative architecture. Trade more, pay less.",
     },
+    {
+      number: "05",
+      title: "USERNAMES",
+      subtitle: "Send to .init Names",
+      description: "Transfer to alice.init instead of 0x… addresses. Resolved on-chain via Initia's Cosmos precompile — no copy-paste, no typos.",
+    },
   ], []);
 
   // Scroll → zoom mapping
   // Phase 1: 0→0.25 zoom = fly into cave (scroll 0-15%)
-  // Phase 2: 0.25→0.95 zoom = 360° rotation with 4 feature plateaus (scroll 15-92%)
+  // Phase 2: 0.25→0.95 zoom = 360° rotation with 5 feature plateaus (scroll 15-92%)
   // Phase 3: 0.95→1.0 zoom = fade to black, transition out (scroll 92-100%)
   const scrollToZoom = (t: number): number => {
     const W: [number, number][] = [
       [0.00, 0.00],   // outer
       [0.15, 0.25],   // arrived inside cave
       [0.18, 0.34],   // feature 0 starts
-      [0.32, 0.42],   // feature 0 plateau
-      [0.35, 0.51],   // feature 1 starts
-      [0.49, 0.59],   // feature 1 plateau
-      [0.52, 0.68],   // feature 2 starts
-      [0.66, 0.76],   // feature 2 plateau
-      [0.69, 0.81],   // feature 3 starts
-      [0.83, 0.89],   // feature 3 plateau
+      [0.28, 0.42],   // feature 0 plateau
+      [0.31, 0.46],   // feature 1 starts
+      [0.41, 0.54],   // feature 1 plateau
+      [0.44, 0.58],   // feature 2 starts
+      [0.54, 0.66],   // feature 2 plateau
+      [0.57, 0.70],   // feature 3 starts
+      [0.67, 0.78],   // feature 3 plateau
+      [0.70, 0.82],   // feature 4 starts
+      [0.80, 0.90],   // feature 4 plateau
       [0.92, 0.95],   // rotation done
       [1.00, 1.00],   // fade complete
     ];
@@ -1029,12 +1101,15 @@ function FeaturesSection() {
   // Heading fades out quickly as the fly-in begins
   const headingOpacity = Math.max(0, 1 - zoomProgress / 0.05);
 
-  // Features only appear inside the cave (zoom 0.25→0.95), evenly distributed
-  const featureZoneStart = 0.28;
+  // Features only appear after fully settled inside the cave (zoom 0.34→0.92)
+  // Delayed start gives the fly-in time to resolve before any card appears.
+  const featureZoneStart = 0.34;
   const featureZoneEnd = 0.92;
   const featurePhaseProgress = THREE.MathUtils.clamp(
     (zoomProgress - featureZoneStart) / (featureZoneEnd - featureZoneStart), 0, 1
   );
+  // Hard gate: no cards until we're past the fly-in entirely
+  const insideCave = zoomProgress >= featureZoneStart;
 
   // Vignette: visible once inside the cave
   const featureOverlayOpacity = (() => {
@@ -1048,34 +1123,45 @@ function FeaturesSection() {
   // Fade to black at the end for transition to Story
   const exitFadeOpacity = THREE.MathUtils.smoothstep(zoomProgress, 0.92, 1.0);
 
+  // "Stuck on the cave wall": each card slides in from the right as the camera's
+  // clockwise rotation brings its wall into view, settles centered at plateau,
+  // then slides off to the left as the next wall rotates in. A subtle rotateY
+  // tilt adds parallax so the card reads as embedded in a curving surface.
   const getFeatureVisibility = (index: number) => {
     const numFeatures = features.length;
     const featureStart = index / numFeatures;
     const featureEnd = (index + 1) / numFeatures;
-    const fadeIn = 0.06;
-    const fadeOut = 0.06;
+    const fadeIn = 0.08;
+    const fadeOut = 0.08;
 
     if (featurePhaseProgress < featureStart || featurePhaseProgress > featureEnd) {
-      return { opacity: 0, translateY: 40, scale: 0.95 };
+      return { opacity: 0, translateX: 0, rotateY: 0, scale: 0.94 };
     }
 
+    const slide = 180; // px — travel distance across entry/exit
+    const tilt = 14;   // deg — perspective tilt at edges
+
     let opacity: number;
-    let translateY: number;
+    let translateX: number;
+    let rotateY: number;
 
     if (featurePhaseProgress < featureStart + fadeIn) {
       const t = THREE.MathUtils.smoothstep(featurePhaseProgress, featureStart, featureStart + fadeIn);
       opacity = t;
-      translateY = (1 - t) * 40;
+      translateX = (1 - t) * slide;
+      rotateY = (1 - t) * -tilt; // tilted as if seen from the right wall
     } else if (featurePhaseProgress > featureEnd - fadeOut) {
       const t = THREE.MathUtils.smoothstep(featurePhaseProgress, featureEnd - fadeOut, featureEnd);
       opacity = 1 - t;
-      translateY = -t * 25;
+      translateX = -t * slide;
+      rotateY = t * tilt; // tilts as the camera pans past to the left
     } else {
       opacity = 1;
-      translateY = 0;
+      translateX = 0;
+      rotateY = 0;
     }
 
-    return { opacity, translateY, scale: 0.95 + opacity * 0.05 };
+    return { opacity, translateX, rotateY, scale: 0.94 + opacity * 0.06 };
   };
 
   const activeFeatureIndex = Math.min(
@@ -1086,7 +1172,8 @@ function FeaturesSection() {
   return (
     <section
       ref={sectionRef}
-      className="relative h-[500vh] bg-black"
+      id="features"
+      className="snap-section relative h-[500vh] bg-black"
     >
       <div className="sticky top-0 h-screen overflow-hidden"
         style={{
@@ -1095,7 +1182,7 @@ function FeaturesSection() {
       >
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute left-1/2 top-[28%] h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-400/10 blur-[150px]" />
-          <div className="absolute right-[12%] top-[42%] h-72 w-72 rounded-full bg-amber-300/10 blur-[170px]" />
+          <div className="absolute right-[12%] top-[42%] h-72 w-72 rounded-full bg-cyan-300/8 blur-[170px]" />
           <div className="absolute left-[10%] bottom-[10%] h-72 w-72 rounded-full bg-purple-500/15 blur-[180px]" />
         </div>
         <div className="absolute inset-0">
@@ -1128,7 +1215,7 @@ function FeaturesSection() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.15 }}
+              viewport={{ once: false, amount: 0.15 }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
               className="text-center"
             >
@@ -1161,10 +1248,10 @@ function FeaturesSection() {
           }}
         />
 
-        {/* Feature cards */}
-        <div className="absolute inset-0 z-20 pointer-events-none">
-          {features.map((feature, index) => {
-            const { opacity, translateY, scale } = getFeatureVisibility(index);
+        {/* Feature cards — only rendered once we're fully inside the cave */}
+        <div className="absolute inset-0 z-20 pointer-events-none" style={{ perspective: "1400px", perspectiveOrigin: "center center" }}>
+          {insideCave && features.map((feature, index) => {
+            const { opacity, translateX, rotateY, scale } = getFeatureVisibility(index);
             if (opacity <= 0.01) return null;
             const isLeft = index % 2 === 0;
 
@@ -1174,7 +1261,8 @@ function FeaturesSection() {
                   className={`mx-auto w-full max-w-5xl px-6 md:px-16 flex ${isLeft ? "justify-start" : "justify-end"}`}
                   style={{
                     opacity,
-                    transform: `translateY(${translateY}px) scale(${scale})`,
+                    transform: `translateX(${translateX}px) rotateY(${rotateY}deg) scale(${scale})`,
+                    transformStyle: "preserve-3d",
                   }}
                 >
                   <div
@@ -1184,7 +1272,7 @@ function FeaturesSection() {
                       backdropFilter: "blur(40px)",
                       WebkitBackdropFilter: "blur(40px)",
                       border: "1px solid rgba(255, 255, 255, 0.08)",
-                      boxShadow: "0 32px 64px -16px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
+                      boxShadow: "0 32px 64px -16px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 -1px 0 rgba(0, 0, 0, 0.4)",
                     }}
                   >
                     <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent" />
@@ -1354,7 +1442,7 @@ function StorySection() {
   const titleOpacity = Math.max(0, Math.min(1, revealProgress / 0.08));
 
   return (
-    <div ref={sectionRef} className="relative h-[350vh] bg-black -mt-[50vh] z-[1]">
+    <div ref={sectionRef} id="architecture" className="relative h-[350vh] bg-black -mt-[50vh] z-[1]">
       <div className="sticky top-0 h-screen overflow-hidden flex flex-col items-center justify-center text-white">
 
         {/* Title */}
@@ -1385,7 +1473,7 @@ function StorySection() {
             <div
               className="absolute inset-0 rounded-2xl pointer-events-none"
               style={{
-                backgroundImage: "linear-gradient(rgba(139,92,246,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.05) 1px, transparent 1px)",
+                backgroundImage: "linear-gradient(rgba(159,41,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(159,41,255,0.05) 1px, transparent 1px)",
                 backgroundSize: "40px 40px",
                 maskImage: "radial-gradient(ellipse at center, black 30%, transparent 70%)",
                 WebkitMaskImage: "radial-gradient(ellipse at center, black 30%, transparent 70%)",
@@ -1397,9 +1485,9 @@ function StorySection() {
             <svg className="absolute inset-0 w-full h-full pointer-events-none">
               <defs>
                 <linearGradient id="line-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="rgba(139,92,246,0.4)" />
+                  <stop offset="0%" stopColor="rgba(159,41,255,0.4)" />
                   <stop offset="50%" stopColor="rgba(34,211,238,0.3)" />
-                  <stop offset="100%" stopColor="rgba(139,92,246,0.4)" />
+                  <stop offset="100%" stopColor="rgba(159,41,255,0.4)" />
                 </linearGradient>
               </defs>
               {connections.map((conn, i) => (
@@ -1455,10 +1543,10 @@ function StorySection() {
           style={{ opacity: descriptionOpacity, transform: `translateY(${(1 - descriptionOpacity) * 20}px)`, transition: "opacity 0.4s ease, transform 0.4s ease" }}
         >
           <div className="flex flex-col items-center md:items-start max-w-sm">
-            <p className="text-center font-circular-web text-white/40 md:text-start text-sm">
+            <p className="text-center text-white/40 md:text-start text-sm leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
               Where DeFi meets innovation. Smart contracts, routing, and bridging — all connected in one seamless protocol.
             </p>
-            <button className="mt-4 bg-yellow-300 text-white text-xs font-medium tracking-wider px-6 py-3 rounded-full hover:bg-yellow-400 hoverable flex items-center gap-2 transition-transform duration-150 hover:scale-105 active:scale-95">
+            <button className="mt-4 bg-[#9f29ff] hover:bg-[#a78bfa] text-white text-xs font-medium tracking-wider px-6 py-3 rounded-full hoverable flex items-center gap-2 transition-all duration-200 hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(159,41,255,0.35)]">
               <TiLocationArrow /> EXPLORE
             </button>
           </div>
@@ -1487,7 +1575,7 @@ function TokenCard({ token, index }: { token: { symbol: string; name: string; lo
       ref={cardRef}
       initial={{ opacity: 0, y: 25, scale: 0.95 }}
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true, amount: 0.1 }}
+      viewport={{ once: false, amount: 0.1 }}
       transition={{ duration: 0.45, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => { setIsHovered(false); setMousePos({ x: 0, y: 0 }); }}
@@ -1560,7 +1648,7 @@ function TokenCard({ token, index }: { token: { symbol: string; name: string; lo
 
 function TokensSection() {
   const tokens = [
-    { symbol: "INIT", name: "Initia", logo: "/tokens/init.png", glow: "rgba(139,92,246,0.15)", ring: "rgba(139,92,246,0.5)" },
+    { symbol: "INIT", name: "Initia", logo: "/tokens/init.png", glow: "rgba(159,41,255,0.15)", ring: "rgba(159,41,255,0.5)" },
     { symbol: "USDC", name: "USD Coin", logo: "/tokens/usdc.png", glow: "rgba(59,130,246,0.15)", ring: "rgba(59,130,246,0.5)" },
     { symbol: "WETH", name: "Wrapped Ether", logo: "/tokens/weth.png", glow: "rgba(156,163,175,0.15)", ring: "rgba(156,163,175,0.5)" },
     { symbol: "TIA", name: "Celestia", logo: "/tokens/tia.png", glow: "rgba(168,85,247,0.15)", ring: "rgba(168,85,247,0.5)" },
@@ -1569,12 +1657,12 @@ function TokensSection() {
   ];
 
   return (
-    <section className="relative z-10 py-32 bg-black">
+    <section id="tokens" className="snap-section relative z-10 py-32 bg-black">
       <div className="container mx-auto px-6 text-center">
         <motion.p
           initial={{ opacity: 0, y: 15 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.1 }}
+          viewport={{ once: false, amount: 0.1 }}
           transition={{ duration: 0.4 }}
           className="text-purple-400/50 text-[10px] tracking-[0.4em] mb-4 uppercase"
         >
@@ -1583,7 +1671,7 @@ function TokensSection() {
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.1 }}
+          viewport={{ once: false, amount: 0.1 }}
           transition={{ duration: 0.5, delay: 0.05 }}
           className="text-4xl md:text-6xl font-zentry font-black text-white tracking-tight mb-16"
         >
@@ -1602,7 +1690,7 @@ function TokensSection() {
 
 function CTASection() {
   return (
-    <section className="relative z-10 py-40 bg-black overflow-hidden">
+    <section id="cta" className="snap-section relative z-10 py-40 bg-black overflow-hidden">
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <motion.div
           animate={{ 
@@ -1640,7 +1728,7 @@ function CTASection() {
             ease: "easeInOut",
             delay: 2
           }}
-          className="absolute w-[250px] h-[250px] rounded-full bg-pink-500/10 blur-[80px]"
+          className="absolute w-[250px] h-[250px] rounded-full bg-purple-400/10 blur-[80px]"
         />
       </div>
       
@@ -1649,13 +1737,13 @@ function CTASection() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
-          viewport={{ once: true }}
+          viewport={{ once: false }}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            viewport={{ once: true }}
+            viewport={{ once: false }}
             className="mb-10"
           >
             <motion.div
@@ -1677,7 +1765,7 @@ function CTASection() {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
-            viewport={{ once: true }}
+            viewport={{ once: false }}
             className="text-5xl md:text-7xl font-zentry font-black text-white tracking-tight mb-6 leading-[1.05]"
           >
             Ready to start?
@@ -1687,7 +1775,7 @@ function CTASection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-            viewport={{ once: true }}
+            viewport={{ once: false }}
             className="text-white/50 text-base md:text-lg mb-12 max-w-md mx-auto leading-relaxed"
           >
             Join the future of DeFi on Initia. One click, best route, zero hassle.
@@ -1697,7 +1785,7 @@ function CTASection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
-            viewport={{ once: true }}
+            viewport={{ once: false }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <motion.button
@@ -1706,16 +1794,10 @@ function CTASection() {
               whileHover={{ scale: 1.05, y: -3 }}
               whileTap={{ scale: 0.97 }}
               transition={{ duration: 0.15 }}
-              className="group relative px-8 py-4 bg-white text-black font-semibold text-sm tracking-wide rounded-full overflow-hidden shadow-lg shadow-white/10"
+              className="group relative px-8 py-4 bg-[#9f29ff] hover:bg-[#a78bfa] text-white font-semibold text-sm tracking-wide rounded-full overflow-hidden shadow-[0_0_32px_rgba(159,41,255,0.4)]"
             >
               <span className="relative z-10">Launch App</span>
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500"
-                initial={{ x: "-100%" }}
-                whileHover={{ x: 0 }}
-                transition={{ duration: 0.3 }}
-              />
-              <div className="absolute -inset-[1px] bg-gradient-to-r from-purple-500 to-pink-500 rounded-full opacity-30 group-hover:opacity-60 transition-opacity duration-300 blur-[3px]" />
+              <div className="absolute -inset-[1px] bg-[#9f29ff] rounded-full opacity-30 group-hover:opacity-60 transition-opacity duration-300 blur-[3px]" />
             </motion.button>
             
             <motion.a
@@ -1785,14 +1867,1263 @@ function Footer() {
             RUPIAH ROUTE
           </span>
         </div>
-        <div 
-          className="relative z-10 mt-8 text-center"
-          style={{ fontFamily: '"Press Start 2P", cursive' }}
-        >
-          <p className="text-[8px] text-white tracking-wider">© 2026 Rupiah Route. All rights reserved.</p>
+        <div className="relative z-10 mt-8 text-center">
+          <p className="text-[10px] text-white/50 tracking-[0.15em]" style={{ fontFamily: "Inter, sans-serif" }}>
+            © 2026 Rupiah Route. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>
+  );
+}
+
+function SceneWrapper({
+  children,
+  intensity = "normal",
+}: {
+  children: React.ReactNode;
+  intensity?: "subtle" | "normal" | "dramatic";
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "start 35%"],
+  });
+
+  const config = {
+    subtle:   { scaleFrom: 0.97, opacityFrom: 0.55, yFrom: 30, blurFrom: 3 },
+    normal:   { scaleFrom: 0.92, opacityFrom: 0.25, yFrom: 60, blurFrom: 6 },
+    dramatic: { scaleFrom: 0.85, opacityFrom: 0.0,  yFrom: 90, blurFrom: 10 },
+  }[intensity];
+
+  const scale = useTransform(scrollYProgress, [0, 1], [config.scaleFrom, 1]);
+  const opacity = useTransform(scrollYProgress, [0, 1], [config.opacityFrom, 1]);
+  const y = useTransform(scrollYProgress, [0, 1], [config.yFrom, 0]);
+  const blur = useTransform(scrollYProgress, [0, 1], [config.blurFrom, 0]);
+  const filter = useTransform(blur, (b) => `blur(${b}px)`);
+
+  return (
+    <div ref={ref} className="relative z-10">
+      <motion.div
+        style={{
+          scale,
+          opacity,
+          y,
+          filter,
+          transformOrigin: "center 35%",
+          willChange: "transform, opacity, filter",
+        }}
+      >
+        {children}
+      </motion.div>
+    </div>
+  );
+}
+
+function smoothScrollTo(target: HTMLElement, duration = 700) {
+  const startY = window.scrollY;
+  const navOffset = 80; // accounts for fixed nav height
+  const targetY = target.getBoundingClientRect().top + window.scrollY - navOffset;
+  const distance = targetY - startY;
+  if (Math.abs(distance) < 2) return;
+  const startTime = performance.now();
+  let cancelled = false;
+  let rafId = 0;
+
+  const cancel = () => {
+    cancelled = true;
+    cancelAnimationFrame(rafId);
+    window.removeEventListener("wheel", cancel);
+    window.removeEventListener("touchstart", cancel);
+    window.removeEventListener("keydown", cancel);
+  };
+  window.addEventListener("wheel", cancel, { passive: true });
+  window.addEventListener("touchstart", cancel, { passive: true });
+  window.addEventListener("keydown", cancel);
+
+  const step = (now: number) => {
+    if (cancelled) return;
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - t, 4); // easeOutQuart — snappy finish
+    window.scrollTo(0, startY + distance * eased);
+    if (t < 1) {
+      rafId = requestAnimationFrame(step);
+    } else {
+      cancel();
+    }
+  };
+  rafId = requestAnimationFrame(step);
+}
+
+function smoothstep(edge0: number, edge1: number, x: number): number {
+  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
+
+function useStageSection() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    let rafId = 0;
+    const handler = () => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = 0;
+        if (!sectionRef.current) return;
+        const rect = sectionRef.current.getBoundingClientRect();
+        const scrollRange = sectionRef.current.offsetHeight - window.innerHeight;
+        if (scrollRange <= 0) return;
+        const p = Math.max(0, Math.min(1, -rect.top / scrollRange));
+        setProgress(p);
+      });
+    };
+    window.addEventListener("scroll", handler, { passive: true });
+    handler();
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("scroll", handler);
+    };
+  }, []);
+
+  return { sectionRef, progress };
+}
+
+// Reveal-then-grid layout: cards slide in one by one to fixed grid slots, then stay parked there.
+// `slot` is the final {x: vw, y: vh} position relative to the section center.
+// Cards enter from off-screen right, settle at slot, no overlap with other cards.
+function getRevealLayout(
+  progress: number,
+  index: number,
+  slot: { x: number; y: number },
+  entryStart: number,
+  entryDuration: number,
+  stagger: number,
+  settledScale: number = 0.85
+) {
+  const cardEntryStart = entryStart + index * stagger;
+  const cardEntryEnd = cardEntryStart + entryDuration;
+  const enterT = smoothstep(cardEntryStart, cardEntryEnd, progress);
+
+  // Pure fade-in at the slot — no horizontal slide, no rotation.
+  // Scale has a gentle two-phase curve: 0.92 → 1.0 (flourish) → settledScale.
+  const peakT = 0.7;
+  const scale =
+    enterT < peakT
+      ? 0.92 + (1 - 0.92) * (enterT / peakT)
+      : 1 - (1 - settledScale) * ((enterT - peakT) / (1 - peakT));
+
+  return {
+    translateX: slot.x,              // vw — card stays at slot, fades in in place
+    translateY: slot.y,              // vh
+    opacity: enterT,
+    scale,
+    rotate: 0,
+    zIndex: 50 + index,
+  };
+}
+
+function StageIndicator({
+  count,
+  active,
+  color = "rgba(34, 211, 238, 0.8)",
+}: {
+  count: number;
+  active: number;
+  color?: string;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-3">
+      {Array.from({ length: count }).map((_, i) => (
+        <div
+          key={i}
+          className="rounded-full"
+          style={{
+            width: "6px",
+            height: active === i ? "28px" : "6px",
+            backgroundColor: active === i ? color : "rgba(255, 255, 255, 0.15)",
+            boxShadow: active === i ? `0 0 12px ${color}` : "none",
+            transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function BackToTopButton() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      const delta = y - lastY;
+      // Show: scrolling up by a meaningful amount AND not near the top
+      if (delta < -8 && y > 500) {
+        setVisible(true);
+      } else if (delta > 8 || y < 200) {
+        // Hide: scrolling down, or we're near the top already
+        setVisible(false);
+      }
+      lastY = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setVisible(false);
+  };
+
+  return (
+    <button
+      onClick={scrollToTop}
+      aria-label="Back to top"
+      className={`fixed bottom-6 left-6 z-[95] hoverable transition-all duration-400 ${
+        visible ? "opacity-100 translate-y-0 scale-100" : "opacity-0 pointer-events-none translate-y-2 scale-95"
+      }`}
+    >
+      <div
+        className="relative flex items-center gap-2.5 pl-3 pr-4 py-2.5 rounded-full text-white transition-all duration-200 hover:scale-[1.04] active:scale-95"
+        style={{
+          background: "#9f29ff",
+          boxShadow: "0 0 32px rgba(139, 92, 246, 0.45), 0 12px 32px rgba(0, 0, 0, 0.4)",
+        }}
+      >
+        <div className="relative w-7 h-7 rounded-full bg-white/15 flex items-center justify-center">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <polyline points="6 15 12 9 18 15" />
+          </svg>
+        </div>
+        <span className="text-[10px] tracking-[0.22em] uppercase font-general whitespace-nowrap pr-0.5">
+          To Top
+        </span>
+      </div>
+    </button>
+  );
+}
+
+function AutoPlayButton() {
+  const [playing, setPlaying] = useState(false);
+  const [atBottom, setAtBottom] = useState(false);
+  const [hintVisible, setHintVisible] = useState(false);
+  const [hintDismissed, setHintDismissed] = useState(false);
+  const playingRef = useRef(false);
+  const rafRef = useRef(0);
+
+  const dismissHint = () => {
+    setHintVisible(false);
+    setHintDismissed(true);
+  };
+
+  const stopPlay = () => {
+    playingRef.current = false;
+    setPlaying(false);
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
+    }
+    // Restore CSS scroll-snap so the user's manual scroll keeps its snap feel.
+    document.documentElement.style.scrollSnapType = "";
+  };
+
+  const startPlay = () => {
+    playingRef.current = true;
+    setPlaying(true);
+    dismissHint();
+    // CSS scroll-snap fights programmatic rAF-driven scrolling at section
+    // boundaries (scroll gets "pulled" back to the snap anchor). Disable it
+    // for the duration of the tour.
+    document.documentElement.style.scrollSnapType = "none";
+
+    // Adaptive speed by section type:
+    //  - Sticky animated (cave, capabilities, etc.): slow so staged animations play out
+    //  - Info-dense / card-grid (tokens, stats, roadmap): medium so cards breathe
+    //  - Flat gaps between sections: fast so viewer isn't stuck in empty scroll
+    const animatedSectionIds = ["problem", "features", "architecture", "how", "capabilities"];
+    const readableSectionIds = ["tokens", "impact", "roadmap"];
+    const SLOW = 3.5;   // ~210 px/s — dense animated sections (5-card cave, 6-card capabilities)
+    const MEDIUM = 3;   // ~180 px/s — slow enough to read card grids
+    const FAST = 11;    // ~660 px/s
+
+    // Absolute document-top of an element, robust to positioned ancestors
+    // (e.g. SceneWrapper wraps sections in a `relative` div, which makes
+    // `offsetTop` return a small value relative to the wrapper, not the doc).
+    const absTop = (el: HTMLElement) => el.getBoundingClientRect().top + window.scrollY;
+
+    const pxPerFrame = (): number => {
+      const y = window.scrollY;
+      const h = window.innerHeight;
+      // Sticky animated sections: slow across the full sticky scroll range
+      for (const id of animatedSectionIds) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        const top = absTop(el);
+        const bottom = top + el.offsetHeight - h;
+        if (y >= top && y <= bottom) return SLOW;
+      }
+      // Card-grid sections: slow while any portion of the section is on screen
+      for (const id of readableSectionIds) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        const top = absTop(el);
+        const bottom = top + el.offsetHeight;
+        if (y + h >= top && y <= bottom) return MEDIUM;
+      }
+      return FAST;
+    };
+
+    const step = () => {
+      if (!playingRef.current) return;
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      const currentY = window.scrollY;
+      if (currentY >= maxScroll - 1) {
+        stopPlay();
+        return;
+      }
+      window.scrollTo(0, Math.min(currentY + pxPerFrame(), maxScroll));
+      rafRef.current = requestAnimationFrame(step);
+    };
+    rafRef.current = requestAnimationFrame(step);
+  };
+
+  // Stop on any user-initiated input (wheel / touch / keys) — the user taking
+  // over is the only way to end the tour now that there's no pause button.
+  useEffect(() => {
+    if (!playing) return;
+    const cancel = () => stopPlay();
+    const onKey = (e: KeyboardEvent) => {
+      if (["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End", "Space", "Escape"].includes(e.code)) {
+        stopPlay();
+      }
+    };
+    window.addEventListener("wheel", cancel, { passive: true });
+    window.addEventListener("touchstart", cancel, { passive: true });
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("wheel", cancel);
+      window.removeEventListener("touchstart", cancel);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [playing]);
+
+  // Hide when user is at the very bottom of the page
+  useEffect(() => {
+    const check = () => {
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      setAtBottom(window.scrollY >= maxScroll - 20);
+    };
+    window.addEventListener("scroll", check, { passive: true });
+    window.addEventListener("resize", check);
+    check();
+    return () => {
+      window.removeEventListener("scroll", check);
+      window.removeEventListener("resize", check);
+    };
+  }, []);
+
+  // First-appearance hint: show after a brief delay, auto-dismiss on timeout or scroll
+  useEffect(() => {
+    const showTimer = setTimeout(() => setHintVisible(true), 2200);
+    const hideTimer = setTimeout(() => dismissHint(), 11000);
+    const onScroll = () => {
+      if (window.scrollY > window.innerHeight * 0.35) dismissHint();
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(hideTimer);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+
+  const showHint = hintVisible && !hintDismissed && !playing;
+  // Hide entire control while the tour is running — user scrolls to stop.
+  const hidden = atBottom || playing;
+
+  return (
+    <div
+      className={`fixed bottom-6 right-6 z-[95] flex items-center gap-3 transition-all duration-400 ${
+        hidden ? "opacity-0 pointer-events-none translate-y-2 scale-95" : "opacity-100 translate-y-0 scale-100"
+      }`}
+    >
+      {/* First-time hint bubble */}
+      <div
+        className={`relative hidden sm:flex items-center rounded-full bg-black/85 backdrop-blur-md border border-purple-400/40 pl-4 pr-5 py-2.5 shadow-[0_0_28px_rgba(159,41,255,0.3)] transition-all duration-400 ${
+          showHint ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2 pointer-events-none"
+        }`}
+        aria-hidden={!showHint}
+      >
+        <span className="text-purple-100 text-[10px] tracking-[0.2em] uppercase whitespace-nowrap font-general">
+          Watch the pitch — scroll anytime to exit
+        </span>
+        <div className="absolute -right-[5px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rotate-45 bg-black/85 border-r border-t border-purple-400/40" />
+      </div>
+
+      {/* Play button (single-state — hides while tour runs) */}
+      <button
+        onClick={startPlay}
+        aria-label="Start auto-scroll tour"
+        className="hoverable group"
+      >
+        <div
+          className="relative flex items-center gap-2.5 pl-3 pr-4 py-2.5 rounded-full text-white transition-all duration-200 hover:scale-[1.04] active:scale-95"
+          style={{
+            background: "#9f29ff",
+            boxShadow: "0 0 32px rgba(139, 92, 246, 0.45), 0 12px 32px rgba(0, 0, 0, 0.4)",
+          }}
+        >
+          {/* Attention pulse — only while the hint is active */}
+          {showHint && (
+            <motion.div
+              className="absolute inset-0 rounded-full pointer-events-none"
+              style={{ border: "2px solid #a78bfa" }}
+              animate={{ scale: [1, 1.15, 1], opacity: [0.7, 0, 0.7] }}
+              transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+            />
+          )}
+
+          <div className="relative w-7 h-7 rounded-full bg-white/15 flex items-center justify-center">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ transform: "translateX(1px)" }}>
+              <path d="M8 5v14l11-7L8 5z" />
+            </svg>
+          </div>
+          <span className="text-[10px] tracking-[0.22em] uppercase font-general whitespace-nowrap pr-0.5">
+            Play Tour
+          </span>
+        </div>
+      </button>
+    </div>
+  );
+}
+
+function ProblemSection() {
+  const { sectionRef, progress } = useStageSection();
+  const problems = [
+    {
+      stat: "$10",
+      statSub: "per $100 swap",
+      title: "EXPENSIVE",
+      description: "Ethereum gas burns retail traders alive. A $100 trade shouldn't cost $10 in fees — but it does.",
+      color: "#c4b5fd",
+    },
+    {
+      stat: "5+",
+      statSub: "DEXs to check",
+      title: "FRAGMENTED",
+      description: "Liquidity scattered across Uniswap, Curve, Balancer. Users compare manually. MEV takes the rest.",
+      color: "#a78bfa",
+    },
+    {
+      stat: "300M+",
+      statSub: "locked out",
+      title: "EXCLUSIONARY",
+      description: "Indonesia has no IDR on-ramp to global DeFi. The world's 4th-largest population is invisible.",
+      color: "#9f29ff",
+    },
+  ];
+
+  // Title: hero → top
+  const titleProgress = smoothstep(0.05, 0.22, progress);
+  const titleTopVh = 40 - 32 * titleProgress;
+  const titleScale = 1.3 - 0.3 * titleProgress;
+  const titleOpacity = progress < 0.80 ? 1 : Math.max(0, 1 - (progress - 0.80) / 0.06);
+
+  // Card grid slots — 3 cards in a row, never overlapping after settled
+  const problemSlots = [
+    { x: -30, y: 0 },
+    { x: 0, y: 0 },
+    { x: 30, y: 0 },
+  ];
+  const entryStart = 0.20;
+  const entryDuration = 0.08;
+  const stagger = 0.11; // ~30vh of dwell between cards so users don't miss them
+
+  const activeIndex = Math.min(
+    problems.length - 1,
+    Math.max(0, Math.floor((progress - entryStart) / stagger))
+  );
+
+  // Cards settle, dwell, then fade out so end message can take over
+  const cardFadeStart = 0.62;
+  const cardFadeEnd = 0.72;
+  const cardGlobalAlpha = progress < cardFadeStart
+    ? 1
+    : progress < cardFadeEnd
+      ? 1 - (progress - cardFadeStart) / (cardFadeEnd - cardFadeStart)
+      : 0;
+
+  // End message — fades in and holds for generous readability
+  const endMessageOpacity = smoothstep(0.68, 0.80, progress);
+  const exitFade = Math.max(0, (progress - 0.94) / 0.06);
+
+  return (
+    <section
+      ref={sectionRef as React.RefObject<HTMLElement>}
+      id="problem"
+      className="snap-section relative h-[500vh] bg-black"
+    >
+      <div className="sticky top-0 h-screen overflow-hidden">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute left-[10%] top-[20%] h-96 w-96 rounded-full bg-purple-500/6 blur-[150px]" />
+          <div className="absolute right-[15%] bottom-[15%] h-96 w-96 rounded-full bg-purple-400/5 blur-[180px]" />
+        </div>
+
+        <div
+          className="absolute inset-x-0 z-20 px-6 text-center"
+          style={{
+            top: `${titleTopVh}vh`,
+            transform: `scale(${titleScale})`,
+            transformOrigin: "center center",
+            opacity: titleOpacity,
+            willChange: "top, transform, opacity",
+          }}
+        >
+          <p className="text-purple-300/60 text-[10px] tracking-[0.6em] uppercase mb-3 font-general">
+            The Problem
+          </p>
+          <h2 className="text-white text-3xl md:text-5xl font-zentry tracking-tight leading-[1.1]">
+            DEFI IS <span className="italic text-purple-300">BROKEN</span>
+          </h2>
+          <p className="text-white/40 text-xs md:text-sm max-w-lg mx-auto mt-4" style={{ fontFamily: "Inter, sans-serif" }}>
+            Three failures. Scroll to see each.
+          </p>
+        </div>
+
+        <div className="absolute inset-x-0 top-[22vh] md:top-[25vh] bottom-0 z-10 flex items-center justify-center px-6">
+          {problems.map((problem, i) => {
+            const { opacity, translateX, translateY, rotate, scale, zIndex } = getRevealLayout(
+              progress, i, problemSlots[i], entryStart, entryDuration, stagger, 0.92
+            );
+            if (opacity <= 0.01 && cardGlobalAlpha <= 0.01) return null;
+            return (
+              <div
+                key={problem.title}
+                className="absolute inset-0 flex items-center justify-center px-6"
+                style={{
+                  opacity: opacity * cardGlobalAlpha,
+                  transform: `translate(${translateX}vw, ${translateY}vh) scale(${scale}) rotate(${rotate}deg)`,
+                  zIndex,
+                }}
+              >
+                <div
+                  className="relative w-full max-w-xs p-6 md:p-8 rounded-2xl overflow-hidden"
+                  style={{
+                    background: "rgba(12, 14, 25, 0.88)",
+                    border: `1px solid ${problem.color}50`,
+                    backdropFilter: "blur(40px)",
+                    WebkitBackdropFilter: "blur(40px)",
+                    boxShadow: `0 50px 100px -20px ${problem.color}30, 0 0 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05)`,
+                  }}
+                >
+                  <div
+                    className="absolute top-0 left-0 right-0 h-px"
+                    style={{ background: `linear-gradient(90deg, transparent, ${problem.color}, transparent)` }}
+                  />
+                  <div
+                    className="absolute -right-3 -top-4 text-[120px] font-black leading-none select-none"
+                    style={{ fontFamily: "Space Grotesk, sans-serif", color: `${problem.color}0D` }}
+                  >
+                    0{i + 1}
+                  </div>
+
+                  <div className="relative z-10">
+                    <div
+                      className="text-4xl md:text-5xl font-black tracking-tight mb-2"
+                      style={{ color: problem.color, fontFamily: "Space Grotesk, sans-serif" }}
+                    >
+                      {problem.stat}
+                    </div>
+                    <p className="text-white/40 text-[10px] md:text-xs tracking-wider uppercase mb-5" style={{ fontFamily: "Inter, sans-serif" }}>
+                      {problem.statSub}
+                    </p>
+
+                    <div className="w-12 h-0.5 rounded-full mb-4" style={{ background: problem.color }} />
+
+                    <h3
+                      className="text-white text-lg md:text-xl font-bold tracking-wide mb-3"
+                      style={{ fontFamily: "Space Grotesk, sans-serif" }}
+                    >
+                      {problem.title}
+                    </h3>
+                    <p className="text-white/55 text-xs md:text-sm leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
+                      {problem.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div
+          className="absolute inset-x-0 top-[22vh] md:top-[25vh] bottom-0 z-10 flex items-center justify-center px-6 pointer-events-none"
+          style={{ opacity: endMessageOpacity }}
+        >
+          <div className="text-center">
+            <div className="inline-flex items-center gap-4 mb-6">
+              <div className="h-px w-16 bg-gradient-to-r from-transparent to-white/40" />
+              <p className="text-white/70 text-[10px] tracking-[0.4em] uppercase font-general">So we built</p>
+              <div className="h-px w-16 bg-gradient-to-l from-transparent to-white/40" />
+            </div>
+            <h3 className="text-white text-5xl md:text-7xl font-zentry tracking-tight leading-[1.1]">
+              RUPIAH<span className="italic text-purple-400">ROUTE</span>
+            </h3>
+          </div>
+        </div>
+
+        {progress > 0.18 && progress < 0.68 && (
+          <div className="absolute right-6 md:right-10 top-1/2 -translate-y-1/2 z-30">
+            <StageIndicator count={problems.length} active={activeIndex} color="rgba(167, 139, 250, 0.8)" />
+          </div>
+        )}
+
+        {exitFade > 0 && (
+          <div className="absolute inset-0 z-40 bg-black pointer-events-none" style={{ opacity: exitFade }} />
+        )}
+      </div>
+    </section>
+  );
+}
+
+function AnimatedNumber({ value, decimals = 0 }: { value: number; decimals?: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start 95%", "start 40%"],
+  });
+  const animated = useTransform(scrollYProgress, [0, 1], [0, value]);
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    return animated.on("change", (v) => setDisplay(v));
+  }, [animated]);
+
+  return <span ref={ref}>{display.toFixed(decimals)}</span>;
+}
+
+function StatsSection() {
+  const stats = [
+    { value: 100, unit: "ms", label: "Block Time", sublabel: "75× faster than Ethereum", color: "#67e8f9" },
+    { value: 99, unit: "%", label: "Gas Saved", sublabel: "vs mainnet baseline", color: "#22d3ee" },
+    { value: 5, unit: "+", label: "Route Sources", sublabel: "scanned per swap", color: "#06b6d4" },
+    { value: 3, unit: "", label: "Languages", sublabel: "EN · ID · ZH", color: "#0891b2" },
+    { value: 0.3, unit: "%", label: "Swap Fee", sublabel: "transparent, on-chain", decimals: 1, color: "#22d3ee" },
+    { value: 7, unit: "s", label: "End-to-End", sublabel: "signed to finalized", color: "#67e8f9" },
+  ];
+
+  return (
+    <section id="impact" className="snap-section relative z-10 py-24 md:py-32 bg-black overflow-hidden">
+      <div className="pointer-events-none absolute inset-0">
+        <div
+          className="absolute inset-0 bg-[linear-gradient(rgba(159,41,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(159,41,255,0.04)_1px,transparent_1px)] bg-[size:60px_60px]"
+          style={{
+            maskImage: "radial-gradient(ellipse at center, black 40%, transparent 80%)",
+            WebkitMaskImage: "radial-gradient(ellipse at center, black 40%, transparent 80%)",
+          }}
+        />
+      </div>
+
+      <div className="container mx-auto px-6 relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.2 }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-14 md:mb-16"
+        >
+          <p className="text-cyan-400/60 text-[10px] tracking-[0.6em] uppercase mb-4 font-general">
+            By the Numbers
+          </p>
+          <h2 className="text-white text-4xl md:text-6xl font-zentry tracking-tight leading-[1.1]">
+            PROOF IN <span className="italic text-cyan-400">NUMBERS</span>
+          </h2>
+        </motion.div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5 max-w-6xl mx-auto">
+          {stats.map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 25 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false, amount: 0.2 }}
+              transition={{ duration: 0.5, delay: i * 0.05 }}
+            >
+              <div
+                className="relative p-6 md:p-8 rounded-2xl h-full overflow-hidden"
+                style={{
+                  background: "rgba(10, 12, 22, 0.7)",
+                  border: `1px solid ${stat.color}25`,
+                  backdropFilter: "blur(20px)",
+                  WebkitBackdropFilter: "blur(20px)",
+                  boxShadow: "0 16px 40px -12px rgba(0,0,0,0.6)",
+                }}
+              >
+                <div
+                  className="absolute top-0 left-0 right-0 h-px"
+                  style={{ background: `linear-gradient(90deg, transparent, ${stat.color}70, transparent)` }}
+                />
+                <div className="relative z-10">
+                  <div
+                    className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight mb-2 flex items-baseline gap-1"
+                    style={{ color: stat.color, fontFamily: "Space Grotesk, sans-serif" }}
+                  >
+                    <AnimatedNumber value={stat.value} decimals={stat.decimals ?? 0} />
+                    <span className="text-2xl md:text-3xl lg:text-4xl">{stat.unit}</span>
+                  </div>
+                  <p className="text-white/80 text-sm md:text-base font-bold tracking-wide mb-1" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
+                    {stat.label}
+                  </p>
+                  <p className="text-white/40 text-xs tracking-wide" style={{ fontFamily: "Inter, sans-serif" }}>
+                    {stat.sublabel}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HowItWorksSection() {
+  const { sectionRef, progress } = useStageSection();
+  const steps = [
+    {
+      num: "01",
+      title: "ENTER",
+      short: "Pick tokens + amount",
+      description: "Select input (IDRX, USDC) and output (WETH, TIA). Enter amount. That's it.",
+      color: "#67e8f9",
+    },
+    {
+      num: "02",
+      title: "SCAN",
+      short: "5 routes in parallel",
+      description: "Engine queries Initia AMM + LiFi + OpenOcean + KyberSwap + ParaSwap simultaneously.",
+      color: "#22d3ee",
+    },
+    {
+      num: "03",
+      title: "COMPARE",
+      short: "Best path wins",
+      description: "Routes ranked by output minus gas. Direct, multi-hop, and cross-chain all considered.",
+      color: "#06b6d4",
+    },
+    {
+      num: "04",
+      title: "EXECUTE",
+      short: "7 seconds, one click",
+      description: "Atomic swap on Initia L2. Finalized in ~7s. Near-zero gas. Done.",
+      color: "#0891b2",
+    },
+  ];
+
+  const titleProgress = smoothstep(0.05, 0.22, progress);
+  const titleTopVh = 40 - 32 * titleProgress;
+  const titleScale = 1.3 - 0.3 * titleProgress;
+  const titleOpacity = progress < 0.92 ? 1 : Math.max(0, 1 - (progress - 0.92) / 0.06);
+
+  // 4 steps in a horizontal row
+  const stepSlots = [
+    { x: -33, y: 0 },
+    { x: -11, y: 0 },
+    { x: 11, y: 0 },
+    { x: 33, y: 0 },
+  ];
+  const entryStart = 0.20;
+  const entryDuration = 0.08;
+  const stagger = 0.12; // dwell between steps
+  const activeIndex = Math.min(
+    steps.length - 1,
+    Math.max(0, Math.floor((progress - entryStart) / stagger))
+  );
+
+  const exitFade = Math.max(0, (progress - 0.94) / 0.06);
+
+  return (
+    <section
+      ref={sectionRef as React.RefObject<HTMLElement>}
+      id="how"
+      className="snap-section relative h-[500vh] bg-black"
+    >
+      <div className="sticky top-0 h-screen overflow-hidden">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[700px] w-[700px] rounded-full bg-cyan-500/5 blur-[200px]" />
+        </div>
+
+        <div
+          className="absolute inset-x-0 z-20 px-6 text-center"
+          style={{
+            top: `${titleTopVh}vh`,
+            transform: `scale(${titleScale})`,
+            transformOrigin: "center center",
+            opacity: titleOpacity,
+            willChange: "top, transform, opacity",
+          }}
+        >
+          <p className="text-cyan-400/60 text-[10px] tracking-[0.6em] uppercase mb-3 font-general">
+            How it Works
+          </p>
+          <h2 className="text-white text-3xl md:text-5xl font-zentry tracking-tight leading-[1.1]">
+            FOUR STEPS, <span className="italic text-cyan-400">SEVEN SECONDS</span>
+          </h2>
+        </div>
+
+        <div className="absolute inset-x-0 top-[22vh] md:top-[25vh] bottom-0 z-10 flex items-center justify-center px-6">
+          {steps.map((step, i) => {
+            const { opacity, translateX, translateY, rotate, scale, zIndex } = getRevealLayout(
+              progress, i, stepSlots[i], entryStart, entryDuration, stagger, 0.88
+            );
+            if (opacity <= 0.01) return null;
+            return (
+              <div
+                key={step.num}
+                className="absolute inset-0 flex items-center justify-center px-6"
+                style={{
+                  opacity,
+                  transform: `translate(${translateX}vw, ${translateY}vh) scale(${scale}) rotate(${rotate}deg)`,
+                  zIndex,
+                }}
+              >
+                <div className="flex flex-col items-center text-center max-w-[20vw] md:max-w-[18vw]">
+                  <div className="relative mb-5 md:mb-7">
+                    <div
+                      className="w-28 h-28 md:w-36 md:h-36 rounded-full flex items-center justify-center relative"
+                      style={{
+                        background: "rgba(10, 12, 22, 0.95)",
+                        border: `3px solid ${step.color}`,
+                        boxShadow: `0 0 40px ${step.color}60, 0 0 80px ${step.color}20, inset 0 0 30px ${step.color}20`,
+                      }}
+                    >
+                      <span
+                        className="text-4xl md:text-5xl font-black"
+                        style={{ color: step.color, fontFamily: "Space Grotesk, sans-serif" }}
+                      >
+                        {step.num}
+                      </span>
+                    </div>
+                    <motion.div
+                      className="absolute inset-0 rounded-full border-2"
+                      style={{ borderColor: step.color }}
+                      animate={{ scale: [1, 1.2, 1], opacity: [0.55, 0, 0.55] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                  </div>
+
+                  <h3
+                    className="text-white text-xl md:text-2xl font-bold tracking-wide mb-1"
+                    style={{ fontFamily: "Space Grotesk, sans-serif" }}
+                  >
+                    {step.title}
+                  </h3>
+                  <p
+                    className="text-xs md:text-sm font-medium mb-3"
+                    style={{ color: step.color, fontFamily: "Space Grotesk, sans-serif" }}
+                  >
+                    {step.short}
+                  </p>
+                  <p className="text-white/55 text-xs md:text-sm leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
+                    {step.description}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {progress > 0.18 && progress < 0.94 && (
+          <div className="absolute right-6 md:right-10 top-1/2 -translate-y-1/2 z-30">
+            <StageIndicator count={steps.length} active={activeIndex} color="rgba(34, 211, 238, 0.8)" />
+          </div>
+        )}
+
+        {exitFade > 0 && (
+          <div className="absolute inset-0 z-40 bg-black pointer-events-none" style={{ opacity: exitFade }} />
+        )}
+      </div>
+    </section>
+  );
+}
+
+function AdvancedCapabilitiesSection() {
+  const { sectionRef, progress } = useStageSection();
+  const capabilities = [
+    {
+      title: "LIMIT ORDERS",
+      tagline: "Set the price. Walk away.",
+      description: "Place orders at target price. Keepers execute on-chain when the market hits. 0.1% executor fee. Fully decentralized.",
+      color: "#c4b5fd",
+    },
+    {
+      title: "BATCH SWAP",
+      tagline: "Rebalance in one transaction.",
+      description: "Split one input across multiple outputs. Atomic execution. Built for portfolios that move together or not at all.",
+      color: "#b197fc",
+    },
+    {
+      title: "SEND TO USERNAME",
+      tagline: "alice.init → just works.",
+      description: "Transfer to .init usernames. Resolved on-chain via Cosmos precompile. No more copy-paste addresses, no more typos.",
+      color: "#a78bfa",
+    },
+    {
+      title: "ROUTE COMPARISON",
+      tagline: "LiFi · OpenOcean · KyberSwap · ParaSwap",
+      description: "We query four external aggregators in parallel with our on-chain router. You see every quote, ranked. You pick.",
+      color: "#9370db",
+    },
+    {
+      title: "TRILINGUAL UX",
+      tagline: "EN · ID · ZH",
+      description: "Bahasa Indonesia first-class. Mandarin supported. IDR formatting native. Built for global users, not just Western.",
+      color: "#9f29ff",
+    },
+    {
+      title: "IDR GATEWAY",
+      tagline: "300M users. On-chain.",
+      description: "IDRX as the anchor. Indonesia's first DeFi-native on-ramp. The world's 4th-largest nation, finally a first-class citizen.",
+      color: "#7c3aed",
+    },
+  ];
+
+  const titleProgress = smoothstep(0.05, 0.22, progress);
+  const titleTopVh = 40 - 32 * titleProgress;
+  const titleScale = 1.3 - 0.3 * titleProgress;
+  const titleOpacity = progress < 0.92 ? 1 : Math.max(0, 1 - (progress - 0.92) / 0.06);
+
+  // 6 cards in a 3×2 grid — bottom row raised so it doesn't crowd the viewport bottom
+  const capSlots = [
+    { x: -30, y: -20 }, { x: 0, y: -20 }, { x: 30, y: -20 },
+    { x: -30, y: 14 },  { x: 0, y: 14 },  { x: 30, y: 14 },
+  ];
+  const entryStart = 0.20;
+  const entryDuration = 0.08;
+  const stagger = 0.09; // dwell between cards
+  const activeIndex = Math.min(
+    capabilities.length - 1,
+    Math.max(0, Math.floor((progress - entryStart) / stagger))
+  );
+
+  const exitFade = Math.max(0, (progress - 0.94) / 0.06);
+
+  return (
+    <section
+      ref={sectionRef as React.RefObject<HTMLElement>}
+      id="capabilities"
+      className="snap-section relative h-[600vh] bg-black"
+    >
+      <div className="sticky top-0 h-screen overflow-hidden">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute right-[10%] top-[15%] h-96 w-96 rounded-full bg-purple-500/6 blur-[180px]" />
+          <div className="absolute left-[10%] bottom-[15%] h-96 w-96 rounded-full bg-purple-400/5 blur-[180px]" />
+        </div>
+
+        <div
+          className="absolute inset-x-0 z-20 px-6 text-center"
+          style={{
+            top: `${titleTopVh}vh`,
+            transform: `scale(${titleScale})`,
+            transformOrigin: "center center",
+            opacity: titleOpacity,
+            willChange: "top, transform, opacity",
+          }}
+        >
+          <p className="text-purple-400/60 text-[10px] tracking-[0.6em] uppercase mb-3 font-general">
+            Beyond the Swap
+          </p>
+          <h2 className="text-white text-3xl md:text-5xl font-zentry tracking-tight leading-[1.1]">
+            THE <span className="italic text-purple-400">FULL STACK</span>
+          </h2>
+        </div>
+
+        <div className="absolute inset-x-0 top-[22vh] md:top-[25vh] bottom-0 z-10 flex items-center justify-center px-6">
+          {capabilities.map((cap, i) => {
+            const { opacity, translateX, translateY, rotate, scale, zIndex } = getRevealLayout(
+              progress, i, capSlots[i], entryStart, entryDuration, stagger, 0.88
+            );
+            if (opacity <= 0.01) return null;
+            return (
+              <div
+                key={cap.title}
+                className="absolute inset-0 flex items-center justify-center px-6"
+                style={{
+                  opacity,
+                  transform: `translate(${translateX}vw, ${translateY}vh) scale(${scale}) rotate(${rotate}deg)`,
+                  zIndex,
+                }}
+              >
+                <div
+                  className="relative w-full max-w-sm p-6 md:p-8 rounded-2xl overflow-hidden"
+                  style={{
+                    background: "rgba(10, 12, 22, 0.88)",
+                    border: `1px solid ${cap.color}55`,
+                    backdropFilter: "blur(40px)",
+                    WebkitBackdropFilter: "blur(40px)",
+                    boxShadow: `0 30px 60px -15px ${cap.color}30, 0 0 60px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05)`,
+                  }}
+                >
+                  <div
+                    className="absolute inset-0 rounded-2xl pointer-events-none opacity-70"
+                    style={{ background: `radial-gradient(circle at center, ${cap.color}15, transparent 70%)` }}
+                  />
+                  <div
+                    className="absolute top-0 left-0 right-0 h-px"
+                    style={{ background: `linear-gradient(90deg, transparent, ${cap.color}, transparent)` }}
+                  />
+
+                  <div className="relative z-10 text-center">
+                    <div
+                      className="text-[10px] md:text-xs tracking-[0.4em] uppercase mb-2 font-general"
+                      style={{ color: `${cap.color}` }}
+                    >
+                      {String(i + 1).padStart(2, "0")} / {String(capabilities.length).padStart(2, "0")}
+                    </div>
+                    <p
+                      className="text-xs tracking-[0.2em] uppercase mb-3"
+                      style={{ color: `${cap.color}DD`, fontFamily: "Space Grotesk, sans-serif" }}
+                    >
+                      {cap.tagline}
+                    </p>
+                    <h3
+                      className="text-white text-xl md:text-2xl font-bold tracking-wide mb-3"
+                      style={{ fontFamily: "Space Grotesk, sans-serif" }}
+                    >
+                      {cap.title}
+                    </h3>
+                    <div
+                      className="w-10 h-0.5 rounded-full mx-auto mb-3"
+                      style={{ background: cap.color, boxShadow: `0 0 8px ${cap.color}` }}
+                    />
+                    <p className="text-white/65 text-sm leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
+                      {cap.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {progress > 0.18 && progress < 0.94 && (
+          <div className="absolute right-6 md:right-10 top-1/2 -translate-y-1/2 z-30">
+            <StageIndicator count={capabilities.length} active={activeIndex} color="rgba(167, 139, 250, 0.8)" />
+          </div>
+        )}
+
+        {exitFade > 0 && (
+          <div className="absolute inset-0 z-40 bg-black pointer-events-none" style={{ opacity: exitFade }} />
+        )}
+      </div>
+    </section>
+  );
+}
+
+function RoadmapSection() {
+  const phases = [
+    {
+      phase: "01",
+      status: "Shipping",
+      statusColor: "#c4b5fd",
+      period: "Q2 2026",
+      title: "MVP Launch",
+      description: "Core protocol deployed. Feature-complete DeFi stack on Initia L2.",
+      items: ["Smart Swap + routing", "Limit Orders (keeper-based)", "Batch Swap rebalancer", "L1 ↔ L2 Bridge", "Multi-language UX"],
+      color: "#a78bfa",
+    },
+    {
+      phase: "02",
+      status: "Up next",
+      statusColor: "#a78bfa",
+      period: "Q3 2026",
+      title: "Multi-L2 Routing",
+      description: "Expand quote sources across Arbitrum, Optimism, Base. Failover when Initia is congested.",
+      items: ["Arbitrum integration", "Optimism integration", "Automatic failover", "Gas optimization v2"],
+      color: "#9f29ff",
+    },
+    {
+      phase: "03",
+      status: "On deck",
+      statusColor: "#9f29ff",
+      period: "Q4 2026",
+      title: "Mainnet + EIR",
+      description: "Graduate from testnet to production. Enter Initia's Entrepreneur in Residence program.",
+      items: ["Initia mainnet launch", "EIR admission", "Security audit", "Fundraising round"],
+      color: "#7c3aed",
+    },
+    {
+      phase: "04",
+      status: "Horizon",
+      statusColor: "#a78bfa",
+      period: "2027 →",
+      title: "Intelligence Layer",
+      description: "AI-driven route advice. Messaging-app native swaps. Confidential settlement.",
+      items: ["AI route advisor", "Telegram bot interface", "Confidential swaps (iExec Nox)", "Cross-chain aggregator"],
+      color: "#6d28d9",
+    },
+  ];
+
+  return (
+    <section
+      id="roadmap"
+      className="snap-section relative bg-black py-24 md:py-32 overflow-hidden"
+    >
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(159,41,255,0.08),transparent_60%)]" />
+      </div>
+
+      <div className="container mx-auto px-6 relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.3 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="text-center mb-20 md:mb-28"
+        >
+          <p className="text-purple-400/60 text-[10px] tracking-[0.6em] uppercase mb-4 font-general">
+            Roadmap
+          </p>
+          <h2 className="text-white text-4xl md:text-6xl font-zentry tracking-tight leading-[1.1]">
+            THE <span className="italic text-purple-400">JOURNEY</span>
+          </h2>
+          <p className="text-white/40 text-sm md:text-base max-w-2xl mx-auto mt-6" style={{ fontFamily: "Inter, sans-serif" }}>
+            From hackathon MVP to multi-L2 aggregator to AI-native swap layer.
+            Each phase unlocks the next.
+          </p>
+        </motion.div>
+
+        {/* Vertical timeline — regular scroll flow within the section */}
+        <div className="relative max-w-5xl mx-auto">
+          {/* Central line */}
+          <div
+            className="absolute left-8 md:left-1/2 md:-translate-x-1/2 top-0 bottom-0 w-px"
+            style={{
+              background:
+                "linear-gradient(180deg, transparent 0%, rgba(196,181,253,0.4) 15%, rgba(167,139,250,0.4) 40%, rgba(159,41,255,0.4) 65%, rgba(124,58,237,0.4) 85%, rgba(109,40,217,0.4) 95%, transparent 100%)",
+            }}
+          />
+
+          {phases.map((phase, i) => {
+            const isLeft = i % 2 === 0;
+            return (
+              <motion.div
+                key={phase.phase}
+                initial={{ opacity: 0, y: 80 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.35 }}
+                transition={{ duration: 1.0, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+                className={`relative flex items-start mb-20 md:mb-28 last:mb-0 ${isLeft ? "md:flex-row" : "md:flex-row-reverse"}`}
+              >
+                {/* Phase dot on the timeline */}
+                <div className="absolute left-8 md:left-1/2 -translate-x-1/2 top-6 z-10">
+                  <div className="relative">
+                    <div
+                      className="w-5 h-5 rounded-full"
+                      style={{
+                        background: phase.color,
+                        boxShadow: `0 0 16px ${phase.color}, 0 0 32px ${phase.color}40`,
+                      }}
+                    />
+                    <motion.div
+                      className="absolute inset-0 rounded-full"
+                      style={{ border: `2px solid ${phase.color}` }}
+                      animate={{ scale: [1, 2.2, 1], opacity: [0.6, 0, 0.6] }}
+                      transition={{ duration: 2.4, repeat: Infinity, delay: i * 0.3, ease: "easeInOut" }}
+                    />
+                  </div>
+                </div>
+
+                {/* Spacer for desktop alternating layout */}
+                <div className="hidden md:block md:flex-1" />
+
+                {/* Phase card */}
+                <div className="flex-1 pl-20 md:pl-0 md:max-w-[45%]">
+                  <div
+                    className="relative p-7 md:p-8 rounded-2xl overflow-hidden"
+                    style={{
+                      background: "rgba(10, 12, 22, 0.82)",
+                      border: `1px solid ${phase.color}45`,
+                      backdropFilter: "blur(20px)",
+                      WebkitBackdropFilter: "blur(20px)",
+                      boxShadow: `0 30px 60px -15px ${phase.color}25, 0 0 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)`,
+                    }}
+                  >
+                    <div
+                      className="absolute top-0 left-0 right-0 h-px"
+                      style={{ background: `linear-gradient(90deg, transparent, ${phase.color}, transparent)` }}
+                    />
+                    <div
+                      className="absolute inset-0 rounded-2xl pointer-events-none opacity-40"
+                      style={{ background: `radial-gradient(circle at top right, ${phase.color}20, transparent 60%)` }}
+                    />
+
+                    <div className="relative z-10">
+                      <div className="flex items-center justify-between mb-4">
+                        <span
+                          className="text-6xl md:text-7xl font-black leading-none"
+                          style={{ color: `${phase.color}45`, fontFamily: "Space Grotesk, sans-serif" }}
+                        >
+                          {phase.phase}
+                        </span>
+                        <span
+                          className="px-3 py-1.5 rounded-full text-[10px] font-bold tracking-[0.2em] uppercase"
+                          style={{
+                            background: `${phase.statusColor}18`,
+                            color: phase.statusColor,
+                            border: `1px solid ${phase.statusColor}55`,
+                            fontFamily: "Space Grotesk, sans-serif",
+                            boxShadow: `0 0 16px ${phase.statusColor}30`,
+                          }}
+                        >
+                          {phase.status}
+                        </span>
+                      </div>
+
+                      <p className="text-white/45 text-xs tracking-[0.3em] uppercase mb-3" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
+                        {phase.period}
+                      </p>
+                      <h3
+                        className="text-white text-xl md:text-2xl font-bold tracking-wide mb-3"
+                        style={{ fontFamily: "Space Grotesk, sans-serif" }}
+                      >
+                        {phase.title}
+                      </h3>
+                      <p className="text-white/60 text-sm md:text-base leading-relaxed mb-5" style={{ fontFamily: "Inter, sans-serif" }}>
+                        {phase.description}
+                      </p>
+
+                      <ul className="space-y-2">
+                        {phase.items.map((item, idx) => (
+                          <motion.li
+                            key={item}
+                            initial={{ opacity: 0, x: -12 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: false, amount: 0.5 }}
+                            transition={{ duration: 0.45, delay: 0.35 + idx * 0.12, ease: [0.22, 1, 0.36, 1] }}
+                            className="flex items-center gap-3 text-white/70 text-sm"
+                            style={{ fontFamily: "Inter, sans-serif" }}
+                          >
+                            <div
+                              className="w-1.5 h-1.5 rounded-full shrink-0"
+                              style={{ background: phase.color, boxShadow: `0 0 8px ${phase.color}` }}
+                            />
+                            {item}
+                          </motion.li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -2003,7 +3334,10 @@ export default function Home() {
           50% { transform: translateY(66%) scale(0.65); opacity: 0.8; }
         }
         
-        html { scroll-behavior: auto; }
+        html {
+          scroll-behavior: auto;
+          scroll-padding-top: 80px;
+        }
         body { cursor: default; overflow-x: hidden; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -2020,12 +3354,19 @@ export default function Home() {
       <div className="relative z-10">
         <Navigation />
         <HeroSection scrollYRef={scrollYRef} />
+        <ProblemSection />
         <FeaturesSection />
         <StorySection />
-        <TokensSection />
-        <CTASection />
+        <SceneWrapper intensity="normal"><TokensSection /></SceneWrapper>
+        <HowItWorksSection />
+        <AdvancedCapabilitiesSection />
+        <SceneWrapper intensity="subtle"><StatsSection /></SceneWrapper>
+        <SceneWrapper intensity="subtle"><RoadmapSection /></SceneWrapper>
+        <SceneWrapper intensity="subtle"><CTASection /></SceneWrapper>
         <Footer />
       </div>
+      <AutoPlayButton />
+      <BackToTopButton />
     </div>
   );
 }

@@ -4,13 +4,10 @@ import { useState, useEffect, useMemo } from "react";
 import { useAccount, useBalance, useReadContract } from "wagmi";
 import { useTranslation } from "react-i18next";
 import { CORE_TOKENS, type Token } from "@/lib/contract";
+import { ERC20_BALANCE_ABI } from "@/lib/abis";
 import { getActivities, type ActivityRecord } from "@/lib/activity";
-import { ActivityHistory } from "./ActivityHistory";
+import { ActivityHistory, TYPE_META } from "./ActivityHistory";
 import { HiChartBar } from "react-icons/hi2";
-
-const ERC20_BALANCE_ABI = [
-  { name: "balanceOf", type: "function", stateMutability: "view", inputs: [{ name: "account", type: "address" }], outputs: [{ name: "", type: "uint256" }] },
-] as const;
 
 /* ── Token balance row ── */
 
@@ -95,16 +92,6 @@ function useActivityStats(address: string) {
     return { totalTxns, byType, gasSpent, activities, depositCount, withdrawCount, activeLimit, uniqueRecipients, sendCount: sends.length };
   }, [activities]);
 }
-
-/* ── Type breakdown colors ── */
-
-const TYPE_META: Record<string, { label: string; color: string }> = {
-  swap: { label: "Swaps", color: "bg-blue-500" },
-  send: { label: "Sends", color: "bg-cyan-500" },
-  limit: { label: "Limits", color: "bg-indigo-500" },
-  batch: { label: "Batch", color: "bg-amber-500" },
-  bridge: { label: "Bridges", color: "bg-purple" },
-};
 
 /* ── Main ── */
 
@@ -193,74 +180,89 @@ export function DashboardView() {
           ) : (
             <div className="space-y-2">
               {/* Swaps */}
-              {(stats.byType["swap"] ?? 0) > 0 && (
-                <div className="rounded-xl bg-bg p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                    <span className="text-[7px] text-text-sub">Swaps</span>
+              {(stats.byType["swap"] ?? 0) > 0 && (() => {
+                const { Icon, color } = TYPE_META.swap;
+                return (
+                  <div className="rounded-xl bg-bg p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Icon className={`w-3 h-3 shrink-0 ${color}`} />
+                      <span className="text-[7px] text-text-sub">Swaps</span>
+                    </div>
+                    <span className="text-[8px] font-bold text-text">{stats.byType["swap"]}</span>
                   </div>
-                  <span className="text-[8px] font-bold text-text">{stats.byType["swap"]}</span>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Bridge */}
-              {(stats.byType["bridge"] ?? 0) > 0 && (
-                <div className="rounded-xl bg-bg p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-purple" />
-                      <span className="text-[7px] text-text-sub">Bridge</span>
+              {(stats.byType["bridge"] ?? 0) > 0 && (() => {
+                const { Icon, color } = TYPE_META.bridge;
+                return (
+                  <div className="rounded-xl bg-bg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Icon className={`w-3 h-3 shrink-0 ${color}`} />
+                        <span className="text-[7px] text-text-sub">Bridge</span>
+                      </div>
+                      <span className="text-[8px] font-bold text-text">{stats.byType["bridge"]} txns</span>
                     </div>
-                    <span className="text-[8px] font-bold text-text">{stats.byType["bridge"]} txns</span>
+                    <div className="flex gap-2">
+                      <div className="flex-1 rounded-lg bg-green/5 border border-green/10 px-2 py-1.5 text-center">
+                        <div className="text-[8px] font-bold text-green">{stats.depositCount}</div>
+                        <div className="text-[7px] text-text-muted">Deposits</div>
+                      </div>
+                      <div className="flex-1 rounded-lg bg-amber/5 border border-amber/10 px-2 py-1.5 text-center">
+                        <div className="text-[8px] font-bold text-amber">{stats.withdrawCount}</div>
+                        <div className="text-[7px] text-text-muted">Withdrawals</div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <div className="flex-1 rounded-lg bg-green/5 border border-green/10 px-2 py-1.5 text-center">
-                      <div className="text-[8px] font-bold text-green">{stats.depositCount}</div>
-                      <div className="text-[7px] text-text-muted">Deposits</div>
-                    </div>
-                    <div className="flex-1 rounded-lg bg-amber/5 border border-amber/10 px-2 py-1.5 text-center">
-                      <div className="text-[8px] font-bold text-amber">{stats.withdrawCount}</div>
-                      <div className="text-[7px] text-text-muted">Withdrawals</div>
-                    </div>
-                  </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Sends */}
-              {(stats.byType["send"] ?? 0) > 0 && (
-                <div className="rounded-xl bg-bg p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
-                    <div>
-                      <span className="text-[7px] text-text-sub block">Sends</span>
-                      <span className="text-[7px] text-text-muted">{stats.uniqueRecipients} recipient{stats.uniqueRecipients !== 1 ? "s" : ""}</span>
+              {(stats.byType["send"] ?? 0) > 0 && (() => {
+                const { Icon, color } = TYPE_META.send;
+                return (
+                  <div className="rounded-xl bg-bg p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Icon className={`w-3 h-3 shrink-0 ${color}`} />
+                      <div>
+                        <span className="text-[7px] text-text-sub block">Sends</span>
+                        <span className="text-[7px] text-text-muted">{stats.uniqueRecipients} recipient{stats.uniqueRecipients !== 1 ? "s" : ""}</span>
+                      </div>
                     </div>
+                    <span className="text-[8px] font-bold text-text">{stats.sendCount}</span>
                   </div>
-                  <span className="text-[8px] font-bold text-text">{stats.sendCount}</span>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Limit */}
-              {(stats.byType["limit"] ?? 0) > 0 && (
-                <div className="rounded-xl bg-bg p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                    <span className="text-[7px] text-text-sub">Limit Orders</span>
+              {(stats.byType["limit"] ?? 0) > 0 && (() => {
+                const { Icon, color } = TYPE_META.limit;
+                return (
+                  <div className="rounded-xl bg-bg p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Icon className={`w-3 h-3 shrink-0 ${color}`} />
+                      <span className="text-[7px] text-text-sub">Limit Orders</span>
+                    </div>
+                    <span className="text-[8px] font-bold text-text">{stats.activeLimit}</span>
                   </div>
-                  <span className="text-[8px] font-bold text-text">{stats.activeLimit}</span>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Batch */}
-              {(stats.byType["batch"] ?? 0) > 0 && (
-                <div className="rounded-xl bg-bg p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    <span className="text-[7px] text-text-sub">Batch Swaps</span>
+              {(stats.byType["batch"] ?? 0) > 0 && (() => {
+                const { Icon, color } = TYPE_META.batch;
+                return (
+                  <div className="rounded-xl bg-bg p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Icon className={`w-3 h-3 shrink-0 ${color}`} />
+                      <span className="text-[7px] text-text-sub">Batch Swaps</span>
+                    </div>
+                    <span className="text-[8px] font-bold text-text">{stats.byType["batch"]}</span>
                   </div>
-                  <span className="text-[8px] font-bold text-text">{stats.byType["batch"]}</span>
-                </div>
-              )}
+                );
+              })()}
             </div>
           )}
         </div>

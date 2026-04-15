@@ -12,7 +12,8 @@ contract DeployRupiahRouter is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        RupiahRouter router = new RupiahRouter();
+        // Pass address(0),address(0) to use canonical Initia precompile addresses.
+        RupiahRouter router = new RupiahRouter(address(0), address(0));
 
         console.log("=== RupiahRouter Deployed ===");
         console.log("Contract:", address(router));

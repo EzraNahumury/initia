@@ -114,7 +114,14 @@ export function World({ globeConfig, data }: WorldProps) {
     scene.add(globe);
 
     // Build point data from arcs
-    const points: any[] = [];
+    interface GlobePoint {
+      size: number;
+      order: number;
+      color: (t: number) => string;
+      lat: number;
+      lng: number;
+    }
+    const points: GlobePoint[] = [];
     for (const arc of data) {
       const rgb = hexToRgb(arc.color)!;
       const colorFn = (t: number) => `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${1 - t})`;
@@ -125,18 +132,18 @@ export function World({ globeConfig, data }: WorldProps) {
       (v, i, a) => a.findIndex((v2) => v2.lat === v.lat && v2.lng === v.lng) === i
     );
 
-    // Arcs
+    // Arcs — three-globe accessor callbacks receive the arc datum
     globe
       .arcsData(data)
-      .arcStartLat((d: any) => d.startLat)
-      .arcStartLng((d: any) => d.startLng)
-      .arcEndLat((d: any) => d.endLat)
-      .arcEndLng((d: any) => d.endLng)
-      .arcColor((e: any) => e.color)
-      .arcAltitude((e: any) => e.arcAlt)
+      .arcStartLat((d: object) => (d as Position).startLat)
+      .arcStartLng((d: object) => (d as Position).startLng)
+      .arcEndLat((d: object) => (d as Position).endLat)
+      .arcEndLng((d: object) => (d as Position).endLng)
+      .arcColor((e: object) => (e as Position).color)
+      .arcAltitude((e: object) => (e as Position).arcAlt)
       .arcStroke(() => [0.32, 0.28, 0.3][Math.round(Math.random() * 2)])
       .arcDashLength(globeConfig.arcLength || 0.9)
-      .arcDashInitialGap((e: any) => e.order)
+      .arcDashInitialGap((e: object) => (e as Position).order)
       .arcDashGap(15)
       .arcDashAnimateTime(() => globeConfig.arcTime || 1000);
 
