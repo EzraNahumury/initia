@@ -180,14 +180,18 @@ export function HeroSection() {
           style={{ width: 280, height: 280 }}>
           {/* Center logo */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <img
-              src="/logo/logo.png"
-              alt="RupiahRoute"
-              className="w-56 h-56 object-contain"
+            <div
+              className="logo-circle logo-circle-hero w-44 h-44 p-6"
               style={{
-                filter: "drop-shadow(0 0 20px rgba(159,41,255,0.4)) drop-shadow(0 0 40px rgba(159,41,255,0.2))",
+                boxShadow: "0 0 30px rgba(159,41,255,0.4), 0 0 60px rgba(159,41,255,0.2), 0 0 80px rgba(159,41,255,0.1)",
               }}
-            />
+            >
+              <img
+                src="/logo/mascotIconOnly.png"
+                alt="RupiahRouter"
+                className="w-full h-full object-contain"
+              />
+            </div>
           </div>
 
         </div>

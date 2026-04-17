@@ -25,8 +25,10 @@ export function Header() {
               <Menu className="w-5 h-5" />
             </button>
             <Link href="/" className="flex items-center gap-2.5">
-              <Image src="/logo.png" alt="RupiahRoute" width={32} height={32} className="shrink-0 object-contain" style={{ filter: "drop-shadow(0 0 6px rgba(159,41,255,0.3))" }} />
-              <span className="font-semibold text-sm text-foreground hidden sm:block">RupiahRoute Docs</span>
+              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center p-1 shrink-0 ring-2 ring-purple/50" style={{ boxShadow: "0 0 8px rgba(159,41,255,0.3)" }}>
+                <Image src="/logo/mascotIconOnly.png" alt="Rupiah Router" width={24} height={24} className="w-full h-full object-contain" />
+              </div>
+              <span className="font-semibold text-sm text-foreground hidden sm:block">Rupiah Router Docs</span>
             </Link>
           </div>
 
@@ -61,8 +63,10 @@ export function Header() {
             </button>
             <div className="mb-6 px-6">
               <Link href="/" className="flex items-center gap-2.5" onClick={() => setMobileMenuOpen(false)}>
-                <Image src="/logo.png" alt="RupiahRoute" width={32} height={32} className="shrink-0 object-contain" style={{ filter: "drop-shadow(0 0 6px rgba(159,41,255,0.3))" }} />
-                <span className="font-semibold text-sm text-foreground">RupiahRoute Docs</span>
+                <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center p-1 shrink-0 ring-2 ring-purple/50" style={{ boxShadow: "0 0 8px rgba(159,41,255,0.3)" }}>
+                  <Image src="/logo/mascotIconOnly.png" alt="Rupiah Router" width={24} height={24} className="w-full h-full object-contain" />
+                </div>
+                <span className="font-semibold text-sm text-foreground">Rupiah Router Docs</span>
               </Link>
             </div>
             <nav className="space-y-6 px-4 pb-6">

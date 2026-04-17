@@ -64,7 +64,7 @@ export function TokenSelector({ selected, onSelect, disabledToken }: Props) {
   // Filter chains
   const filteredChains = useMemo(() => {
     const base: UniChain[] = [
-      { chainId: 0, name: "RupiahRoute", logo: "/logo/logo.png", color: "#0a0a0a" },
+      { chainId: 0, name: "RupiahRouter", logo: "/logo/mascotIconOnly.png", color: "#0a0a0a" },
       ...uniChains.filter((c) => c.chainId !== 0),
     ];
     if (!chainSearch) return base;
@@ -204,15 +204,18 @@ export function TokenSelector({ selected, onSelect, disabledToken }: Props) {
                     >
                       {/* Chain icon */}
                       {chain.logo ? (
-                        <img
-                          src={chain.logo}
-                          alt={chain.name}
-                          className="w-6 h-6 rounded-full shrink-0 object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = "none";
-                            (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden");
-                          }}
-                        />
+                        <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center p-0.5 shrink-0 ring-1 ring-purple/30">
+                          <img
+                            src={chain.logo}
+                            alt={chain.name}
+                            className="w-full h-full rounded-full object-cover"
+                            onError={(e) => {
+                              const wrapper = (e.target as HTMLImageElement).parentElement;
+                              if (wrapper) wrapper.style.display = "none";
+                              wrapper?.nextElementSibling?.classList.remove("hidden");
+                            }}
+                          />
+                        </div>
                       ) : null}
                       <div
                         className={`w-6 h-6 rounded-full flex items-center justify-center text-[7px] font-bold shrink-0 ${chain.logo ? "hidden" : ""}`}

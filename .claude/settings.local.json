@@ -114,7 +114,22 @@
       "Bash(npx eslint *)",
       "Bash(echo \"EXIT: $?\")",
       "Bash(echo \"EXIT:$?\")",
-      "Bash(grep -l \"IconType\" C:/initia/fe_rupiahrote/node_modules/react-icons/lib/*.d.ts)"
+      "Bash(grep -l \"IconType\" C:/initia/fe_rupiahrote/node_modules/react-icons/lib/*.d.ts)",
+      "Bash(awk '{print $9, \"\\(\" $5 \"\\)\"}')",
+      "Bash(ls -lh /c/initia/logo/*.png)",
+      "Bash(awk '{print $9, $5}')",
+      "Bash(cp \"C:/initia/logo/mascotIconOnly.png\" \"C:/initia/fe_rupiahrote/public/logo/mascotIconOnly.png\")",
+      "Bash(cp \"C:/initia/logo/MascotIconWText.png\" \"C:/initia/fe_rupiahrote/public/logo/MascotIconWText.png\")",
+      "Bash(cp \"C:/initia/logo/MascotIconBanner \\(Icon Bigger than text\\).png\" \"C:/initia/fe_rupiahrote/public/logo/MascotIconBanner.png\")",
+      "Bash(cp \"C:/initia/logo/MascotIconBannerV2 \\(Icon Slightly equal to text\\).png\" \"C:/initia/fe_rupiahrote/public/logo/MascotIconBannerV2.png\")",
+      "Bash(mkdir -p \"C:/initia/docs_rupiahrote/public/logo\")",
+      "Bash(cp \"C:/initia/logo/mascotIconOnly.png\" \"C:/initia/docs_rupiahrote/public/logo/mascotIconOnly.png\")",
+      "Bash(cp \"C:/initia/logo/MascotIconWText.png\" \"C:/initia/docs_rupiahrote/public/logo/MascotIconWText.png\")",
+      "Bash(cp \"C:/initia/logo/mascotIconOnly.png\" \"C:/initia/landing_page_rp/public/logo/mascotIconOnly.png\")",
+      "Bash(cp \"C:/initia/logo/MascotIconWText.png\" \"C:/initia/landing_page_rp/public/logo/MascotIconWText.png\")",
+      "Bash(cp \"C:/initia/logo/MascotIconBanner \\(Icon Bigger than text\\).png\" \"C:/initia/landing_page_rp/public/logo/MascotIconBanner.png\")",
+      "Bash(cp \"C:/initia/logo/MascotIconBannerV2 \\(Icon Slightly equal to text\\).png\" \"C:/initia/landing_page_rp/public/logo/MascotIconBannerV2.png\")",
+      "Bash(python *)"
     ]
   }
 }

@@ -30,10 +30,12 @@ export default function IntroductionPage() {
 
         {/* Content */}
         <div className="relative z-10 px-8 py-12 text-center">
-          <Image src="/logo.png" alt="RupiahRoute" width={80} height={80} className="mx-auto mb-6 rounded-full object-contain"
-            style={{ filter: "drop-shadow(0 0 20px rgba(159,41,255,0.4))" }} />
+          <div className="mx-auto mb-6 w-20 h-20 rounded-full bg-white flex items-center justify-center p-4 ring-2 ring-purple/50"
+            style={{ boxShadow: "0 0 20px rgba(159,41,255,0.4)" }}>
+            <Image src="/logo/mascotIconOnly.png" alt="Rupiah Router" width={56} height={56} className="w-full h-full object-contain" />
+          </div>
           <h1 className="text-2xl font-bold text-foreground mb-2"
-            style={{ textShadow: "0 0 20px rgba(159,41,255,0.4)" }}>RupiahRoute</h1>
+            style={{ textShadow: "0 0 20px rgba(159,41,255,0.4)" }}>Rupiah Router</h1>
           <p className="text-sm text-purple-light font-medium mb-5 uppercase tracking-widest">Built for Initia MiniEVM</p>
           <p className="text-sm text-muted max-w-lg mx-auto leading-relaxed">
             One interface, one click, best route. The engine handles pool selection, multi-hop routing,

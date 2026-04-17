@@ -30,8 +30,10 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 shrink-0">
-          <Image src="/logo/logo.png" alt="Rupiah Rote" width={44} height={44} className="w-11 h-11 rounded-full object-cover" unoptimized />
-          <span className="font-pixel text-[10px] text-purple-light tracking-wide">Rupiah Rote</span>
+          <div className="logo-circle w-11 h-11 p-1.5 shadow-md shadow-purple/20 transition-shadow duration-300 hover:shadow-lg hover:shadow-purple/40">
+            <Image src="/logo/mascotIconOnly.png" alt="Rupiah Router" width={32} height={32} className="w-full h-full object-contain" unoptimized />
+          </div>
+          <span className="font-pixel text-[10px] text-purple-light tracking-wide">Rupiah Router</span>
         </Link>
 
         {/* Center nav */}

@@ -110,7 +110,9 @@ export function WelcomePage({ onEnter }: { onEnter: () => void }) {
           </div>
 
           <div className="relative z-10 w-20 h-20 rounded-2xl bg-[#0a0a1a] border border-purple/30 flex items-center justify-center">
-            <img src="/logo/logo.png" alt="RupiahRoute" className="w-14 h-14 rounded-xl object-cover" />
+            <div className="logo-circle w-14 h-14 p-2">
+              <img src="/logo/mascotIconOnly.png" alt="RupiahRouter" className="w-full h-full object-contain" />
+            </div>
           </div>
 
           {/* Beam lane: connection line only */}
@@ -137,7 +139,7 @@ export function WelcomePage({ onEnter }: { onEnter: () => void }) {
             textShadow: "0 0 20px rgba(159,41,255,0.5)",
           }}
         >
-          RupiahRoute
+          Rupiah Router
         </h1>
 
         <p className="text-[12px] text-purple-light font-medium mb-8 uppercase tracking-widest">

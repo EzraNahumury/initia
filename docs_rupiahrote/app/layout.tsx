@@ -12,8 +12,8 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "RupiahRoute Docs",
-  description: "Documentation for RupiahRoute, a Smart DeFi Router on Initia",
+  title: "Rupiah Router Docs",
+  description: "Documentation for Rupiah Router, a Smart DeFi Router on Initia",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useAccount, useConnect, useDisconnect, type Connector } from "wagmi";
+import { useAccount, useChainId, useConnect, useDisconnect, type Connector } from "wagmi";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
@@ -84,6 +84,7 @@ function WalletIcon({
 
 export function WalletButton() {
   const { address, isConnected, connector } = useAccount();
+  const chainId = useChainId();
   const { connectors, connect, isPending } = useConnect();
   const { disconnect } = useDisconnect();
   const { t } = useTranslation();
@@ -105,34 +106,37 @@ export function WalletButton() {
   // Treat as connected only if user-initiated
   const showConnected = isConnected && address && userInitiated;
 
-  // Fetch GAS balance
+  // Fetch GAS balance via the connected wallet's own provider so the number
+  // always matches what the wallet UI shows (same RPC, same account, same chain).
   useEffect(() => {
-    if (!address) return;
+    if (!address || !connector) {
+      setGasBalance("0");
+      return;
+    }
+    let cancelled = false;
     const fetchBalance = async () => {
       try {
-        const res = await fetch("http://localhost:8545", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            jsonrpc: "2.0",
-            method: "eth_getBalance",
-            params: [address, "latest"],
-            id: 1,
-          }),
+        const provider = (await connector.getProvider()) as {
+          request: (args: { method: string; params?: unknown[] }) => Promise<string>;
+        };
+        const hex = await provider.request({
+          method: "eth_getBalance",
+          params: [address, "latest"],
         });
-        const data = await res.json();
-        if (data.result) {
-          const ether = Number(BigInt(data.result)) / 1e18;
-          setGasBalance(
-            ether.toLocaleString(undefined, { maximumFractionDigits: 2 }),
-          );
-        }
+        if (cancelled) return;
+        const ether = Number(BigInt(hex)) / 1e18;
+        setGasBalance(
+          ether.toLocaleString(undefined, { maximumFractionDigits: 2 }),
+        );
       } catch {}
     };
     fetchBalance();
     const iv = setInterval(fetchBalance, 10000);
-    return () => clearInterval(iv);
-  }, [address]);
+    return () => {
+      cancelled = true;
+      clearInterval(iv);
+    };
+  }, [address, connector, chainId]);
 
   // Auto-close modal on connection
   useEffect(() => {

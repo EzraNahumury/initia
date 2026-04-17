@@ -376,8 +376,10 @@ function Navigation() {
     >
       <div className="flex items-center justify-between">
         <a href="/" className="flex items-center gap-3 cursor-pointer hoverable">
-          <Image src="/logo/logo.png" alt="RupiahRoute" width={40} height={40} className="h-10 w-10 object-contain" priority />
-          <span className="text-white font-medium tracking-[0.15em] text-sm font-general">RUPIAHROUTE</span>
+          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center p-1.5 ring-2 ring-purple-500/50 shrink-0" style={{ boxShadow: "0 0 8px rgba(159,41,255,0.3)" }}>
+            <Image src="/logo/mascotIconOnly.png" alt="Rupiah Router" width={28} height={28} className="w-full h-full object-contain" priority />
+          </div>
+          <span className="text-white font-medium tracking-[0.15em] text-sm font-general">RUPIAH ROUTER</span>
         </a>
 
         <div className="hidden lg:flex items-center gap-8">
@@ -1751,13 +1753,15 @@ function CTASection() {
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               className="inline-block"
             >
-              <Image
-                src="/logo/logo.png"
-                alt="Initia"
-                width={64}
-                height={64}
-                className="mx-auto rounded-2xl"
-              />
+              <div className="mx-auto w-16 h-16 rounded-full bg-white flex items-center justify-center p-3 ring-2 ring-purple-500/50" style={{ boxShadow: "0 0 16px rgba(159,41,255,0.4)" }}>
+                <Image
+                  src="/logo/mascotIconOnly.png"
+                  alt="Rupiah Router"
+                  width={40}
+                  height={40}
+                  className="w-full h-full object-contain"
+                />
+              </div>
             </motion.div>
           </motion.div>
           
