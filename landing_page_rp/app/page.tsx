@@ -1792,17 +1792,20 @@ function CTASection() {
             viewport={{ once: false }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <motion.button
+            <motion.a
+              href="https://rupiahroute-apps.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               whileHover={{ scale: 1.05, y: -3 }}
               whileTap={{ scale: 0.97 }}
               transition={{ duration: 0.15 }}
-              className="group relative px-8 py-4 bg-[#9f29ff] hover:bg-[#a78bfa] text-white font-semibold text-sm tracking-wide rounded-full overflow-hidden shadow-[0_0_32px_rgba(159,41,255,0.4)]"
+              className="group relative px-8 py-4 bg-[#9f29ff] hover:bg-[#a78bfa] text-white font-semibold text-sm tracking-wide rounded-full overflow-hidden shadow-[0_0_32px_rgba(159,41,255,0.4)] inline-block"
             >
               <span className="relative z-10">Launch App</span>
               <div className="absolute -inset-[1px] bg-[#9f29ff] rounded-full opacity-30 group-hover:opacity-60 transition-opacity duration-300 blur-[3px]" />
-            </motion.button>
+            </motion.a>
             
             <motion.a
               href="https://docsrupiahroute.vercel.app/"
