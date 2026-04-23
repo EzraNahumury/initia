@@ -1,0 +1,34 @@
+{
+  "name": "RupiahRoute",
+  "description": "Smart DeFi router on Initia MiniEVM that optimizes swap routes across multiple DEXs and chains.",
+  "team": [
+    {
+      "name": "Solo Developer",
+      "role": "Fullstack & Smart Contract Engineer"
+    }
+  ],
+  "links": {
+    "website": "https://rupiahroute.vercel.app/",
+    "app": "https://rupiahroute-apps.vercel.app/",
+    "docs": "https://docsrupiahroute.vercel.app/",
+    "github": "https://github.com/EzraNahumury/initia"
+  },
+  "contracts": [
+    {
+      "name": "TokenFaucet",
+      "address": "0x114ead71f34a502db1b9cd25d66be8f2a46caa68",
+      "network": "Initia MiniEVM (local)"
+    },
+    {
+      "name": "RupiahRouter",
+      "address": "0x114ead71f34a502db1b9cd25d66be8f2a46caa68",
+      "network": "Initia MiniEVM (local)"
+    }
+  ],
+  "chain": {
+    "name": "Rupiahrote-1",
+    "chain_id": "1212385660403083",
+    "type": "rollup",
+    "environment": "local"
+  }
+}
